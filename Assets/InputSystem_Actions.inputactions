@@ -1,8 +1,9 @@
 {
+    "version": 1,
     "name": "InputSystem_Actions",
     "maps": [
         {
-            "name": "Player",
+            "name": "Move",
             "id": "df70fa95-8a34-4494-b137-73ab6b9c7d37",
             "actions": [
                 {
@@ -470,6 +471,34 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Interact",
+            "id": "e25dd361-514a-4017-8aa7-4818c4446c65",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "f482f1d3-642e-411b-a6d8-f267b25487bc",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "0843a20c-c9c0-47dd-8f0a-df458abb9f20",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
