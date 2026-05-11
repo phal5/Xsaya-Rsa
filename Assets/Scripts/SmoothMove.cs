@@ -79,30 +79,4 @@ public class SmoothMove : MonoBehaviour
 
         StartCoroutine(MotionAround());
     }
-
-#nullable enable
-    public void SetTarget(Transform? targetSpace, Vector3 targetPosition)
-    {
-        if (targetSpace != null) _targetSpace = null;
-        else _targetSpace = targetSpace;
-        _relativeTargetPosition = targetPosition;
-    }
-
-    private Vector3 WorldToTargetPosition(Vector3 position)
-    {
-        if (_targetSpace == null) return position;
-        else return _targetSpace.InverseTransformPoint(position);
-    }
-
-    private Vector3 TargetToWorldPosition(Vector3 position)
-    {
-        if (_targetSpace == null) return position;
-        else return _targetSpace.TransformPoint(position);
-    }
-
-    private Vector3 TargetToWorldVector(Vector3 position)
-    {
-        if (_targetSpace == null) return position;
-        else return _targetSpace.TransformVector(position);
-    }
 }
