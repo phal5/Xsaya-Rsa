@@ -1,13 +1,16 @@
 using System.Collections;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 public interface IState
 {
-    public IEnumerator Enter();
+    public void Init(CharacterManager manager, FiniteStateMachine stateMachine) { }
 
-    public IState Update();
+    public void Enter() { }
 
-    public IEnumerator Exit();
+    public void UpdateState();
 
-    public IState Transitions();
+    public void Exit();
+
+    public void Transitions();
 }

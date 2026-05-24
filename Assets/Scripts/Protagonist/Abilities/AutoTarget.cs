@@ -79,7 +79,7 @@ public class AutoTarget : MonoBehaviour
     private void SetTarget(Transform targetTransform, float sqrTargetDistance)
     {
         _targetTransform = targetTransform;
-        _targetPosition = (targetTransform == null)? transform.position : targetTransform.position;
+        _targetPosition = (targetTransform == null)? transform.position + transform.forward : targetTransform.position;
         _targetDistance = Mathf.Sqrt(sqrTargetDistance);
     }
 }

@@ -5,12 +5,18 @@ using UnityEngine.UIElements;
 public class CameraTransition : MonoBehaviour
 {
     [SerializeField] private bool _toggle;  //true = 3D, false = 2D
-    [SerializeField] Transform _protagonist;
-    [SerializeField] Transform _target;
-    [SerializeField] float _duration;
-    
-    float t0;
-    float t1;
+    [SerializeField] private bool _previousToggle;
+    [SerializeField] private Transform _protagonist;
+    [SerializeField] private Transform _target;
+    [SerializeField] private float _duration;
+
+    private float t0;
+    private float t1;
+
+    private void Start()
+    {
+        
+    }
 
     public IEnumerator Move()
     {
