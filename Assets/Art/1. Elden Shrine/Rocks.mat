@@ -65,10 +65,10 @@ Material:
     m_Floats:
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _noise_strength: 1
-    - _threshold: 0.6
+    - _noise_strength: 0.93
+    - _threshold: 1
     m_Colors:
-    - _Color: {r: 0.255, g: 0.24347399, b: 0.19737, a: 1}
-    - _ShadedColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Color: {r: 0.39001927, g: 0.34330127, b: 0.41509432, a: 1}
+    - _ShadedColor: {r: 0.19437514, g: 0.27397642, b: 0.32704395, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
