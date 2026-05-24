@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 93c5a3cff6a07d24cb0729f3e73a4f5b
+timeCreated: 1471817857
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/materials/rock_yellow_desert.mat
+  uploadId: 394433

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1e0c98aebc1aab243b8cffadaa1c52d6
+timeCreated: 1472077405
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/materials/ground_green_hill.mat
+  uploadId: 394433
