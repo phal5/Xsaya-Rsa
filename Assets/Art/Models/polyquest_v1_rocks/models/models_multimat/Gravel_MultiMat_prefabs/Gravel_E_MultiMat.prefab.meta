@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 396a7d1a24f08b2439544e0f7e860dca
+timeCreated: 1475612793
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/models/models_multimat/Gravel_MultiMat_prefabs/Gravel_E_MultiMat.prefab
+  uploadId: 394433

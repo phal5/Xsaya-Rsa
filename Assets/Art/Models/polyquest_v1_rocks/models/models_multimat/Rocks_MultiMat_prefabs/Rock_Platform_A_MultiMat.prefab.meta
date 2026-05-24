@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4357588f30f1890488babd3a756eddc4
+timeCreated: 1475612835
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/models/models_multimat/Rocks_MultiMat_prefabs/Rock_Platform_A_MultiMat.prefab
+  uploadId: 394433

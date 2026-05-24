@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 20d809535ca356f4f8812e8f23e056af
+timeCreated: 1475611012
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/models/models_standard/Rocks_prefabs/Rock_Platform_B.prefab
+  uploadId: 394433

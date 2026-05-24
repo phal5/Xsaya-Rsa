@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bb33ca05dd05fe84898cd247c95c7b70
+timeCreated: 1475612500
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/models/models_standard/Gravel_prefabs/Gravel_B.prefab
+  uploadId: 394433

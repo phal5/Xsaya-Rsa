@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ca0aeaa549d23d34182588765a23e14d
+timeCreated: 1472864383
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/materials/rock_mine_TX.mat
+  uploadId: 394433
