@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bd5d6be1676fa0f4c9b927659be55ae0
+timeCreated: 1475546817
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/materials/fog_pit_03.mat
+  uploadId: 394433

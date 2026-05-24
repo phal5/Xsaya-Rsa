@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 75c24a23bb7ea6345bdcbb38b5fe116e
+timeCreated: 1492553963
+licenseType: Store
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/shaders/PolyboxCore.cginc
+  uploadId: 394433
