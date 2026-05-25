@@ -16,4 +16,9 @@ public static class CustomMath
         from -= remove * Vector3.Dot(from, remove);
         return from;
     }
+
+    public static float ReLU(float t)
+    {
+        return t > 0 ? t : 0;
+    }
 }

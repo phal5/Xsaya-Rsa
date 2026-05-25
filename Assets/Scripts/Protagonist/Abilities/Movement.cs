@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,7 +14,7 @@ public class Movement : MonoBehaviour
     Vector3 _localVelocity;
     Vector3 _targetLocalVelocity;
 
-    bool _singular = false;
+    [SerializeField] bool _singular = false;
 
     private void FixedUpdate()
     {
@@ -29,12 +30,15 @@ public class Movement : MonoBehaviour
 
     private void Singular()
     {
-        Vector3 v = _rigidbody.linearVelocity;
+        Vector3 velocity = _rigidbody.linearVelocity;
+        Vector3 direction = _targetLocalVelocity.normalized;
+        
+        Vector3 rawAccel = _targetLocalVelocity - velocity;
+        float alignment = Vector3.Dot(rawAccel, direction);
+        float disparity = CustomMath.ReLU(-alignment);      // flip sign to derive negative alignment
+        Vector3 accel = (rawAccel + disparity * direction).normalized;   // remove negative alignment factor from the acceleration vector to derive acceleration direction
 
-
-
-        _sampler.position = _rigidbody.position;
-        _sampler.linearVelocity = _rigidbody.linearVelocity;
+        _localVelocity += Time.fixedDeltaTime * _acceleration * accel;
     }
 
     private void Mutual()
@@ -93,6 +97,7 @@ public class Movement : MonoBehaviour
 
     public void IntegrateVelocitySpace()
     {
+        _sampler.position = _rigidbody.position;
         _sampler.linearVelocity = _rigidbody.linearVelocity;
         _targetLocalVelocity = Vector3.zero;
         _localVelocity = Vector3.zero;
