@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 84e09a6836a97294492c1364685b6cda
+timeCreated: 1471324748
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/scenes/Rocks_Scenes/Rocks_Textured_lightmapped_scenes/Troubleshooting_textured_scenes_TX.txt
+  uploadId: 394433

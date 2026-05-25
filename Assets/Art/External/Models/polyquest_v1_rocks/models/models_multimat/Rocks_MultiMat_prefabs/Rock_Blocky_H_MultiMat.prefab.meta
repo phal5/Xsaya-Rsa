@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: df5fa80fd6b85af478466080a432025f
+timeCreated: 1475612830
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/models/models_multimat/Rocks_MultiMat_prefabs/Rock_Blocky_H_MultiMat.prefab
+  uploadId: 394433

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d4678a53fdc11a546ae55d1f9bddc12d
+timeCreated: 1475611021
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/models/models_standard/Rocks_prefabs/Rock_Sharp_C.prefab
+  uploadId: 394433

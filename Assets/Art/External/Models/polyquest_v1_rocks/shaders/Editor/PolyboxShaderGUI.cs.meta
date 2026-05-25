@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: bc88b8f0229e44dc0be28ee9e1296d08
+timeCreated: 1486250366
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/shaders/Editor/PolyboxShaderGUI.cs
+  uploadId: 394433
