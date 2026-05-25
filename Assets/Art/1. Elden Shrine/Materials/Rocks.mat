@@ -68,7 +68,7 @@ Material:
     - _noise_strength: 0
     - _threshold: 0.84
     m_Colors:
-    - _Color: {r: 0.34509805, g: 0.41568628, b: 0.39305693, a: 1}
+    - _Color: {r: 0.34509805, g: 0.37954873, b: 0.41568628, a: 1}
     - _ShadedColor: {r: 0.19437514, g: 0.27397642, b: 0.32704395, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

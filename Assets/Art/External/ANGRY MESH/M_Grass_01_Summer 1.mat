@@ -169,7 +169,7 @@ Material:
     - _BaseEmissiveMaskContrast: 2
     - _BaseMetallicIntensity: 0
     - _BaseNormalIntensity: 1
-    - _BaseOpacityCutoff: 0.3
+    - _BaseOpacityCutoff: 0.21
     - _BaseOpacityIntensity: 1
     - _BaseRoughness: 0
     - _BaseRoughnessIntensity: 1

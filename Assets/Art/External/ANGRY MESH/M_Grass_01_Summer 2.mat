@@ -13,7 +13,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ENABLEBOTTOMCOLOR_ON
-  - _ENABLEBOTTOMDITHER_ON
   - _ENABLESMOOTHNESSWAVES_ON
   - _ENABLETINTVARIATIONCOLOR_ON
   - _ENABLEWIND_ON
@@ -163,12 +162,12 @@ Material:
     - _AlphaClip: 0
     - _AlphaCutoff: 0.5
     - _BaseAOIntensity: 0.491
-    - _BaseAlbedoBrightness: 1
+    - _BaseAlbedoBrightness: 5
     - _BaseAlbedoDesaturation: 1
     - _BaseEmissiveIntensity: 2
     - _BaseEmissiveMaskContrast: 2
     - _BaseMetallicIntensity: 0
-    - _BaseNormalIntensity: 1
+    - _BaseNormalIntensity: 0
     - _BaseOpacityCutoff: 0.3
     - _BaseOpacityIntensity: 1
     - _BaseRoughness: 0
@@ -176,17 +175,17 @@ Material:
     - _BaseRoughnessOffset: 1.1
     - _BaseSmoothness: 0.2
     - _BaseSmoothnessAA: 0.5
-    - _BaseSmoothnessIntensity: 1
+    - _BaseSmoothnessIntensity: 0
     - _BaseSmoothnessMax: 1
     - _BaseSmoothnessMin: 0
     - _BaseSmoothnessOffset: 0.1
     - _BaseSmoothnessVColorMask: 0
-    - _BaseSmoothnessWaves: 0.1
+    - _BaseSmoothnessWaves: 0
     - _BaseUVScale: 1
-    - _BottomColorContrast: 1
-    - _BottomColorOffset: 2.73
+    - _BottomColorContrast: 0
+    - _BottomColorOffset: 5
     - _BottomDitherContrast: 3
-    - _BottomDitherOffset: 0
+    - _BottomDitherOffset: -1
     - _BumpScale: 1
     - _BumpScale1: 1
     - _BumpScale2: 1
@@ -202,7 +201,7 @@ Material:
     - _Divide: 1
     - _DstBlend: 0
     - _EnableBottomColor: 1
-    - _EnableBottomDither: 1
+    - _EnableBottomDither: 0
     - _EnableDetail: 0
     - _EnableDetail1: 0
     - _EnableFlipNormals: 0
@@ -269,13 +268,13 @@ Material:
     - _ZWrite: 1
     - __dirty: 1
     m_Colors:
-    - _BaseAlbedoColor: {r: 0.32687068, g: 0.5647059, b: 0.04313726, a: 1}
+    - _BaseAlbedoColor: {r: 0.054901958, g: 0.14509805, b: 0.091035604, a: 1}
     - _BaseAlbedoColor1: {r: 0.8679245, g: 0.25792095, b: 0.25792095, a: 0.5019608}
     - _BaseAlbedoColor2: {r: 0.5520116, g: 0.41788515, b: 0.34191445, a: 0.5019608}
     - _BaseBottomColor: {r: 1, g: 0, b: 0, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 0}
     - _BaseEmissiveColor: {r: 0, g: 0, b: 0, a: 1}
-    - _BottomColor: {r: 0.26045197, g: 0.54088044, b: 0.05272725, a: 0}
+    - _BottomColor: {r: 0.031372543, g: 0.16400953, b: 0.19607843, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _TintColor: {r: 0.12323356, g: 1, b: 0, a: 0}

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d944b2551e520134f9f366197f8cbc22
+timeCreated: 1471473458
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 74642
+  packageName: Low Poly Rocks
+  packageVersion: 6.0
+  assetPath: Assets/polyquest_v1_rocks/materials/dummy/dummy_red_desert.mat
+  uploadId: 394433
