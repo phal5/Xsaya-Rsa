@@ -66,7 +66,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _noise_strength: 0
-    - _threshold: 0.95
+    - _threshold: 0.7
     m_Colors:
     - _Color: {r: 0.34509805, g: 0.41568628, b: 0.39305693, a: 1}
     - _ShadedColor: {r: 0.19437514, g: 0.27397642, b: 0.32704395, a: 1}
