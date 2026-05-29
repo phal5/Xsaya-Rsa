@@ -9,6 +9,13 @@ public class Character_Airborne : BaseState
     uint _dashTicket = 1;
     bool _jump = false;
 
+    private void ResetValues()
+    {
+        _jumpTicket = 1;
+        _dashTicket = 1;
+        _jump = false;
+    }
+
     public override void Bootstrap()
     {
         Debug.Log("Character_Airborne Bootstrap Complete!");
@@ -16,12 +23,16 @@ public class Character_Airborne : BaseState
 
     public override void Enter()
     {
-        characterManager.movement.IntegrateVelocitySpace();
+        characterManager.movement.SetMovementMode(true);
         InputManager.instance.move_jump.action.performed += RegisterJump;
-        _jumpTicket = 1;
-        _dashTicket = 1;
-        _jump = false;
-        return;
+        InputManager.instance.move_jump.action.canceled += CancelJump;
+        ResetValues();
+    }
+
+    public override void Exit()
+    {
+        InputManager.instance.move_jump.action.performed -= RegisterJump;
+        InputManager.instance.move_jump.action.performed -= CancelJump;
     }
 
     public override void UpdateState()
@@ -29,12 +40,6 @@ public class Character_Airborne : BaseState
         Transitions();
         Move();
         if (_jump) Jump();
-    }
-
-    public override void Exit()
-    {
-        InputManager.instance.move_jump.action.performed -= RegisterJump;
-        return;
     }
 
     public override void Transitions()
@@ -68,5 +73,11 @@ public class Character_Airborne : BaseState
     private void RegisterJump(InputAction.CallbackContext _)
     {
         _jump = true;
+    }
+
+    private void CancelJump(InputAction.CallbackContext _)
+    {
+        if(_jump) _jump = false;
+        characterManager.movement.NReluSamplerYVelocity();
     }
 }

@@ -3,17 +3,17 @@ using UnityEngine.InputSystem;
 
 public class Character_Ground : BaseState
 {
-    Ray _ray;
+    RaycastHit _raycastHit;
 
     public override void Bootstrap()
     {
-        _ray.direction = Vector3.down;
         Debug.Log("Character_Ground Bootstrap complete!");
     }
 
     public override void Enter()
     {
         InputManager.instance.move_jump.action.performed += Jump;
+        characterManager.movement.SetMovementMode(false);
     }
 
     public override void UpdateState()
@@ -29,8 +29,13 @@ public class Character_Ground : BaseState
 
     public override void Transitions()
     {
-        if (!characterManager.caster.Cast(out _)) fsm.TransitTo<Character_Airborne>();
-        
+        ToAirborne();
+    }
+
+    private void ToAirborne()
+    {
+        if (!characterManager.caster.Cast(out _raycastHit))
+            fsm.TransitTo<Character_Airborne>();
     }
 
     private void Move()
@@ -43,10 +48,5 @@ public class Character_Ground : BaseState
     private void Jump(InputAction.CallbackContext context)
     {
         characterManager.movement.SetSamplerYVelocity(characterManager.jumpSpeed);
-    }
-
-    private void RegisterJump()
-    {
-
     }
 }

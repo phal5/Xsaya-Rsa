@@ -12,39 +12,40 @@ public class Movement : MonoBehaviour
     [SerializeField] private float _acceleration;
 
     Vector3 _localVelocity;
-    Vector3 _targetLocalVelocity;
+
+    Vector3 _targetVelocity;
 
     [SerializeField] bool _singular = false;
 
     private void FixedUpdate()
     {
-        if (_singular)
-        {
-            Singular();
-        }
-        else
-        {
-            Mutual();
-        }
+        if (_singular) Singular();
+        else Mutual();
     }
 
     private void Singular()
     {
-        Vector3 velocity = _rigidbody.linearVelocity;
-        Vector3 direction = _targetLocalVelocity.normalized;
+        // singular mode does NOT utilize the concept of separated velocities
+        // thus, only the SAMPLER will be utilized.
+        Vector3 velocity = _sampler.linearVelocity;
+        Vector3 direction = _targetVelocity.normalized;
         
-        Vector3 rawAccel = _targetLocalVelocity - velocity;
-        float alignment = Vector3.Dot(rawAccel, direction);
+        Vector3 rawAccel = _targetVelocity - velocity;
+        float alignment = Vector3.Dot(rawAccel, direction); // how much 'direction' component the raw acceleration has
         float disparity = CustomMath.ReLU(-alignment);      // flip sign to derive negative alignment
         Vector3 accel = (rawAccel + disparity * direction).normalized;   // remove negative alignment factor from the acceleration vector to derive acceleration direction
 
-        _localVelocity += Time.fixedDeltaTime * _acceleration * accel;
+        _sampler.linearVelocity += direction * Mathf.Clamp(Time.fixedDeltaTime * alignment * _acceleration, 0, alignment);
+
+        // integrate velocity spaces
+        _rigidbody.position = _sampler.position;
+        _rigidbody.linearVelocity = _sampler.linearVelocity;
     }
 
     private void Mutual()
     {
         //0. set local velocity
-        AccelerateTo(_targetLocalVelocity);
+        AccelerateTo(_targetVelocity);
 
         //1. set linear velocity as local + environmental velocity
         _rigidbody.linearVelocity = _sampler.linearVelocity + _localVelocity;
@@ -53,15 +54,9 @@ public class Movement : MonoBehaviour
         _sampler.position = _rigidbody.position;
     }
 
-    // I'll use 2 rigidbodies - one for Environmental velocity(sampling), other for global velocity
-    // I'll teleport 'environmental' to 'global' on the end of every calculation and extract the velocity in the beginning
-    // on the entrance to airborne state, global velocity will override environmental velocity once for smooth conversion.
-
-    // Local velocity will remain internal.
-
     public void SetMovementMode(bool singular)
     {
-        if(singular !=  _singular)
+        if (singular != _singular)
         {
             _singular = singular;
             IntegrateVelocitySpace();
@@ -70,7 +65,7 @@ public class Movement : MonoBehaviour
 
     public void Move(Vector3 targetLocalVelocity)
     {
-        _targetLocalVelocity = targetLocalVelocity;
+        _targetVelocity = targetLocalVelocity;
     }
 
     public void IncrementSamplerVelocity(Vector3 incrementation)
@@ -90,6 +85,13 @@ public class Movement : MonoBehaviour
         _sampler.linearVelocity = v;
     }
 
+    public void NReluSamplerYVelocity()
+    {
+        Vector3 v = _sampler.linearVelocity;
+        v.y = -CustomMath.ReLU(-v.y);
+        _sampler.linearVelocity = v;
+    }
+
     public void SetLocalVelocity(Vector3 velocity)
     {
         _localVelocity = velocity;
@@ -99,7 +101,7 @@ public class Movement : MonoBehaviour
     {
         _sampler.position = _rigidbody.position;
         _sampler.linearVelocity = _rigidbody.linearVelocity;
-        _targetLocalVelocity = Vector3.zero;
+        _targetVelocity = Vector3.zero;
         _localVelocity = Vector3.zero;
     }
 
@@ -117,10 +119,6 @@ public class Movement : MonoBehaviour
 
     private void Accelerate(Vector3 acceleration)
     {
-        if (acceleration == Vector3.zero) return;
-
-        Vector3 dir = acceleration.normalized;
-        float spd = Vector3.Dot(_localVelocity, dir);
         _localVelocity += acceleration;
     }
 }
