@@ -315,7 +315,6 @@ Transform:
   - {fileID: 3390189777057667870}
   - {fileID: 5529089874762323543}
   - {fileID: 4726336798455377211}
-  - {fileID: 5617347610044950367}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!33 &6582730067550801962
@@ -445,53 +444,6 @@ MonoBehaviour:
   <dashSpeed>k__BackingField: 30
   <jumpSpeed>k__BackingField: 10
   <caster>k__BackingField: {fileID: 7239816527336891340}
---- !u!1 &4993615670749249862
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5617347610044950367}
-  - component: {fileID: 1073892048590177483}
-  m_Layer: 10
-  m_Name: Attack
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5617347610044950367
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4993615670749249862}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5304977396237468201}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1073892048590177483
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4993615670749249862}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f9a6176fcf01e94eae83b31fa0f7101, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BasicAttack
-  _weapon: {fileID: 1184651300702569161}
-  _duration: 0.1
-  _disableWeaponObject: 1
 --- !u!1 &5258913663965965259
 GameObject:
   m_ObjectHideFlags: 0
@@ -536,7 +488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11ab879cbb07d164ba2e48dc2f4e0775, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Character_Controlled
-  characterManager: {fileID: 4848436285175788426}
+  characterManager: {fileID: 0}
   _initialStateScript: {fileID: 11500000, guid: 7df803396e31f154c9ad3bfeb83f47da, type: 3}
   _machine: {fileID: 0}
   _currentState: 
@@ -570,7 +522,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 8015793715901798008}
   m_Father: {fileID: 5304977396237468201}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5036920050831767713
@@ -616,7 +569,7 @@ MonoBehaviour:
             m_StringArgument: Attack Invoked
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1073892048590177483}
+        - m_Target: {fileID: 8295592993660738564}
           m_TargetAssemblyTypeName: BasicAttack, Assembly-CSharp
           m_MethodName: Attack
           m_Mode: 1
@@ -644,6 +597,53 @@ MonoBehaviour:
             m_StringArgument: That Lightening thing Invoked
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!1 &7888725691767823771
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8015793715901798008}
+  - component: {fileID: 8295592993660738564}
+  m_Layer: 10
+  m_Name: SkillRack
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8015793715901798008
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7888725691767823771}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4726336798455377211}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8295592993660738564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7888725691767823771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f9a6176fcf01e94eae83b31fa0f7101, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicAttack
+  _weapon: {fileID: 1184651300702569161}
+  _duration: 0.1
+  _disableWeaponObject: 1
 --- !u!1 &8142261030663481357
 GameObject:
   m_ObjectHideFlags: 0
@@ -691,7 +691,7 @@ MonoBehaviour:
   _sampler: {fileID: 7960466687855591618}
   _rigidbody: {fileID: 7419664751702170186}
   _space: {fileID: 0}
-  _acceleration: 60
+  _acceleration: 200
   _singular: 0
 --- !u!1 &9194436079956968562
 GameObject:
