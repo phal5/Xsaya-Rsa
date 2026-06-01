@@ -78,6 +78,6 @@ public class Character_Airborne : BaseState
     private void CancelJump(InputAction.CallbackContext _)
     {
         if(_jump) _jump = false;
-        characterManager.movement.NReluSamplerYVelocity();
+        characterManager.movement.Drop();
     }
 }

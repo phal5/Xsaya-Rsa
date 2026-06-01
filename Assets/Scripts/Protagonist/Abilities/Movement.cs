@@ -7,9 +7,9 @@ public class Movement : MonoBehaviour
 {
     [SerializeField] private Rigidbody _sampler;
     [SerializeField] private Rigidbody _rigidbody;
-    [SerializeField] private Transform _space;
     [Space(10f)]
-    [SerializeField] private float _acceleration;
+    [SerializeField] private float _groundAcceleration;
+    [SerializeField] private float _aerialAcceleration;
 
     Vector3 _localVelocity;
 
@@ -27,15 +27,17 @@ public class Movement : MonoBehaviour
     {
         // singular mode does NOT utilize the concept of separated velocities
         // thus, only the SAMPLER will be utilized.
+
         Vector3 velocity = _sampler.linearVelocity;
         Vector3 direction = _targetVelocity.normalized;
-        
         Vector3 rawAccel = _targetVelocity - velocity;
+        rawAccel.y = 0;
+
         float alignment = Vector3.Dot(rawAccel, direction); // how much 'direction' component the raw acceleration has
         float disparity = CustomMath.ReLU(-alignment);      // flip sign to derive negative alignment
         Vector3 accel = (rawAccel + disparity * direction).normalized;   // remove negative alignment factor from the acceleration vector to derive acceleration direction
 
-        _sampler.linearVelocity += direction * Mathf.Clamp(Time.fixedDeltaTime * alignment * _acceleration, 0, alignment);
+        _sampler.linearVelocity += accel * Mathf.Clamp(alignment, 0, 1) * Time.fixedDeltaTime * _aerialAcceleration;
 
         // integrate velocity spaces
         _rigidbody.position = _sampler.position;
@@ -54,18 +56,52 @@ public class Movement : MonoBehaviour
         _sampler.position = _rigidbody.position;
     }
 
+    private void AccelerateTo(Vector3 targetVelocity)
+    {
+        if (targetVelocity == _localVelocity) return;
+        
+        Vector3 direction = (targetVelocity - _localVelocity).normalized;
+        float difference = (targetVelocity - _localVelocity).magnitude;
+        float step = _groundAcceleration * Time.fixedDeltaTime;
+        float incremence = Mathf.Min(step, difference);
+        Vector3 acceleration = incremence * direction;
+        Accelerate(acceleration);
+    }
+
+    private void Accelerate(Vector3 acceleration)
+    {
+        _localVelocity += acceleration;
+    }
+
+    #region Public
+
     public void SetMovementMode(bool singular)
     {
         if (singular != _singular)
         {
             _singular = singular;
-            IntegrateVelocitySpace();
+            if (singular) IntegrateMutualToSingular();
+            else IntegrateSingularToMutual();
         }
     }
 
     public void Move(Vector3 targetLocalVelocity)
     {
         _targetVelocity = targetLocalVelocity;
+    }
+
+    public void Drop()
+    {
+        Vector3 v = _sampler.linearVelocity;
+        v.y = -CustomMath.ReLU(-v.y);
+        _sampler.linearVelocity = v;
+    }
+
+    public void SetSamplerYVelocity(float velocity)
+    {
+        Vector3 v = _sampler.linearVelocity;
+        v.y = velocity;
+        _sampler.linearVelocity = v;
     }
 
     public void IncrementSamplerVelocity(Vector3 incrementation)
@@ -78,26 +114,16 @@ public class Movement : MonoBehaviour
         _sampler.linearVelocity = velocity;
     }
 
-    public void SetSamplerYVelocity(float velocity)
-    {
-        Vector3 v = _sampler.linearVelocity;
-        v.y = velocity;
-        _sampler.linearVelocity = v;
-    }
-
-    public void NReluSamplerYVelocity()
-    {
-        Vector3 v = _sampler.linearVelocity;
-        v.y = -CustomMath.ReLU(-v.y);
-        _sampler.linearVelocity = v;
-    }
-
     public void SetLocalVelocity(Vector3 velocity)
     {
         _localVelocity = velocity;
     }
 
-    public void IntegrateVelocitySpace()
+    #endregion
+
+    #region VelocitySpace Integration
+
+    private void IntegrateMutualToSingular()
     {
         _sampler.position = _rigidbody.position;
         _sampler.linearVelocity = _rigidbody.linearVelocity;
@@ -105,20 +131,13 @@ public class Movement : MonoBehaviour
         _localVelocity = Vector3.zero;
     }
 
-    private void AccelerateTo(Vector3 targetVelocity)
+    private void IntegrateSingularToMutual()
     {
-        if (targetVelocity == _localVelocity) return;
-        
-        Vector3 direction = (targetVelocity - _localVelocity).normalized;
-        float difference = (targetVelocity - _localVelocity).magnitude;
-        float step = _acceleration * Time.fixedDeltaTime;
-        float incremence = Mathf.Min(step, difference);
-        Vector3 acceleration = incremence * direction;
-        Accelerate(acceleration);
+        _targetVelocity = _sampler.linearVelocity;
+        _localVelocity = _sampler.linearVelocity;
+        _sampler.position = _rigidbody.position;
+        _sampler.linearVelocity = Vector3.zero;
     }
 
-    private void Accelerate(Vector3 acceleration)
-    {
-        _localVelocity += acceleration;
-    }
+    #endregion
 }
