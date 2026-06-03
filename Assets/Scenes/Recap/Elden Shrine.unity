@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: e29c4639f56c74040945920a4c56802e, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 6fc9458492f1bff45b6d4a0b2f60be28, type: 2}
   m_HaloStrength: 0.9
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: f0ae89df9552efa4ba7f9e3eafe045fd, type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: 7d3034180ff1d2240ba3d0524825e4b3, type: 2}
   m_LightingSettings: {fileID: 4890085278179872738, guid: 6837f943688e52c4a97151d49fb57df8, type: 2}
 --- !u!196 &4
 NavMeshSettings:
@@ -1475,13 +1475,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 394072461}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.62642545, y: 0.34191534, z: -0.61541617, w: 0.33458644}
+  m_LocalRotation: {x: 0.5887803, y: 0.36117816, z: -0.6515241, w: 0.31369498}
   m_LocalPosition: {x: 35, y: 51.23, z: -8.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 552515512}
-  m_LocalEulerAnglesHint: {x: 57.143, y: -91.968, z: -181.748}
+  m_LocalEulerAnglesHint: {x: 57.143, y: -85.16, z: -181.748}
 --- !u!1 &422555817
 GameObject:
   m_ObjectHideFlags: 0
@@ -9125,7 +9125,7 @@ Transform:
   m_GameObject: {fileID: 2117371892}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 39.4, y: 12.59, z: 33.95}
+  m_LocalPosition: {x: 39.4, y: 12.59, z: 19.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9172,7 +9172,7 @@ Light:
   m_Type: 3
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.9
-  m_Range: 10
+  m_Range: 13.5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -9212,7 +9212,7 @@ Light:
   m_RenderingLayerMask: 1
   m_Lightmapping: 2
   m_LightShadowCasterMode: 0
-  m_AreaSize: {x: 78.89253, y: 43.841522}
+  m_AreaSize: {x: 78.89253, y: 23.786453}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
