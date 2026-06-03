@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Rocks
+  m_Name: Rocks Shaded 2
   m_Shader: {fileID: -6465566751694194690, guid: 090654ce034de6c439d5c1bdc5fab5bd, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -65,10 +65,10 @@ Material:
     m_Floats:
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _noise_strength: 0
-    - _threshold: 0.6
+    - _noise_strength: 0.79
+    - _threshold: 1.78
     m_Colors:
-    - _Color: {r: 0.33707133, g: 0.34778094, b: 0.3584906, a: 1}
-    - _ShadedColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Color: {r: 0.24747825, g: 0.25791547, b: 0.27044016, a: 1}
+    - _ShadedColor: {r: 0.15021154, g: 0.17818461, b: 0.19496846, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

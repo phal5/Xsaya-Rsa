@@ -15,19 +15,19 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: 0.3
+    m_Value: 0
   contrast:
     m_OverrideState: 1
-    m_Value: -20.4
+    m_Value: -8.6
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 1.1659487, g: 1.1659487, b: 1.1659487, a: 1}
   hueShift:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   saturation:
     m_OverrideState: 1
-    m_Value: 14.7
+    m_Value: 0
 --- !u!114 &-3942936798300855434
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -49,7 +49,7 @@ MonoBehaviour:
     m_Value: 0.5
   intensity:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 1.37
   scatter:
     m_OverrideState: 1
     m_Value: 0.8
@@ -58,7 +58,7 @@ MonoBehaviour:
     m_Value: 65472
   tint:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 0.54221416, b: 0.28773582, a: 1}
+    m_Value: {r: 1, g: 0.3571429, b: 0, a: 1}
   highQualityFiltering:
     m_OverrideState: 0
     m_Value: 0
@@ -151,20 +151,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   active: 1
   shadows:
-    m_OverrideState: 1
-    m_Value: {x: 0.14713842, y: 0.28422526, z: 1, w: 0.13744815}
-  midtones:
-    m_OverrideState: 1
-    m_Value: {x: 1, y: 0.948971, z: 0.85072714, w: -0.0030495317}
-  highlights:
-    m_OverrideState: 1
-    m_Value: {x: 1, y: 0.6426897, z: 0.3156467, w: 0.10369053}
-  shadowsStart:
     m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  midtones:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  highlights:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  shadowsStart:
+    m_OverrideState: 1
     m_Value: 0
   shadowsEnd:
-    m_OverrideState: 0
-    m_Value: 0.3
+    m_OverrideState: 1
+    m_Value: 0.26
   highlightsStart:
     m_OverrideState: 0
     m_Value: 0.55
@@ -332,10 +332,10 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.3
+    m_Value: 0.35
   smoothness:
     m_OverrideState: 1
-    m_Value: 0.323
+    m_Value: 0.234
   rounded:
     m_OverrideState: 0
     m_Value: 0
