@@ -13,12 +13,14 @@ public class FiniteStateMachine : MonoBehaviour, IState
     [Header("Initial State - only one of these are applied, top to down.")]
     [SerializeField] protected MonoScript _initialStateScript;
     [SerializeField] protected FiniteStateMachine _machine;
+    [SerializeField] protected bool _resetOnEnter = false;
     [Space(10f)]
     [Header("Current State Check Window")]
     [SerializeField] string _currentState;
 
-    protected Dictionary<Type, IState> _states;
     protected FiniteStateMachine fsm;
+    protected Dictionary<Type, IState> _states;
+    protected Type _initialStateType;
     protected IState _state;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -32,6 +34,8 @@ public class FiniteStateMachine : MonoBehaviour, IState
     {
         UpdateState();
     }
+
+    public Type StateType => _state.GetType();
 
     #region Sub-State Initialization
 
@@ -59,6 +63,8 @@ public class FiniteStateMachine : MonoBehaviour, IState
             _machine.Init(characterManager, this);
             return;
         }
+
+        _initialStateType = _state.GetType();
     }
 
     #endregion
@@ -92,7 +98,7 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     #endregion
 
-    #region Sub-State Transition - remind you, the FSM is a state itself - thus, sub-states.
+    #region Sub-State Transition - remind you, the FSM is a state in itself - thus, sub-states.
 
     protected void Transit(IState nextState)
     {
@@ -121,10 +127,9 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     public bool TransitTo(Type type)
     {
-        if (_states.ContainsKey(type))
+        if (_states.TryGetValue(type, out IState state))
         {
-            IState nextState = _states[type];
-            Transit(nextState);
+            Transit(state);
             return true;
         }
         else return false;
@@ -144,8 +149,14 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     public virtual void Bootstrap() { }
 
-    public virtual void Enter() { }
+    public virtual void Enter()
+    {
+        if (_resetOnEnter) TransitTo(_initialStateType);
+    }
 
+    /// <summary>
+    /// Called every frame before transition check.
+    /// </summary>
     public void UpdateState()
     {
         _state.UpdateState();
@@ -154,6 +165,9 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     public virtual void Exit() { }
 
+    /// <summary>
+    /// Called every frame after state update.
+    /// </summary>
     public virtual void Transitions() { }
 
     #endregion
