@@ -13,4 +13,14 @@ public class Steering : MonoBehaviour
     {
         
     }
+
+    public void Move(Vector3 direction)
+    {
+
+    }
+
+    public void Jump()
+    {
+
+    }
 }
