@@ -48,6 +48,7 @@ MonoBehaviour:
   characterManager: {fileID: 4848436285175788426}
   _initialStateScript: {fileID: 0}
   _machine: {fileID: 3829089813538943097}
+  _resetOnEnter: 0
   _currentState: 
 --- !u!1 &2820621455486361952
 GameObject:
@@ -188,6 +189,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5529089874762323543}
   - component: {fileID: 7239816527336891340}
+  - component: {fileID: 4135126068341750456}
   m_Layer: 10
   m_Name: SphereCaster
   m_TagString: Untagged
@@ -225,6 +227,20 @@ MonoBehaviour:
   _direction: {x: 0, y: -1, z: 0}
   _radius: 0.85
   _distance: 0.851
+--- !u!114 &4135126068341750456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3306408583754998175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc539f8928b395c41803ac22ee459aed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CapsuleCaster
+  _capsuleCollider: {fileID: 1297210233029392639}
+  _distance: 0.001
 --- !u!1 &3656971019408392254
 GameObject:
   m_ObjectHideFlags: 0
@@ -491,6 +507,7 @@ MonoBehaviour:
   characterManager: {fileID: 0}
   _initialStateScript: {fileID: 11500000, guid: 7df803396e31f154c9ad3bfeb83f47da, type: 3}
   _machine: {fileID: 0}
+  _resetOnEnter: 0
   _currentState: 
 --- !u!1 &7523471220952143362
 GameObject:
@@ -654,6 +671,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3390189777057667870}
   - component: {fileID: 7936465902329791481}
+  - component: {fileID: 5044150862867635081}
   m_Layer: 10
   m_Name: Movement
   m_TagString: Untagged
@@ -690,9 +708,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Move
   _sampler: {fileID: 7960466687855591618}
   _rigidbody: {fileID: 7419664751702170186}
-  _space: {fileID: 0}
-  _acceleration: 200
+  _groundAcceleration: 0
+  _aerialAcceleration: 0
   _singular: 0
+--- !u!114 &5044150862867635081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8142261030663481357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15e8ef2da2751aa48b8f597a372d169a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Steering
+  _camera: {fileID: 0}
+  _character: {fileID: 5304977396237468201}
+  _movement: {fileID: 7936465902329791481}
+  _caster: {fileID: 0}
+  _rotationSpeed: 1
 --- !u!1 &9194436079956968562
 GameObject:
   m_ObjectHideFlags: 0

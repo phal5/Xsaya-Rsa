@@ -2,25 +2,30 @@ using UnityEngine;
 
 public class Steering : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] Camera _camera;
+    [SerializeField] Transform _character;
+    [SerializeField] Movement _movement;
+    [SerializeField] CapsuleCaster _caster;
+
+    [SerializeField] float _rotationSpeed = 1.0f;
+
+    public void Move(Vector3 inputDirection, Vector3 groundNormal)
     {
+        Vector3 direction = _camera.transform.TransformDirection(inputDirection);
+        Vector3 moveDirection = CustomMath.PreservativeRemove(groundNormal, direction);
+        Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
         
+        _character.transform.rotation = Quaternion.RotateTowards(_character.transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+        _movement.Move(direction);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Jump(float speed)
     {
-        
+        _movement.SetSamplerYVelocity(speed);
     }
 
-    public void Move(Vector3 direction)
+    public void Drop()
     {
-
-    }
-
-    public void Jump()
-    {
-
+        _movement.Drop();
     }
 }

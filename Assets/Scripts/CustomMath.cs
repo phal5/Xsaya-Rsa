@@ -8,12 +8,16 @@ public static class CustomMath
         return t * t * (3f - 2 * t);
     }
 
-    public static Vector3 PreservativeRemove(Vector3 remove, Vector3 from)
+    public static Vector3 PreservativeRemove(Vector3 component, Vector3 from)
     {
         float mag = from.magnitude;
-        remove = remove.normalized;
+        Vector3.Normalize(component);
+        component *= Vector3.Dot(from, component);
+        
+        from -= component;
+        Vector3.Normalize(from);
+        from *= mag;
 
-        from -= remove * Vector3.Dot(from, remove);
         return from;
     }
 
