@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class CharacterManager : MonoBehaviour
+public class CharacterManager : EntityManager
 {
     [field:SerializeField] public FiniteStateMachine fsm;
-    [field:SerializeField] public Movement movement {  get; private set; }
+    [field:SerializeField] public Character_Movement movement {  get; private set; }
     [field:SerializeField] public CapsuleCollider capsuleCollider { get; private set; }
     [Header("Horizontal Speed")]
     [field: SerializeField] public float groundSpeed { get; private set; }

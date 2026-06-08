@@ -189,7 +189,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5529089874762323543}
   - component: {fileID: 7239816527336891340}
-  - component: {fileID: 4135126068341750456}
+  - component: {fileID: 8460148023563199255}
   m_Layer: 10
   m_Name: SphereCaster
   m_TagString: Untagged
@@ -227,7 +227,7 @@ MonoBehaviour:
   _direction: {x: 0, y: -1, z: 0}
   _radius: 0.85
   _distance: 0.851
---- !u!114 &4135126068341750456
+--- !u!114 &8460148023563199255
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -671,7 +671,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3390189777057667870}
   - component: {fileID: 7936465902329791481}
-  - component: {fileID: 5044150862867635081}
+  - component: {fileID: 5195307063140341564}
   m_Layer: 10
   m_Name: Movement
   m_TagString: Untagged
@@ -711,7 +711,7 @@ MonoBehaviour:
   _groundAcceleration: 0
   _aerialAcceleration: 0
   _singular: 0
---- !u!114 &5044150862867635081
+--- !u!114 &5195307063140341564
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

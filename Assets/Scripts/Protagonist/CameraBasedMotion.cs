@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ObjectBasedMotion : MonoBehaviour
 {
-    [SerializeField] Movement _movement;
+    [SerializeField] Character_Movement _movement;
     [SerializeField] Transform _transform;
 
     public void Move(Vector2 controls, Vector3 groundNormal, float speed)

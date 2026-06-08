@@ -3,7 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Movement : MonoBehaviour
+public class Character_Movement : MonoBehaviour, IMovement
 {
     [SerializeField] private Rigidbody _sampler;
     [SerializeField] private Rigidbody _rigidbody;

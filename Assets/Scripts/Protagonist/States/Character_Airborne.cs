@@ -3,7 +3,7 @@ using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Character_Airborne : BaseState
+public class Character_Airborne : BaseCharacterState
 {
     uint _jumpTicket = 1;
     uint _dashTicket = 1;

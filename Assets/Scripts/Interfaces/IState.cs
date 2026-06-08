@@ -4,7 +4,7 @@ using UnityEngine;
 
 public interface IState
 {
-    public void Init(CharacterManager manager, FiniteStateMachine stateMachine) { }
+    public void Init(EntityManager manager, FiniteStateMachine stateMachine) { }
 
     public void Enter() { }
 

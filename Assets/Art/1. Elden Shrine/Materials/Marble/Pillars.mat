@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_URP_CelShader
+  m_Name: Pillars
   m_Shader: {fileID: -6465566751694194690, guid: 9e2184c751f256143874f5d1a3a13598, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0

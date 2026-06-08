@@ -1,14 +1,16 @@
 using System.Collections;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
-public abstract class BaseState : IState
+public abstract class BaseCharacterState : IState
 {
     protected CharacterManager characterManager;
     protected FiniteStateMachine fsm;
 
-    public void Init(CharacterManager characterManager, FiniteStateMachine machine)
+    public void Init(EntityManager characterManager, FiniteStateMachine machine)
     {
-        this.characterManager = characterManager;
+        if (characterManager.GetType() != typeof(CharacterManager)) return;
+        this.characterManager = (CharacterManager)characterManager;
         this.fsm = machine;
         Bootstrap();
     }

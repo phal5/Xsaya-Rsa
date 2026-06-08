@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class Steering : MonoBehaviour
+public class Character_Steering : MonoBehaviour
 {
     [SerializeField] Camera _camera;
     [SerializeField] Transform _character;
-    [SerializeField] Movement _movement;
+    [SerializeField] Character_Movement _movement;
     [SerializeField] CapsuleCaster _caster;
 
     [SerializeField] float _rotationSpeed = 1.0f;
