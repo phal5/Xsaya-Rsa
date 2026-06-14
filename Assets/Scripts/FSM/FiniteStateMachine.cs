@@ -16,7 +16,8 @@ public class FiniteStateMachine : MonoBehaviour, IState
     [SerializeField] protected bool _resetOnEnter = false;
     [Space(10f)]
     [Header("Current State Check Window")]
-    [SerializeField] string _currentState;
+    [SerializeField] string _currentStateName;
+    public Type _currentStateType { get { return _state.GetType(); } }
 
     protected FiniteStateMachine fsm;
     protected Dictionary<Type, IState> _states;
@@ -106,7 +107,7 @@ public class FiniteStateMachine : MonoBehaviour, IState
         _state = nextState;
         _state.Enter();
 
-        _currentState = nextState.GetType().Name;
+        _currentStateName = nextState.GetType().Name;
     }
 
     public bool TransitTo<T>() where T : IState, new()

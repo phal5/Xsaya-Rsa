@@ -10,10 +10,12 @@ public class AgnostosManager : EntityManager
     [field: SerializeField] public float attackRadius { get; private set; }
     [field: SerializeField] public float attackReadyTime { get; private set; }
     [field: SerializeField] public float attackTime { get; private set; }
+    [field: SerializeField] public float attackCooldown { get; private set; } = 0.3f;
     [field: SerializeField] public float stunRecoveryTime { get; private set; }
     [field: SerializeField] public TransformWeightBlender[] footTargets { get; private set; }
     [field: SerializeField] public Transform[] legRoots { get; private set; }
     [field: SerializeField] public Transform[] walkTargets { get; private set; }
     [field: SerializeField] public Transform[] AttackReadyTargets { get; private set; }
     [field: SerializeField] public Transform AttackTarget { get; private set; }
+    [field: SerializeField] public MeleeWeapon weapon { get; private set; }
 }

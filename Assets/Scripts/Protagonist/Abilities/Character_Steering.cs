@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Character_Steering : MonoBehaviour
 {
-    [SerializeField] Transform _character;
+    [SerializeField] Rigidbody _character;
     [SerializeField] Character_Movement _movement;
     [SerializeField] CapsuleCaster _caster;
 
@@ -10,17 +10,17 @@ public class Character_Steering : MonoBehaviour
 
     public void Move(Vector3 inputDirection, Vector3 groundNormal)
     {
+        Vector3 movement;
         //Motion
         Vector3 direction = Camera.main.transform.TransformVector(inputDirection);
-        Vector3 moveDirection = CustomMath.PreservativeRemove(groundNormal, direction);
-        _movement.Move(moveDirection);
+        movement = CustomMath.PreservativeRemove(groundNormal, direction);
+        _movement.Move(movement);
 
         //Rotation
         if (inputDirection == Vector3.zero) return;
-        print(CustomMath.RemoveY(moveDirection));
-        Quaternion targetRotation = Quaternion.LookRotation(CustomMath.RemoveY(moveDirection), Vector3.up);
-        _character.rotation = Quaternion.RotateTowards(_character.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
-        
+        Quaternion targetRotation = Quaternion.LookRotation(CustomMath.RemoveY(movement), Vector3.up);
+        Quaternion rotated = Quaternion.RotateTowards(_character.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+        _character.MoveRotation(rotated);
     }
 
     public void Jump(float speed)

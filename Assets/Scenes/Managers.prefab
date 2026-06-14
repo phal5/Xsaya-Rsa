@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1021132546944036264}
   - component: {fileID: 8152297381157566722}
-  - component: {fileID: 5985562267946031052}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -52,32 +51,3 @@ MonoBehaviour:
   move_skill: {fileID: 1120369429361536294, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   move_interact: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   move_crouch: {fileID: 7040659881675835329, guid: 052faaac586de48259a63d0c4782560b, type: 3}
---- !u!114 &5985562267946031052
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6964550388378484398}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34eab09ebed155a41acb4a7efe792147, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InputQueue
-  comboCheckKeys:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: SkillDefiner, Assembly-CSharp
-        m_MethodName: Evaluate
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  inputLifetime: 0.5
-  maxBufferSize: 10

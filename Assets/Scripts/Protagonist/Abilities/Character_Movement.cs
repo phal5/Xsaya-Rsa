@@ -17,6 +17,11 @@ public class Character_Movement : MonoBehaviour, IMovement
 
     [SerializeField] bool _singular = false;
 
+    private void Update()
+    {
+        
+    }
+
     private void FixedUpdate()
     {
         if (_singular) Singular();
@@ -29,18 +34,19 @@ public class Character_Movement : MonoBehaviour, IMovement
         // thus, only the SAMPLER will be utilized.
 
         Vector3 velocity = _sampler.linearVelocity;
-        Vector3 direction = _targetVelocity.normalized;
+        Vector3 inputDirection = _targetVelocity.normalized;
         Vector3 rawAccel = _targetVelocity - velocity;
         rawAccel.y = 0;
 
-        float alignment = Vector3.Dot(rawAccel, direction); // how much 'direction' component the raw acceleration has
-        float disparity = CustomMath.ReLU(-alignment);      // flip sign to derive negative alignment
-        Vector3 accel = (rawAccel + disparity * direction).normalized;   // remove negative alignment factor from the acceleration vector to derive acceleration direction
+        float alignment = Vector3.Dot(rawAccel, inputDirection);
+        float disparity = CustomMath.ReLU(-alignment);
+        Vector3 accel = (rawAccel + disparity * inputDirection).normalized;   // remove negative alignment factor from the acceleration vector to derive acceleration direction
+        float magnitude = _aerialAcceleration * Mathf.Clamp(alignment, 0, 1) * Time.fixedDeltaTime;
 
-        _sampler.linearVelocity += accel * Mathf.Clamp(alignment, 0, 1) * Time.fixedDeltaTime * _aerialAcceleration;
+        _sampler.linearVelocity += magnitude * accel;
 
         // integrate velocity spaces
-        _rigidbody.position = _sampler.position;
+        _rigidbody.MovePosition(_sampler.position);
         _rigidbody.linearVelocity = _sampler.linearVelocity;
     }
 

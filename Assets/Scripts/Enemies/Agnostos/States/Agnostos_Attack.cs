@@ -1,12 +1,10 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 {
-    bool _ready;
-    bool _hit;
-
     public override void Bootstrap()
     {
 
@@ -14,20 +12,17 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 
     public override void Enter()
     {
-        _ready = false;
-        _hit = false;
         Ready();
     }
 
     public override void UpdateState()
     {
-        
         Transitions();
     }
 
     public override void Exit()
     {
-        
+
     }
 
     public override void Transitions()
@@ -52,7 +47,20 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 
     private void Attack()
     {
+        manager.weapon.StartAttack();
         manager.AttackTarget.position = PlayerManager.instance.player.position;
-        manager.footTargets[0].Transit(manager.AttackTarget, manager.attackTime, (x) => { return x; }, Ready);
+        manager.footTargets[0].Transit(manager.AttackTarget, manager.attackTime, (x) => { return x; }, ImpactFrame);
+    }
+
+    private void ImpactFrame()
+    {
+        manager.weapon.EndAttack();
+        manager.footTargets[0].StartCoroutine(Cooldown());
+    }
+
+    IEnumerator Cooldown()
+    {
+        yield return new WaitForSeconds(manager.attackCooldown);
+        Ready();
     }
 }
