@@ -16,9 +16,10 @@ public class Character_Steering : MonoBehaviour
         _movement.Move(moveDirection);
 
         //Rotation
-        if (moveDirection == Vector3.zero) return;
+        if (inputDirection == Vector3.zero) return;
+        print(CustomMath.RemoveY(moveDirection));
         Quaternion targetRotation = Quaternion.LookRotation(CustomMath.RemoveY(moveDirection), Vector3.up);
-        _character.transform.rotation = Quaternion.RotateTowards(_character.transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+        _character.rotation = Quaternion.RotateTowards(_character.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
         
     }
 

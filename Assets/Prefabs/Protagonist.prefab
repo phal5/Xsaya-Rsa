@@ -315,7 +315,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5304977396237468201}
   - component: {fileID: 1297210233029392639}
-  - component: {fileID: 7419664751702170186}
+  - component: {fileID: 4828166432045433657}
   - component: {fileID: 4848436285175788426}
   - component: {fileID: 4008733019537931288}
   m_Layer: 10
@@ -335,7 +335,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -3.5, y: 0.5, z: 0}
-  m_LocalScale: {x: 1.7000002, y: 1.7, z: 1.7000002}
+  m_LocalScale: {x: 1.7000008, y: 1.7, z: 1.7000008}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2861779899089600945}
@@ -371,7 +371,7 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!54 &7419664751702170186
+--- !u!54 &4828166432045433657
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -395,9 +395,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 120
-  m_CollisionDetection: 2
+  m_CollisionDetection: 0
 --- !u!114 &4848436285175788426
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -686,7 +686,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Character_Movement
   _sampler: {fileID: 7960466687855591618}
-  _rigidbody: {fileID: 7419664751702170186}
+  _rigidbody: {fileID: 4828166432045433657}
   _groundAcceleration: 100
   _aerialAcceleration: 100
   _singular: 0
@@ -702,11 +702,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15e8ef2da2751aa48b8f597a372d169a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Steering
-  _camera: {fileID: 0}
   _character: {fileID: 5304977396237468201}
   _movement: {fileID: 5317255057381944640}
   _caster: {fileID: 8460148023563199255}
-  _rotationSpeed: 1080
+  _rotationSpeed: 1800
 --- !u!1 &9194436079956968562
 GameObject:
   m_ObjectHideFlags: 0

@@ -4989,8 +4989,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1592160952}
   - {fileID: 543450653401314608}
+  - {fileID: 1592160952}
   - {fileID: 1493953563}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6756,8 +6756,8 @@ Canvas:
   m_GameObject: {fileID: 1031026352}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 1557215272}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -7859,17 +7859,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1850509136}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1255018099 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 873928667698992692, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
-  m_PrefabInstance: {fileID: 7867259846953797512}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b59cebc79835e834eb0a5b0883381cca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SkillDefiner
 --- !u!1 &1303352527
 GameObject:
   m_ObjectHideFlags: 0
@@ -12777,7 +12766,7 @@ PrefabInstance:
     - target: {fileID: 5985562267946031052, guid: 602c1357c11560f459194d910f230f32, type: 3}
       propertyPath: comboCheckKeys.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1255018099}
+      objectReference: {fileID: 0}
     - target: {fileID: 6964550388378484398, guid: 602c1357c11560f459194d910f230f32, type: 3}
       propertyPath: m_Name
       value: Managers
@@ -17346,14 +17335,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: controlled
       objectReference: {fileID: 0}
-    - target: {fileID: 5195307063140341564, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
-      propertyPath: _camera
-      value: 
-      objectReference: {fileID: 1557215272}
-    - target: {fileID: 5195307063140341564, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
-      propertyPath: _rotationSpeed
-      value: 90
-      objectReference: {fileID: 0}
     - target: {fileID: 5304977396237468201, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.22
@@ -17393,10 +17374,6 @@ PrefabInstance:
     - target: {fileID: 5304977396237468201, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7419664751702170186, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
-      propertyPath: m_Constraints
-      value: 120
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
