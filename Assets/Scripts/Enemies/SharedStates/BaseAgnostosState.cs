@@ -25,7 +25,7 @@ public class BaseEntityState<managerType> : IState where managerType : EntityMan
 }
 
 /*
- public override void Bootstrap()
+    public override void Bootstrap()
     {
 
     }

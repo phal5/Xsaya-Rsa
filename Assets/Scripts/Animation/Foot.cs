@@ -3,6 +3,8 @@ using UnityEngine.Events;
 
 public class Foot : MonoBehaviour
 {
+    [SerializeField] LayerMask _ground;
+    [Space(10f)]
     [Tooltip("Stride when moving at 1m/s")]
     [SerializeField] float _baseStride = 0.6f;
     [SerializeField] float _lift = 0.2f;
@@ -79,7 +81,7 @@ public class Foot : MonoBehaviour
     {
         raycastPosition = _root.position + _root.TransformDirection(_raycastOffset);
         _baseStepFrequency = 1 / _baseStride * 2;
-        if(Physics.Raycast(raycastPosition, Vector3.down, out RaycastHit hit, _distance, 1<<3)) _target.position = hit.point;
+        if(Physics.Raycast(raycastPosition, Vector3.down, out RaycastHit hit, _distance, _ground)) _target.position = hit.point;
         else _target.position = raycastPosition + Vector3.down * _distance;
         ResetValues();
     }

@@ -8,7 +8,7 @@ using UnityEngine;
 [System.Serializable]
 public class FiniteStateMachine : MonoBehaviour, IState
 {
-    [SerializeField] protected EntityManager entityManager;
+    [SerializeField] protected EntityManager manager;
     [Space(10f)]
     [Header("Initial State - only one of these are applied, top to down.")]
     [SerializeField] protected MonoScript _initialStateScript;
@@ -60,7 +60,7 @@ public class FiniteStateMachine : MonoBehaviour, IState
         {
             _state = _machine;
             // Manual initialization(since we're not initializing the machine)
-            _machine.Init(entityManager, this);
+            _machine.Init(manager, this);
             return;
         }
 
@@ -76,7 +76,7 @@ public class FiniteStateMachine : MonoBehaviour, IState
         if (_states.ContainsKey(typeof(T))) Debug.LogError($"Multiple instances of a State [{typeof(T).Name}] has been initialized in a single State Machine under [{gameObject.name}]");
 
         T nextState = new T();
-        nextState.Init(entityManager, this);
+        nextState.Init(manager, this);
         return nextState;
     }
 
@@ -85,8 +85,8 @@ public class FiniteStateMachine : MonoBehaviour, IState
         if (!typeof(IState).IsAssignableFrom(type)) return null;
         if (_states.ContainsKey(type)) return null;
 
-        IState state = (IState)Activator.CreateInstance(type, entityManager);
-        state.Init(entityManager, this);
+        IState state = (IState)Activator.CreateInstance(type, manager);
+        state.Init(manager, this);
         return state;
     }
 
@@ -139,9 +139,9 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     #region State Logics: FSM as State (for inheritance)
 
-    public void Init(EntityManager characterManager, FiniteStateMachine machine)
+    public void Init(EntityManager entityManager, FiniteStateMachine machine)
     {
-        this.entityManager = characterManager;
+        this.manager = entityManager;
         this.fsm = machine;
         InitializeState();
         Bootstrap();
@@ -172,3 +172,22 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     #endregion
 }
+
+/*
+
+    public override void Bootstrap()
+    {
+
+    }
+
+    public override void Exit()
+    {
+
+    }
+
+    public override void Transitions()
+    {
+
+    }
+
+ */

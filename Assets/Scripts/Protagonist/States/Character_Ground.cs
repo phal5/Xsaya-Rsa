@@ -13,7 +13,7 @@ public class Character_Ground : BaseCharacterState
     public override void Enter()
     {
         InputManager.instance.move_jump.action.performed += Jump;
-        characterManager.movement.SetMovementMode(false);
+        characterManager.steering.Ground();
     }
 
     public override void UpdateState()
@@ -42,11 +42,11 @@ public class Character_Ground : BaseCharacterState
     {
         Vector3 steering = InputManager.CharacterMove;
         float speed = characterManager.groundSpeed;
-        characterManager.movement.Move(steering * speed);
+        characterManager.steering.Move(steering * speed, _raycastHit.normal);
     }
 
     private void Jump(InputAction.CallbackContext context)
     {
-        characterManager.movement.SetSamplerYVelocity(characterManager.jumpSpeed);
+        characterManager.steering.Jump(characterManager.jumpSpeed);
     }
 }

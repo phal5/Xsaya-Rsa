@@ -14,15 +14,19 @@ public static class CustomMath
 
         Vector3 Clean = CleanRemove(component, from);
         Vector3 normalizedClean = Clean.normalized;
-        Clean *= mag;
 
-        return Clean;
+        return normalizedClean * mag;
     }
 
     public static Vector3 CleanRemove(Vector3 component, Vector3 from)
     {
         component = GetComponentFrom(component, from);
         return from - component;
+    }
+
+    public static Vector3 RemoveY(Vector3 from)
+    {
+        return new(from.x, 0, from.z);
     }
 
     public static Vector3 GetComponentFrom(Vector3 component, Vector3 from)

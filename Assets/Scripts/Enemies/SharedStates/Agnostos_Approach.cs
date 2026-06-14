@@ -10,7 +10,10 @@ public class Agnostos_Approach : BaseEntityState<AgnostosManager>
 
     public override void Enter()
     {
-        
+        for(int i = 0;  i < 4; i++)
+        {
+            ReturnToWalk(i);
+        }
     }
 
     public override void UpdateState()
@@ -43,5 +46,10 @@ public class Agnostos_Approach : BaseEntityState<AgnostosManager>
         {
             fsm.TransitTo<Agnostos_Attack>();
         }
+    }
+
+    private void ReturnToWalk(int i)
+    {
+        manager.footTargets[i].Transit(manager.walkTargets[i], manager.attackReadyTime, (x) => { return x; }, null);
     }
 }

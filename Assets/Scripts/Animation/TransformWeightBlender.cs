@@ -24,7 +24,7 @@ public class TransformWeightBlender : MonoBehaviour
         transform.position = BlendedTransformation().position;
     }
 
-    public (Vector3 position, Quaternion rotation) BlendedTransformation()
+    private (Vector3 position, Quaternion rotation) BlendedTransformation()
     {
         Vector3 blendedPosition = Vector3.zero;
         Quaternion blendedRotation = Quaternion.identity;
@@ -62,8 +62,15 @@ public class TransformWeightBlender : MonoBehaviour
             StopCoroutine(activeTransition);
         }
 
-        _invDuration = 1 / duration;
-        activeTransition = StartCoroutine(TransitionRoutine(target, duration, easingFunction, onComplete));
+        if(duration > 0f)
+        {
+            _invDuration = 1 / duration;
+            activeTransition = StartCoroutine(TransitionRoutine(target, duration, easingFunction, onComplete));
+        }
+        else
+        {
+            FinalizeWeights(targets.FirstOrDefault(t => t.target == target));
+        }
     }
 
     private IEnumerator TransitionRoutine(Transform targetTransform, float duration, Func<float, float> easeFunc, Action onComplete)

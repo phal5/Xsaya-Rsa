@@ -25,3 +25,29 @@ public abstract class BaseCharacterState : IState
 
     public virtual void Transitions() { }
 }
+/*
+    public override void Bootstrap()
+    {
+
+    }
+
+    public override void Enter()
+    {
+
+    }
+
+    public override void UpdateState()
+    {
+
+    }
+
+    public override void Exit()
+    {
+
+    }
+
+    public override void Transitions()
+    {
+
+    }
+ */

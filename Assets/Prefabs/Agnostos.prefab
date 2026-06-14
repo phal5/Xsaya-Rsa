@@ -320,6 +320,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02025e78f12402e46ba97f4c8c644998, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Foot
+  _ground:
+    serializedVersion: 2
+    m_Bits: 0
   _baseStride: 0.6
   _lift: 0.5
   _distance: 3
@@ -1254,7 +1257,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4051608200893165733}
-  - component: {fileID: 8674377596908504098}
   - component: {fileID: 2902917445375835067}
   m_Layer: 7
   m_Name: Agnostos
@@ -1273,8 +1275,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2201751216400623564}
   - {fileID: 4430875827497051076}
@@ -1282,20 +1284,6 @@ Transform:
   - {fileID: 5133733590562707999}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8674377596908504098
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1288793160508428008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46521a07774dc1a4ab44a6810d3f32ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Agnostos
-  maxHealth: 100
-  currentHealth: 0
 --- !u!114 &2902917445375835067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1308,11 +1296,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65a635e430f459045908490d827e4c97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyManager
+  <agnostosEnemy>k__BackingField: {fileID: 2299859263427620709}
   <movement>k__BackingField: {fileID: 6948923893790219513}
   <character>k__BackingField: {fileID: 4430875827497051076}
   <speed>k__BackingField: 3
-  <attackRadius>k__BackingField: 3
-  <legRoots>k__BackingField: []
+  <awakeRadius>k__BackingField: 3
+  <attackRadius>k__BackingField: 4
+  <attackReadyTime>k__BackingField: 0.7
+  <attackTime>k__BackingField: 0.1
+  <stunRecoveryTime>k__BackingField: 0.3
+  <footTargets>k__BackingField:
+  - {fileID: 207311121701995700}
+  - {fileID: 8000426332081643030}
+  - {fileID: 7002249466487990527}
+  - {fileID: 1744148351211339857}
+  <legRoots>k__BackingField:
+  - {fileID: 3095157750747115228}
+  - {fileID: 3004669995401254478}
+  - {fileID: 3498036701308238519}
+  - {fileID: 3096150706387027760}
+  <walkTargets>k__BackingField:
+  - {fileID: 4427599364529350318}
+  - {fileID: 4641552194067115109}
+  - {fileID: 3651176900839324956}
+  - {fileID: 9124832973263135275}
+  <AttackReadyTargets>k__BackingField:
+  - {fileID: 3079755922996367096}
+  - {fileID: 4562898654447849470}
+  - {fileID: 7940162478339799731}
+  - {fileID: 518578825242505030}
+  <AttackTarget>k__BackingField: {fileID: 1947495195967218429}
 --- !u!1 &1299731568003365807
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,6 +1744,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02025e78f12402e46ba97f4c8c644998, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Foot
+  _ground:
+    serializedVersion: 2
+    m_Bits: 0
   _baseStride: 0.6
   _lift: 0.5
   _distance: 3
@@ -2224,6 +2240,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02025e78f12402e46ba97f4c8c644998, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Foot
+  _ground:
+    serializedVersion: 2
+    m_Bits: 9
   _baseStride: 0.6
   _lift: 0.5
   _distance: 3
@@ -3337,6 +3356,7 @@ GameObject:
   - component: {fileID: 4071076145066182823}
   - component: {fileID: 2288190833830000182}
   - component: {fileID: 3096493531891347187}
+  - component: {fileID: 2299859263427620709}
   m_Layer: 7
   m_Name: Cage
   m_TagString: Untagged
@@ -3468,6 +3488,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48948dfe9d76b07488dacd46a7955fa1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.RigTransform
+--- !u!114 &2299859263427620709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3297442956706706203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46521a07774dc1a4ab44a6810d3f32ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Agnostos
+  maxHealth: 100
+  currentHealth: 0
+  onDamage:
+    m_PersistentCalls:
+      m_Calls: []
+  onDestroy:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1288793160508428008}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &3377833652235976858
 GameObject:
   m_ObjectHideFlags: 0
@@ -5414,7 +5466,7 @@ SphereCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4807931707186992432}
-  m_Material: {fileID: 13400000, guid: 64cbf34b8c725da4cbc58d8529127dc7, type: 2}
+  m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -5594,7 +5646,7 @@ Transform:
   m_GameObject: {fileID: 4958929895230289631}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.357, y: 1.678, z: -0.578}
+  m_LocalPosition: {x: -1.155, y: 1.548, z: -0.577}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6677,7 +6729,7 @@ Transform:
   m_GameObject: {fileID: 6157235587343053389}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.357, y: 1.678, z: 0.578}
+  m_LocalPosition: {x: -1.1550004, y: 1.548, z: 0.577}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7566,8 +7618,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c972a880546406a4ba5cd5614bbe11b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FiniteStateMachine
-  entityManager: {fileID: 2902917445375835067}
-  _initialStateScript: {fileID: 11500000, guid: f4345ee7f98d1dc478895927d461f1c2, type: 3}
+  manager: {fileID: 2902917445375835067}
+  _initialStateScript: {fileID: 11500000, guid: eb793879e078d0d48af9de4c517c01d8, type: 3}
   _machine: {fileID: 0}
   _resetOnEnter: 0
   _currentState: 
@@ -7686,7 +7738,7 @@ Transform:
   m_GameObject: {fileID: 6986529347483480969}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.357, y: 1.678, z: 0.578}
+  m_LocalPosition: {x: 1.1550016, y: 1.5480003, z: 0.5770001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7977,7 +8029,7 @@ Transform:
   m_GameObject: {fileID: 7413282947558062235}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.357, y: 1.678, z: -0.578}
+  m_LocalPosition: {x: 1.155001, y: 1.5480001, z: -0.577}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8344,6 +8396,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02025e78f12402e46ba97f4c8c644998, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Foot
+  _ground:
+    serializedVersion: 2
+    m_Bits: 0
   _baseStride: 0.6
   _lift: 0.5
   _distance: 3

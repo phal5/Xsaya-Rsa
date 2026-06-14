@@ -183,7 +183,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40e764624c3f5af42bd666e261c55e7b, type: 3}
   m_Name: TiltShiftVolume
   m_EditorClassIdentifier: FronkonGames.Artistic.TiltShift::FronkonGames.Artistic.TiltShift.TiltShiftVolume
-  active: 1
+  active: 0
   intensity:
     m_OverrideState: 1
     m_Value: 0.597
