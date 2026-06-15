@@ -13,6 +13,7 @@ public class HybridCameraRig : MonoBehaviour
 
     [Header("2D Mode Settings")]
     [SerializeField] private Vector3 offset2D = new Vector3(3f, 2f, -10f);
+    [SerializeField] private float targetGravity = 0.1f;
     [SerializeField] private float positionDamping2D = 0.2f;
     private Vector3 currentVelocity2D;
     private Quaternion targetRotation2D = Quaternion.identity;
@@ -27,7 +28,6 @@ public class HybridCameraRig : MonoBehaviour
     [SerializeField] private float transitionSpeed = 1.2f;
     [SerializeField] private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    private bool isTransitioning = false;
     private float transitionRate = 0f; // 0.0 = 2D, 1.0 = 3D
 
     void Start()
@@ -35,6 +35,14 @@ public class HybridCameraRig : MonoBehaviour
         targetRotation2D = transform.rotation;
         targetRotation3D = transform.rotation;
         transitionRate = is2DMode ? 0f : 1f;
+    }
+
+    private void Update()
+    {
+        if (!is2DMode)
+        {
+
+        }
     }
 
     void LateUpdate()
@@ -56,7 +64,7 @@ public class HybridCameraRig : MonoBehaviour
         }
     }
 
-    // --- Transition Logic ---
+    #region --- Transition Logic ---
 
     private float TargetTransitionWeight() =>
         is2DMode? 0 : 1;
@@ -85,7 +93,9 @@ public class HybridCameraRig : MonoBehaviour
         currentVelocity2D = Vector3.zero;
     }
 
-    // --- State Calculations (The Math) ---
+    #endregion
+
+    #region --- State Calculations (The Math) ---
 
     private (Vector3 pos, Quaternion rot) GetIdeal2DState()
     {
@@ -97,13 +107,26 @@ public class HybridCameraRig : MonoBehaviour
         Vector3 camUp = idealRot * Vector3.up;
         Vector3 camForward = idealRot * Vector3.forward;
         Vector3 charForward = character.forward;
+        float dynamicX = offset2D.x * Vector3.Dot(charForward, camRight);
+
+        Vector3 idealPos;
 
         // Dynamic offset
-        float dynamicX = offset2D.x * Vector3.Dot(charForward, camRight);
-        Vector3 targetOffset = (dynamicX * camRight) + (offset2D.y * camUp) + (offset2D.z * camForward);
-        Vector3 idealPos = character.position + targetOffset;
+        Vector3 flatOffset = (dynamicX * camRight) + (offset2D.y * camUp);
+        Vector3 zOffset = offset2D.z * camForward;
+        Vector3 flatOffsetPos = character.position + flatOffset;
 
-        return (idealPos, idealRot);
+        if(target != null)
+        {
+            Vector3 disparity = (character.position - target.position);
+            idealPos = Vector3.Lerp(target.position, flatOffsetPos, Mathf.Clamp01(disparity.sqrMagnitude / targetGravity)) + zOffset;
+        }
+        else
+        {
+            idealPos = flatOffsetPos + zOffset;
+        }
+
+            return (idealPos, idealRot);
     }
 
     private (Vector3 pos, Quaternion rot) GetIdeal3DState()
@@ -121,13 +144,15 @@ public class HybridCameraRig : MonoBehaviour
         return (idealPos, idealRot);
     }
 
-    // --- State Applications (The Movement) ---
+    #endregion
+
+    #region --- State Applications (The Movement) ---
 
     private void Apply2DState()
     {
-        var state = GetIdeal2DState();
-        transform.rotation = state.rot;
-        transform.position = Vector3.SmoothDamp(transform.position, state.pos, ref currentVelocity2D, positionDamping2D);
+        var (position, rotation) = GetIdeal2DState();
+        position = Vector3.SmoothDamp(transform.position, position, ref currentVelocity2D, positionDamping2D);
+        transform.SetPositionAndRotation(position, rotation);
     }
 
     private void Apply3DState()
@@ -143,9 +168,13 @@ public class HybridCameraRig : MonoBehaviour
         transform.position = rotationCenter + (transform.rotation * offset3DLocal);
     }
 
+    #endregion
+
     // --- Public API ---
 
     public void ToggleMode(bool to2DMode) { is2DMode = to2DMode; }
+
+    public void SetTarget(Transform _target) { target = _target; }
 
     // (Include the previously written SetTarget, Set2DDirection, and Apply3DManualRotation methods here)
 }

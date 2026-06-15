@@ -5,6 +5,8 @@ using UnityEngine.Events;
 
 public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 {
+    bool _ready = true;
+
     public override void Bootstrap()
     {
 
@@ -12,11 +14,12 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 
     public override void Enter()
     {
-        Ready();
+        _ready = true;
     }
 
     public override void UpdateState()
     {
+        UpdateLoop();
         Transitions();
     }
 
@@ -37,6 +40,15 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
         if (disparity.sqrMagnitude > r * r)
         {
             fsm.TransitTo<Agnostos_Approach>();
+        }
+    }
+
+    private void UpdateLoop()
+    {
+        if (_ready)
+        {
+            _ready = false;
+            Ready();
         }
     }
 
@@ -61,6 +73,6 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
     IEnumerator Cooldown()
     {
         yield return new WaitForSeconds(manager.attackCooldown);
-        Ready();
+        _ready = true;
     }
 }

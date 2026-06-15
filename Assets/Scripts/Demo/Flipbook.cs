@@ -10,7 +10,7 @@ public class Flipbook : MonoBehaviour
     [SerializeField] GameObject? _idle;
 
     [SerializeField] GameObject? _jump;
-    [SerializeField] GameObject? _fall;
+    [SerializeField] GameObject? _land;
 
     [SerializeField] GameObject? _stunned;
     [SerializeField] GameObject? _dead;
@@ -18,6 +18,10 @@ public class Flipbook : MonoBehaviour
     [SerializeField] PlayerInput _input;
     [SerializeField] Rigidbody _rb;
     [SerializeField] FiniteStateMachine _fsm;
+    [SerializeField] Collider _weapon;
+    [SerializeField] DamagableBase _damagable;
+
+    float _hp = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -30,29 +34,38 @@ public class Flipbook : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(_fsm._currentStateType == typeof(Character_Airborne) && _rb.linearVelocity.y < 0) EnableOnly(_fall);
-        else
+        if (_weapon.enabled)
         {
-            bool hasInput = _input.currentActionMap.actions.Any(action => action.IsPressed() || action.triggered);
-            if (!hasInput)
+            EnableOnly(_attack);
+            return;
+        }
+        if (_damagable.CurrentHealth < _hp)
+        {
+            if(_damagable.CurrentHealth == 0)
             {
-                EnableOnly(_idle);
+                EnableOnly(_dead);
+                return;
+            }
+            else
+            {
+                EnableOnly(_stunned);
+                return;
             }
         }
-    }
+        if (_fsm._currentStateType == typeof(Character_Airborne))
+        {
+            if (_rb.linearVelocity.y < 0) EnableOnly(_land);
+            else EnableOnly(_jump);
+            return;
+        }
+        if(_fsm._currentStateType == typeof(Character_Ground))
+        {
+            if (_rb.linearVelocity.sqrMagnitude > 1) EnableOnly(_run);
+            else EnableOnly(_idle);
+            return;
+        }
 
-    void EnableOnly(GameObject? pose)
-    {
-        print(pose?.name);
-        Activate(_attack, false);
-        Activate(_run, false);
-        Activate(_jump, false);
-        Activate(_idle, false);
-        Activate(_fall, false);
-        Activate(_stunned, false);
-        Activate(_dead, false);
-
-        Activate(pose, true);
+        _hp = _damagable.CurrentHealth;
     }
 
     void Activate(GameObject? gameObject, bool activate)
@@ -60,4 +73,25 @@ public class Flipbook : MonoBehaviour
         if (gameObject == null) return;
         gameObject.SetActive(activate);
     }
+
+    void EnableOnly(GameObject? pose)
+    {
+        Activate(_attack, false);
+        Activate(_run, false);
+        Activate(_jump, false);
+        Activate(_idle, false);
+        Activate(_land, false);
+        Activate(_stunned, false);
+        Activate(_dead, false);
+
+        Activate(pose, true);
+    }
+
+    public void SetAttack() { EnableOnly(_attack); }
+
+    public void SetStunned() { EnableOnly(_stunned); }
+
+    public void SetDead() { EnableOnly(_dead); }
+
+    public void SetBase() { EnableOnly(_idle); }
 }
