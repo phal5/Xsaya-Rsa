@@ -16057,7 +16057,7 @@ MeshCollider:
     m_Bits: 0
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
-  m_ProvidesContacts: 1
+  m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
   m_Convex: 0
@@ -23439,8 +23439,10 @@ MonoBehaviour:
     Dialogue(accounts also for tutorial), and button(Over protagonist's head).\n*
     If extra time, make a boss(+3D fight)"
   _memos:
-  - memo: "Lighting and environment\n\n1. Lighting baked - Done\n2. \n\nfill seams
-      up"
+  - memo: "1. esc \uBA54\uB274 \uB9CC\uB4E4\uAE30(\uB098\uAC00\uAE30, \uB9AC\uC14B
+      \uB4F1)\n2. 3D \uC804\uD22C\uC52C \uB9CC\uB4E4\uAE30(\uBCC4\uB3C4 \uC52C\uB3C4
+      \uAD1C\uCC2E\uC74C, \uC544\uBB34\uB807\uAC8C\uB098 \uB300\uCDA9 \uC801 \uC138\uC6CC\uC11C
+      \uB9CC\uB4E4\uAE30)"
   - memo: "\uC624\uD0A4\uC774\uB77C \uCC98\uC74C \uB9CC\uB0AC\uC744 \uB54C \uB208\uAC00\uB9AC\uAC1C
       \uC798\uB77C\uC8FC\uBA74\uC11C \u2018\uC774\uC81C \uB354 \uC798 \uBCF4\uC774\uACA0\uC9C0?\u2019
       \uBB3C\uC5B4\uBCF4\uB294 \uC7A5\uBA74"
