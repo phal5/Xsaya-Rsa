@@ -112,18 +112,19 @@ public class HybridCameraRig : MonoBehaviour
         Vector3 idealPos;
 
         // Dynamic offset
-        Vector3 flatOffset = (dynamicX * camRight) + (offset2D.y * camUp);
+        Vector3 flatOffset = (dynamicX * camRight);
+        Vector3 yOffset = offset2D.y * camUp;
         Vector3 zOffset = offset2D.z * camForward;
         Vector3 flatOffsetPos = character.position + flatOffset;
 
         if(target != null)
         {
             Vector3 disparity = (character.position - target.position);
-            idealPos = Vector3.Lerp(target.position, flatOffsetPos, Mathf.Clamp01(disparity.sqrMagnitude / targetGravity)) + zOffset;
+            idealPos = Vector3.Lerp(target.position, flatOffsetPos, Mathf.Clamp01(disparity.sqrMagnitude / targetGravity)) + zOffset + yOffset;
         }
         else
         {
-            idealPos = flatOffsetPos + zOffset;
+            idealPos = flatOffsetPos + zOffset + yOffset;
         }
 
             return (idealPos, idealRot);

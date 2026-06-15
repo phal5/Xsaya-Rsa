@@ -1,4 +1,3 @@
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class SingularFlatMovement : MonoBehaviour, IMovement
@@ -11,7 +10,7 @@ public class SingularFlatMovement : MonoBehaviour, IMovement
     [SerializeField] Vector3 localEyeOffset;
 
     Vector3 targetVelocity;
-    Transform? lookTarget;
+    [SerializeField]Transform? lookTarget;
 
     // Update is called once per frame
     void FixedUpdate()

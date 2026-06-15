@@ -1,9 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor; // Moved inside the preprocessor directive!
+#endif
 
 [System.Serializable]
 public class FiniteStateMachine : MonoBehaviour, IState
@@ -11,61 +12,99 @@ public class FiniteStateMachine : MonoBehaviour, IState
     [SerializeField] protected EntityManager manager;
     [Space(10f)]
     [Header("Initial State - only one of these are applied, top to down.")]
+
+#if UNITY_EDITOR
     [SerializeField] protected MonoScript _initialStateScript;
+#endif
+
+    // We use this hidden string to save the type so the runtime build can read it.
+    [SerializeField, HideInInspector] protected string _initialStateTypeName;
+
     [SerializeField] protected FiniteStateMachine _machine;
     [SerializeField] protected bool _resetOnEnter = false;
     [Space(10f)]
     [Header("Current State Check Window")]
     [SerializeField] string _currentStateName;
-    public Type _currentStateType { get { return _state.GetType(); } }
+    public Type _currentStateType { get { return _state?.GetType(); } }
 
     protected FiniteStateMachine fsm;
     protected Dictionary<Type, IState> _states;
     protected Type _initialStateType;
     protected IState _state;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (_initialStateScript != null)
+        {
+            // GetClass() returns the actual script's Type, not the MonoScript type
+            Type scriptType = _initialStateScript.GetClass();
+
+            if (scriptType != null && typeof(IState).IsAssignableFrom(scriptType))
+            {
+                // Save the AssemblyQualifiedName as a string so it survives into the build
+                _initialStateTypeName = scriptType.AssemblyQualifiedName;
+            }
+            else
+            {
+                Debug.LogWarning("Assigned script does not implement IState!");
+                _initialStateScript = null;
+                _initialStateTypeName = string.Empty;
+            }
+        }
+        else
+        {
+            _initialStateTypeName = string.Empty;
+        }
+    }
+#endif
+
     protected void Start()
     {
         InitializeState();
     }
 
-    // Update is called once per frame
     protected void Update()
     {
         UpdateState();
     }
 
-    public Type StateType => _state.GetType();
+    public Type StateType => _state?.GetType();
 
     #region Sub-State Initialization
 
-    protected void InitializeFromMonoScript(MonoScript initialState, out Type t, out IState state)
-    {
-        t = initialState.GetClass();
-        state = CreateInstance(t);
-    }
-
     protected void InitializeState()
     {
-        _states = new();
+        _states = new Dictionary<Type, IState>();
 
-        if (_initialStateScript != null)
+        // Check the string instead of the MonoScript!
+        if (!string.IsNullOrEmpty(_initialStateTypeName))
         {
-            InitializeFromMonoScript(_initialStateScript, out Type t, out IState state);
-            _states.TryAdd(t, state);
-            TransitTo(t);
-            return;
+            _initialStateType = Type.GetType(_initialStateTypeName);
+
+            if (_initialStateType != null)
+            {
+                IState state = CreateInstance(_initialStateType);
+                if (state != null)
+                {
+                    _states.TryAdd(_initialStateType, state);
+                    TransitTo(_initialStateType);
+                    return;
+                }
+            }
         }
+
         if (_machine != null)
         {
             _state = _machine;
-            // Manual initialization(since we're not initializing the machine)
             _machine.Init(manager, this);
             return;
         }
 
-        _initialStateType = _state.GetType();
+        if (_state != null)
+        {
+            _initialStateType = _state.GetType();
+        }
     }
 
     #endregion
@@ -74,7 +113,8 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     protected T CreateInstance<T>() where T : IState, new()
     {
-        if (_states.ContainsKey(typeof(T))) Debug.LogError($"Multiple instances of a State [{typeof(T).Name}] has been initialized in a single State Machine under [{gameObject.name}]");
+        if (_states.ContainsKey(typeof(T)))
+            Debug.LogError($"Multiple instances of a State [{typeof(T).Name}] has been initialized in a single State Machine under [{gameObject.name}]");
 
         T nextState = new T();
         nextState.Init(manager, this);
@@ -94,16 +134,16 @@ public class FiniteStateMachine : MonoBehaviour, IState
     protected void AddState<T>(T state) where T : IState
     {
         Type type = typeof(T);
-        _states.TryAdd(type, (T)state);
+        _states.TryAdd(type, state);
     }
 
     #endregion
 
-    #region Sub-State Transition - remind you, the FSM is a state in itself - thus, sub-states.
+    #region Sub-State Transition
 
     protected void Transit(IState nextState)
     {
-        if (_state != null) _state.Exit();
+        _state?.Exit();
         _state = nextState;
         _state.Enter();
 
@@ -133,7 +173,7 @@ public class FiniteStateMachine : MonoBehaviour, IState
             Transit(state);
             return true;
         }
-        else return false;
+        return false;
     }
 
     #endregion
@@ -152,43 +192,23 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
     public virtual void Enter()
     {
-        if (_resetOnEnter) TransitTo(_initialStateType);
+        if (_resetOnEnter && _initialStateType != null) TransitTo(_initialStateType);
     }
 
-    /// <summary>
-    /// Called every frame before transition check.
-    /// </summary>
     public void UpdateState()
     {
-        _state.UpdateState();
+        _state?.UpdateState();
         Transitions();
     }
 
     public virtual void Exit() { }
 
-    /// <summary>
-    /// Called every frame after state update.
-    /// </summary>
     public virtual void Transitions() { }
 
     #endregion
+
+    private void OnDestroy()
+    {
+        _state?.Exit();
+    }
 }
-
-/*
-
-    public override void Bootstrap()
-    {
-
-    }
-
-    public override void Exit()
-    {
-
-    }
-
-    public override void Transitions()
-    {
-
-    }
-
- */

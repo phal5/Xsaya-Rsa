@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -35,9 +36,11 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 
     private void ToApproach()
     {
+        if(PlayerManager.instance.player.IsDestroyed()) return;
+
         Vector3 disparity = PlayerManager.instance.player.position - manager.character.position;
-        float r = manager.attackRadius;
-        if (disparity.sqrMagnitude > r * r)
+        float dist = disparity.magnitude;
+        if (dist > manager.attackRadius || dist < manager.retreatRadius)
         {
             fsm.TransitTo<Agnostos_Approach>();
         }

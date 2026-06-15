@@ -8,6 +8,7 @@ public class AgnostosManager : EntityManager
     [field: SerializeField] public float speed { get; private set; }
     [field: SerializeField] public float awakeRadius { get; private set; }
     [field: SerializeField] public float attackRadius { get; private set; }
+    [field: SerializeField] public float retreatRadius { get; private set; } = 4.2f;
     [field: SerializeField] public float attackReadyTime { get; private set; }
     [field: SerializeField] public float attackTime { get; private set; }
     [field: SerializeField] public float attackCooldown { get; private set; } = 0.3f;

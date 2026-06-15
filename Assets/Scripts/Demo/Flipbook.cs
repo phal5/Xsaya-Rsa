@@ -1,6 +1,7 @@
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Linq;
 
 public class Flipbook : MonoBehaviour
 {
@@ -34,6 +35,8 @@ public class Flipbook : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (PlayerManager.instance.player.IsDestroyed()) return;
+
         if (_weapon.enabled)
         {
             EnableOnly(_attack);

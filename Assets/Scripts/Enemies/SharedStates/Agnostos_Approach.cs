@@ -34,15 +34,18 @@ public class Agnostos_Approach : BaseEntityState<AgnostosManager>
 
     private void Approach(Vector3 targetPosition)
     {
-        Vector3 direction = (targetPosition - manager.character.position).normalized;
+        Vector3 disparity = targetPosition - manager.character.position;
+        Vector3 direction = disparity.normalized;
+        float dist = disparity.magnitude;
+        if(dist < manager.retreatRadius) direction = -direction;
         manager.movement.Move(direction * manager.speed);
     }
 
     private void ToAttack()
     {
         Vector3 disparity = PlayerManager.instance.player.position - manager.character.position;
-        float r = manager.attackRadius;
-        if (disparity.sqrMagnitude <= r * r)
+        float dist = disparity.magnitude;
+        if (dist <= manager.attackRadius && dist > manager.retreatRadius)
         {
             fsm.TransitTo<Agnostos_Attack>();
         }

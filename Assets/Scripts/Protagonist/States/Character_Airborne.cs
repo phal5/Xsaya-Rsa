@@ -32,7 +32,7 @@ public class Character_Airborne : BaseCharacterState
     public override void Exit()
     {
         InputManager.instance.move_jump.action.performed -= RegisterJump;
-        InputManager.instance.move_jump.action.performed -= CancelJump;
+        InputManager.instance.move_jump.action.canceled -= CancelJump;
     }
 
     public override void UpdateState()
