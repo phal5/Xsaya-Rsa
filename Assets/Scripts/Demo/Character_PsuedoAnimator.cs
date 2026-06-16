@@ -3,7 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Flipbook : MonoBehaviour
+public class Character_PsuedoAnimator : MonoBehaviour
 {
 #nullable enable
     [SerializeField] GameObject? _attack;

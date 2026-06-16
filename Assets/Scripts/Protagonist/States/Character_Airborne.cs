@@ -23,7 +23,7 @@ public class Character_Airborne : BaseCharacterState
 
     public override void Enter()
     {
-        characterManager.steering.Airborne();
+        characterManager.Steering.Airborne();
         InputManager.instance.move_jump.action.performed += RegisterJump;
         InputManager.instance.move_jump.action.canceled += CancelJump;
         ResetValues();
@@ -50,7 +50,7 @@ public class Character_Airborne : BaseCharacterState
 
     private void ToGround()
     {
-        if (characterManager.caster.Cast(out _))
+        if (characterManager.Caster.Cast(out _))
         {
             fsm.TransitTo<Character_Ground>();
         }
@@ -59,15 +59,15 @@ public class Character_Airborne : BaseCharacterState
     private void Move()
     {
         Vector3 steering = InputManager.CharacterMove;
-        float speed = characterManager.airborneSpeed;
-        characterManager.steering.Move(steering * speed, Vector3.up);
+        float speed = characterManager.AirborneSpeed;
+        characterManager.Steering.Move(steering * speed, Vector3.up);
     }
 
     private void Jump()
     {
         if (_jumpTicket <= 0) return;
         _jumpTicket--;
-        characterManager.steering.Jump(characterManager.jumpSpeed);
+        characterManager.Steering.Jump(characterManager.JumpSpeed);
     }
 
     private void RegisterJump(InputAction.CallbackContext _)
@@ -78,6 +78,6 @@ public class Character_Airborne : BaseCharacterState
     private void CancelJump(InputAction.CallbackContext _)
     {
         if(_jump) _jump = false;
-        characterManager.steering.Drop();
+        characterManager.Steering.Drop();
     }
 }

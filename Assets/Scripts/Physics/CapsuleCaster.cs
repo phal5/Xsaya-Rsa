@@ -4,6 +4,7 @@ public class CapsuleCaster : MonoBehaviour
 {
     [SerializeField] CapsuleCollider _capsuleCollider;
     [SerializeField] float _distance;
+    [SerializeField] float _shrinkCoefficient = 0.001f;
 
     Vector3 center;
     float radius;
@@ -17,7 +18,7 @@ public class CapsuleCaster : MonoBehaviour
         halfHeightMinusRadius = _capsuleCollider.height * 0.5f - radius;
         halfHeightMinusRadius *= transform.lossyScale.y;
         radius *= transform.lossyScale.x;
-        radius -= 0.0001f;    //just some small number
+        radius -= _shrinkCoefficient;    //just some small number
     }
 
     public bool Cast(out RaycastHit hit, Vector3 direction)

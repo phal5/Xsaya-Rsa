@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class Character_Ground : BaseCharacterState
 {
     RaycastHit _raycastHit;
+    float coyoteTimer;
 
     public override void Bootstrap()
     {
@@ -13,7 +14,8 @@ public class Character_Ground : BaseCharacterState
     public override void Enter()
     {
         InputManager.instance.move_jump.action.performed += Jump;
-        characterManager.steering.Ground();
+        InputManager.instance.move_jump.action.canceled += CancelJump;
+        characterManager.Steering.Ground();
     }
 
     public override void UpdateState()
@@ -25,6 +27,7 @@ public class Character_Ground : BaseCharacterState
     public override void Exit()
     {
         InputManager.instance.move_jump.action.performed -= Jump;
+        InputManager.instance.move_jump.action.canceled -= CancelJump;
     }
 
     public override void Transitions()
@@ -34,19 +37,27 @@ public class Character_Ground : BaseCharacterState
 
     private void ToAirborne()
     {
-        if (!characterManager.caster.Cast(out _raycastHit))
-            fsm.TransitTo<Character_Airborne>();
+        if (!characterManager.Caster.Cast(out _raycastHit))
+            coyoteTimer -= Time.deltaTime;
+        else coyoteTimer = characterManager.CoyoteTime;
+
+        if (coyoteTimer < 0) fsm.TransitTo<Character_Airborne>();
     }
 
     private void Move()
     {
         Vector3 steering = InputManager.CharacterMove;
-        float speed = characterManager.groundSpeed;
-        characterManager.steering.Move(steering * speed, _raycastHit.normal);
+        float speed = characterManager.GroundSpeed;
+        characterManager.Steering.Move(steering * speed, _raycastHit.normal);
     }
 
     private void Jump(InputAction.CallbackContext context)
     {
-        characterManager.steering.Jump(characterManager.jumpSpeed);
+        characterManager.Steering.Jump(characterManager.JumpSpeed);
+    }
+
+    private void CancelJump(InputAction.CallbackContext _)
+    {
+        characterManager.Steering.Drop();
     }
 }

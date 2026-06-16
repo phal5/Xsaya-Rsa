@@ -8,11 +8,6 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
 {
     bool _ready = true;
 
-    public override void Bootstrap()
-    {
-
-    }
-
     public override void Enter()
     {
         _ready = true;
@@ -22,11 +17,6 @@ public class Agnostos_Attack : BaseEntityState<AgnostosManager>
     {
         UpdateLoop();
         Transitions();
-    }
-
-    public override void Exit()
-    {
-
     }
 
     public override void Transitions()

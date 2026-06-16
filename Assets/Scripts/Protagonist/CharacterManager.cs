@@ -2,17 +2,20 @@ using UnityEngine;
 
 public class CharacterManager : EntityManager
 {
-    [field:SerializeField] public Character_Movement movement {  get; private set; }
-    [field: SerializeField] public Character_Steering steering { get; private set; }
-    [field:SerializeField] public CapsuleCollider capsuleCollider { get; private set; }
+    [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
+    [field:SerializeField] public Character_Movement Movement {  get; private set; }
+    [field: SerializeField] public Character_Steering Steering { get; private set; }
+    [field:SerializeField] public CapsuleCollider CapsuleCollider { get; private set; }
+    [Header("Gameplay")]
+    [field: SerializeField] public float CoyoteTime { get; private set; } = 0.2f;
     [Header("Horizontal Speed")]
-    [field: SerializeField] public float groundSpeed { get; private set; }
-    [field: SerializeField] public float airborneSpeed { get; private set; }
-    [field: SerializeField] public float dashSpeed { get; private set; }
+    [field: SerializeField] public float GroundSpeed { get; private set; }
+    [field: SerializeField] public float AirborneSpeed { get; private set; }
+    [field: SerializeField] public float DashSpeed { get; private set; }
     [Header("Vertical Speed")]
-    [field:SerializeField] public float jumpSpeed { get; private set; }
+    [field:SerializeField] public float JumpSpeed { get; private set; }
     [Header("Spherecaster")]
-    [field:SerializeField] public SphereCaster caster { get; private set; }
+    [field:SerializeField] public SphereCaster Caster { get; private set; }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()

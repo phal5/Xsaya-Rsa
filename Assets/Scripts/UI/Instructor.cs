@@ -20,7 +20,6 @@ public class Instructor : MonoBehaviour
         if (Keyboard.current[_key].wasPressedThisFrame)
         {
             _messageUI.SetVisibility(false);
-            this.enabled = false;
             _event.Invoke();
         }
     }

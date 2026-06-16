@@ -6,7 +6,7 @@ public class HybridCameraRig : MonoBehaviour
 {
     [Header("Core References")]
     [SerializeField] private Transform character;
-    [SerializeField] private Transform target;
+    [SerializeField] private AutoTarget targeter;
 
     [Header("State")]
     [SerializeField] private bool is2DMode = true;
@@ -117,7 +117,8 @@ public class HybridCameraRig : MonoBehaviour
         Vector3 zOffset = offset2D.z * camForward;
         Vector3 flatOffsetPos = character.position + flatOffset;
 
-        if(target != null)
+        Transform target = targeter._targetTransform;
+        if (target != null)
         {
             Vector3 disparity = (character.position - target.position);
             idealPos = Vector3.Lerp(target.position, flatOffsetPos, Mathf.Clamp01(disparity.sqrMagnitude / targetGravity)) + zOffset + yOffset;
@@ -132,6 +133,8 @@ public class HybridCameraRig : MonoBehaviour
 
     private (Vector3 pos, Quaternion rot) GetIdeal3DState()
     {
+        Transform target = targeter._targetTransform;
+
         Vector3 rotationCenter = character.position + offset3DWorld;
         Vector3 direction = target != null ? (target.position - rotationCenter) : Vector3.zero;
 
@@ -174,8 +177,6 @@ public class HybridCameraRig : MonoBehaviour
     // --- Public API ---
 
     public void ToggleMode(bool to2DMode) { is2DMode = to2DMode; }
-
-    public void SetTarget(Transform _target) { target = _target; }
 
     // (Include the previously written SetTarget, Set2DDirection, and Apply3DManualRotation methods here)
 }

@@ -2,13 +2,20 @@ using UnityEngine;
 
 public class Character_Steering : MonoBehaviour
 {
-    [SerializeField] Rigidbody _character;
-    [SerializeField] Character_Movement _movement;
+    [SerializeField] CharacterManager _characterManager;
     [SerializeField] CapsuleCaster _caster;
     [SerializeField] float rotationThreshold = 0.1f;
     [SerializeField] float _rotationSpeed = 1.0f;
 
+    Rigidbody _character;
+    Character_Movement _movement;
     RaycastHit _hit;
+
+    private void Awake()
+    {
+        _character = _characterManager.Rigidbody;
+        _movement = _characterManager.Movement;
+    }
 
     public void Move(Vector3 inputDirection, Vector3 groundNormal)
     {
@@ -17,7 +24,8 @@ public class Character_Steering : MonoBehaviour
 
         Vector3 direction = Camera.main.transform.TransformVector(inputDirection);
         movement = CustomMath.PreservativeRemove(groundNormal, direction);
-        if(_caster.Cast(out _hit, movement))
+        print(movement);
+        if (_caster.Cast(out _hit, movement))
         {
             movement = CustomMath.CleanRemove(_hit.normal, movement);
         }
