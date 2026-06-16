@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Agnostos_Idle : BaseEntityState<AgnostosManager>
@@ -15,6 +16,8 @@ public class Agnostos_Idle : BaseEntityState<AgnostosManager>
 
     public void ToApproach()
     {
+        if (PlayerManager.instance.player.IsDestroyed()) return;
+
         Vector3 disparity = manager.character.position - PlayerManager.instance.player.position;
         float r = manager.awakeRadius;
         if (disparity.sqrMagnitude <= r * r)

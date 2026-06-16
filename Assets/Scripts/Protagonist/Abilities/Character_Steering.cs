@@ -24,7 +24,7 @@ public class Character_Steering : MonoBehaviour
 
         Vector3 direction = Camera.main.transform.TransformVector(inputDirection);
         movement = CustomMath.PreservativeRemove(groundNormal, direction);
-        print(movement);
+
         if (_caster.Cast(out _hit, movement))
         {
             movement = CustomMath.CleanRemove(_hit.normal, movement);

@@ -48,6 +48,12 @@ public class UIGroupFader : MonoBehaviour
         {
             // 1. Instantly snap all alpha values to 0 before the player sees frame 1
             ApplyAlphaToAll(0f);
+            SetActivity(false);
+        }
+        else
+        {
+            SetActivity(true);
+            ApplyAlphaToAll(1);
         }
     }
     
@@ -57,8 +63,9 @@ public class UIGroupFader : MonoBehaviour
     
     public void FadeIn()
     {
-        gameObject.SetActive(true);
-        
+        SetActivity(true);
+
+
         _fadeEngine.PlayFade(
             duration: _fadeDuration, 
             fadingIn: true, 
@@ -74,7 +81,7 @@ public class UIGroupFader : MonoBehaviour
             duration: _fadeDuration, 
             fadingIn: false, 
             onUpdate: ApplyAlphaToAll, 
-            onComplete: () => gameObject.SetActive(false)
+            onComplete: () => SetActivity(false)
         );
     }
     
@@ -92,6 +99,14 @@ public class UIGroupFader : MonoBehaviour
                 c.a = originalAlpha * progress;
                 graphic.color = c;
             }
+        }
+    }
+
+    private void SetActivity(bool active)
+    {
+        foreach (Graphic graphic in _uiElements)
+        {
+            graphic.gameObject.SetActive(active);
         }
     }
     

@@ -12,7 +12,6 @@ public class Character_Movement : MonoBehaviour, IMovement
     [SerializeField] private float _aerialAcceleration;
 
     Vector3 _localVelocity;
-
     Vector3 _targetVelocity;
 
     [SerializeField] bool _singular = false;
@@ -26,6 +25,7 @@ public class Character_Movement : MonoBehaviour, IMovement
     {
         if (_singular) Singular();
         else Mutual();
+        print(_localVelocity);
     }
 
     private void Singular()
@@ -89,6 +89,14 @@ public class Character_Movement : MonoBehaviour, IMovement
             if (singular) IntegrateMutualToSingular();
             else IntegrateSingularToMutual();
         }
+    }
+
+    public void ClearMovement()
+    {
+        _targetVelocity = Vector3.zero;
+        _localVelocity = Vector3.zero;
+        _rigidbody.linearVelocity = _sampler.linearVelocity;
+        _rigidbody.angularVelocity = _sampler.angularVelocity;
     }
 
     public void Move(Vector3 targetLocalVelocity)

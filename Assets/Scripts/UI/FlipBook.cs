@@ -52,6 +52,7 @@ public class FlipBook : MonoBehaviour
         _book?.ClearEvents();
         _book = book;
         Next();
+        onSetBook.Invoke();
     }
 }
 

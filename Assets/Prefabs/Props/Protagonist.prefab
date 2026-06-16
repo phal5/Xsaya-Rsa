@@ -680,7 +680,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CapsuleCaster
   _capsuleCollider: {fileID: 7243969750857547376}
-  _distance: 0.1
+  _distance: 0.01
+  _shrinkCoefficient: 0.001
 --- !u!1 &1235941951659319780
 GameObject:
   m_ObjectHideFlags: 0
@@ -790,14 +791,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfce28a6a32e80e469cca022cf0bb4c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterManager
-  <movement>k__BackingField: {fileID: 3728775688057023553}
-  <steering>k__BackingField: {fileID: 5643119508071096491}
-  <capsuleCollider>k__BackingField: {fileID: 7243969750857547376}
-  <groundSpeed>k__BackingField: 15
-  <airborneSpeed>k__BackingField: 10
-  <dashSpeed>k__BackingField: 30
-  <jumpSpeed>k__BackingField: 10
-  <caster>k__BackingField: {fileID: 3194146052685183880}
+  <Rigidbody>k__BackingField: {fileID: 0}
+  <Movement>k__BackingField: {fileID: 0}
+  <Steering>k__BackingField: {fileID: 0}
+  <CapsuleCollider>k__BackingField: {fileID: 0}
+  <CoyoteTime>k__BackingField: 0.2
+  <GroundSpeed>k__BackingField: 0
+  <AirborneSpeed>k__BackingField: 0
+  <DashSpeed>k__BackingField: 0
+  <JumpSpeed>k__BackingField: 0
+  <Caster>k__BackingField: {fileID: 0}
 --- !u!1 &1773054919488112367
 GameObject:
   m_ObjectHideFlags: 0
@@ -2080,10 +2083,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8f57260f2eaa884b874ede6a03bb8f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoTarget
-  _enemyLayerName: Enemies
+  _enemyLayer:
+    serializedVersion: 2
+    m_Bits: 128
   _interval: 0.1
-  _range: 20
-  _layerMask: 0
+  _range: 60
   <_targetPosition>k__BackingField: {x: 0, y: 0, z: 0}
 --- !u!1 &3823564645814330019
 GameObject:
@@ -4000,6 +4004,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FiniteStateMachine
   manager: {fileID: 7287668904403106428}
   _initialStateScript: {fileID: 0}
+  _initialStateTypeName: 
   _machine: {fileID: 8424567816976676742}
   _resetOnEnter: 0
   _currentStateName: 
@@ -4727,6 +4732,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Character_Controlled
   manager: {fileID: 0}
   _initialStateScript: {fileID: 11500000, guid: 7df803396e31f154c9ad3bfeb83f47da, type: 3}
+  _initialStateTypeName: Character_Ground, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    PublicKeyToken=null
   _machine: {fileID: 0}
   _resetOnEnter: 0
   _currentStateName: 
@@ -4953,6 +4960,7 @@ GameObject:
   - component: {fileID: 5656428297867416718}
   - component: {fileID: 3728775688057023553}
   - component: {fileID: 5643119508071096491}
+  - component: {fileID: 6922461128187222107}
   m_Layer: 10
   m_Name: Movement
   m_TagString: Untagged
@@ -5004,10 +5012,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15e8ef2da2751aa48b8f597a372d169a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Steering
-  _character: {fileID: 4497841181015544793}
-  _movement: {fileID: 3728775688057023553}
+  _characterManager: {fileID: 7287668904403106428}
   _caster: {fileID: 6510321842153810209}
+  rotationThreshold: 0.1
   _rotationSpeed: 1080
+--- !u!114 &6922461128187222107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8634380551606077075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b398be4c2328b047b02164d258522e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Dimensional
+  _rigidbody: {fileID: 4497841181015544793}
+  _sampler: {fileID: 7105664321761075555}
 --- !u!1 &8942072118336034522
 GameObject:
   m_ObjectHideFlags: 0
@@ -5806,11 +5828,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 022cec256729c414d8d553a0ec25c516, type: 2}
     - target: {fileID: 6662759528784350787, guid: bfc903034585c534f8cc6307de3430ac, type: 3}
       propertyPath: m_Name
-      value: Walk
-      objectReference: {fileID: 0}
-    - target: {fileID: 6662759528784350787, guid: bfc903034585c534f8cc6307de3430ac, type: 3}
-      propertyPath: m_IsActive
-      value: 1
+      value: Run
       objectReference: {fileID: 0}
     - target: {fileID: 6719804906392261246, guid: bfc903034585c534f8cc6307de3430ac, type: 3}
       propertyPath: m_LocalRotation.w
