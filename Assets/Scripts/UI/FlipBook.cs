@@ -38,6 +38,7 @@ public class FlipBook : MonoBehaviour
         {
             dialogue.text = midScreen.text = speaker.text = string.Empty;
             onDialogueNull.Invoke();
+            RemoveBook();
             return;
         }
         Page page = nullablePage.Value;
@@ -49,10 +50,16 @@ public class FlipBook : MonoBehaviour
     public void SetBook(Book book)
     {
         if (_book == book) return;
-        _book?.ClearEvents();
+        RemoveBook();
         _book = book;
         Next();
         onSetBook.Invoke();
+    }
+
+    private void RemoveBook()
+    {
+        _book?.ClearEvents();
+        _book = null;
     }
 }
 
@@ -70,7 +77,7 @@ public class Book
 
     [SerializeField] private List<Page> _pages = new();
     [SerializeField] private List<PageEvent> _pageEvents = new();
-    [field: SerializeField] public int page { get; private set; } = -1;
+    int page = -1;
 
     public Book() { }
 

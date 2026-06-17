@@ -19,4 +19,12 @@ public class AgnostosManager : EntityManager
     [field: SerializeField] public Transform[] AttackReadyTargets { get; private set; }
     [field: SerializeField] public Transform AttackTarget { get; private set; }
     [field: SerializeField] public MeleeWeapon weapon { get; private set; }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(character.position, awakeRadius);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(character.position, attackRadius);
+    }
 }

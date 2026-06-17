@@ -6,7 +6,8 @@ public class BookTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.transform == PlayerManager.instance.player)
+        if (!enabled) return;
+        if (other.transform == PlayerManager.instance.player)
         {
             FlipBook.Instance.SetBook(book);
         }
@@ -14,6 +15,7 @@ public class BookTrigger : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (!enabled) return;
         if (collision.transform == PlayerManager.instance.player)
         {
             FlipBook.Instance.SetBook(book);
