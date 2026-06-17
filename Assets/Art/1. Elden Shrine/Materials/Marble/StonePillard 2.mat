@@ -115,11 +115,11 @@ Material:
     - _threshold: 0.75
     m_Colors:
     - _BaseColor: {r: 1, g: 0, b: 0, a: 1}
-    - _Color: {r: 0.70440245, g: 0.6800363, b: 0.6800363, a: 1}
+    - _Color: {r: 0.52201253, g: 0.4350104, b: 0.4350104, a: 1}
     - _DodgeColor: {r: 1, g: 0.98827183, b: 0.7137255, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SSSColor: {r: 1, g: 0, b: 0, a: 1}
-    - _ShadedColor: {r: 0.3962264, g: 0.3962264, b: 0.3962264, a: 1}
+    - _ShadedColor: {r: 0.3333333, g: 0.31761003, b: 0.31761003, a: 1}
     - _ShadowColor: {r: 0.4716981, g: 0.28034884, b: 0.28034884, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
