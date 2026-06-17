@@ -10010,7 +10010,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2902917445375835067, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: <awakeRadius>k__BackingField
-      value: 5
+      value: 21.15
       objectReference: {fileID: 0}
     - target: {fileID: 2902917445375835067, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: <attackRadius>k__BackingField
@@ -35011,6 +35011,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: efa7e7bb90adb0445b5f17a5f33b9a06, type: 2}
+    - target: {fileID: -5754084199372789682, guid: c6d6e19799705fa44a5fb792bf7f9f66, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7387706064836869012, guid: a02fc5a5a142d724fa1dbe14e9a1292c, type: 3}
     - target: {fileID: 919132149155446097, guid: c6d6e19799705fa44a5fb792bf7f9f66, type: 3}
       propertyPath: m_Name
       value: DiscPlatform
@@ -44503,6 +44507,14 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1557215272}
+    - target: {fileID: 3905648463629651506, guid: 905dc11eaa7148e4b8925d6cd58f1934, type: 3}
+      propertyPath: m_fontSize
+      value: 55.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 6164319753422067257, guid: 905dc11eaa7148e4b8925d6cd58f1934, type: 3}
+      propertyPath: m_fontSize
+      value: 55.65
+      objectReference: {fileID: 0}
     - target: {fileID: 6572118616037248231, guid: 905dc11eaa7148e4b8925d6cd58f1934, type: 3}
       propertyPath: m_Name
       value: UI Canvas
