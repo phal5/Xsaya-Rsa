@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 806489433808c2a409d697ad98e3e0c3, type: 3}
+  m_Name: Bush
+  m_EditorClassIdentifier: Assembly-CSharp::EnvironmentPlacerProfile
+  _entries:
+  - Prefab: {fileID: 3483944653260286596, guid: 9b563099a2081634bb382b7cceeb5cbc, type: 3}
+    Weight: 1
+    MinScale: 3
+    MaxScale: 5
+    RandomYRotation: 1
+  - Prefab: {fileID: 919132149155446097, guid: e6eeb9f3a57a5d64d8203a0d8b0ef920, type: 3}
+    Weight: 1
+    MinScale: 0.5
+    MaxScale: 2
+    RandomYRotation: 1
+  _minimumSpacing: 1
+  _samplesBeforeRejection: 15
+  _yOffset: 0
+  _useRandomSeed: 0
+  _seed: 42

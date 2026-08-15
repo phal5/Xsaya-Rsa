@@ -3,6 +3,7 @@ using UnityEngine;
 public class CapsuleCaster : MonoBehaviour
 {
     [SerializeField] CapsuleCollider _capsuleCollider;
+    [SerializeField] LayerMask _layerMask = -1;
     [SerializeField] float _distance;
     [SerializeField] float _shrinkCoefficient = 0.001f;
 
@@ -25,7 +26,7 @@ public class CapsuleCaster : MonoBehaviour
     {
         Vector3 point1 = Vector3.up * halfHeightMinusRadius;
         Vector3 point2 = Vector3.down * halfHeightMinusRadius;
-        _hit = Physics.CapsuleCast(point1 + transform.position, point2 + transform.position, radius, direction, out hit, _distance);
+        _hit = Physics.CapsuleCast(point1 + transform.position, point2 + transform.position, radius, direction, out hit, _distance, _layerMask, QueryTriggerInteraction.Ignore);
         return _hit;
     }
 

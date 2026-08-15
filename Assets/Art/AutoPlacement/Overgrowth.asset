@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 806489433808c2a409d697ad98e3e0c3, type: 3}
+  m_Name: Overgrowth
+  m_EditorClassIdentifier: Assembly-CSharp::EnvironmentPlacerProfile
+  _entries:
+  - Prefab: {fileID: 3149934543208911127, guid: 6f89ce1dd1d073142b04db24a18e2ca7, type: 3}
+    Weight: 10
+    MinScale: 2
+    MaxScale: 1
+    RandomYRotation: 1
+  - Prefab: {fileID: 656825216535829528, guid: c29569ded283b9143abc4c6cef0d120a, type: 3}
+    Weight: 10
+    MinScale: 10
+    MaxScale: 20
+    RandomYRotation: 1
+  _minimumSpacing: 3
+  _isRandomPlacement: 1
+  _samplesBeforeRejection: 15
+  _yOffset: 0
+  _useRandomSeed: 0
+  _seed: 42

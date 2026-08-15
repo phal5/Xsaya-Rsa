@@ -31,6 +31,24 @@ public class SingularFlatMovement : MonoBehaviour, IMovement
         lookTarget = target;
     }
 
+    public float VerticalVelocity => _rigidbody.linearVelocity.y;
+
+    /// <summary>
+    /// 월드 Y 속도를 직접 갈아끼운다. 점프/낙하처럼 접지면과 무관한 동작에 쓴다.
+    /// Accelerate는 지면 노멀에 수직인 평면에서만 가속하므로 여기서 넣은 수직 속도를 건드리지 않는다.
+    /// </summary>
+    public void SetVerticalVelocity(float velocity)
+    {
+        Vector3 v = _rigidbody.linearVelocity;
+        v.y = velocity;
+        _rigidbody.linearVelocity = v;
+    }
+
+    public void AddVelocity(Vector3 delta)
+    {
+        _rigidbody.linearVelocity += delta;
+    }
+
     private void Accelerate(Vector3 normal)
     {
         Vector3 v = _rigidbody.linearVelocity;

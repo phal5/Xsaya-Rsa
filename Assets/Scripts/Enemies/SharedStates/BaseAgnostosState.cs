@@ -19,6 +19,8 @@ public class BaseEntityState<managerType> : IState where managerType : EntityMan
 
     public virtual void UpdateState() { }
 
+    public virtual void FixedUpdateState() { }
+
     public virtual void Exit() { }
 
     public virtual void Transitions() { }
@@ -36,6 +38,11 @@ public class BaseEntityState<managerType> : IState where managerType : EntityMan
     }
 
     public override void UpdateState()
+    {
+
+    }
+
+    public virtual void FixedUpdateState()
     {
 
     }

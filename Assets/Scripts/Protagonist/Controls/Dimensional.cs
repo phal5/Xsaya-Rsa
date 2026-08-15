@@ -5,11 +5,11 @@ public class Dimensional : MonoBehaviour
     [SerializeField] Rigidbody _rigidbody;
     [SerializeField] Rigidbody _sampler;
 
-    float _originalZ;
+    [SerializeField] float _originalZ;
 
     private void Awake()
     {
-        _originalZ = _rigidbody.position.z;
+        _originalZ = _rigidbody.transform.position.z;
     }
 
     public void LockZ(bool _lock)
@@ -29,12 +29,12 @@ public class Dimensional : MonoBehaviour
     public void NullifyZ()
     {
         Vector3 position;
-        position = _sampler.position;
+        position = _sampler.transform.position;
         position.z = _originalZ;
-        _sampler.position = position;
+        _sampler.transform.position = position;
 
-        position = _rigidbody.position;
+        position = _rigidbody.transform.position;
         position.z = _originalZ;
-        _rigidbody.position = position;
+        _rigidbody.transform.position = position;
     }
 }

@@ -17,9 +17,11 @@ public abstract class BaseCharacterState : IState
 
     public virtual void Bootstrap() { }
 
-    public virtual void Enter() { }
+    public virtual void Enter() { Debug.Log($"Entered {this.GetType().Name}"); }
 
     public virtual void UpdateState() { }
+
+    public virtual void FixedUpdateState() { }
 
     public virtual void Exit() { }
 
@@ -37,6 +39,11 @@ public abstract class BaseCharacterState : IState
     }
 
     public override void UpdateState()
+    {
+
+    }
+
+    public override void FixedUpdateState()
     {
 
     }

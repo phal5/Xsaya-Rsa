@@ -10,6 +10,8 @@ public interface IState
 
     public void UpdateState();
 
+    public void FixedUpdateState();
+
     public void Exit();
 
     public void Transitions();

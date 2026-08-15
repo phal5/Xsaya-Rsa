@@ -16,16 +16,10 @@ public class Character_Movement : MonoBehaviour, IMovement
 
     [SerializeField] bool _singular = false;
 
-    private void Update()
-    {
-        
-    }
-
     private void FixedUpdate()
     {
         if (_singular) Singular();
         else Mutual();
-        print(_localVelocity);
     }
 
     private void Singular()
@@ -40,13 +34,14 @@ public class Character_Movement : MonoBehaviour, IMovement
 
         float alignment = Vector3.Dot(rawAccel, inputDirection);
         float disparity = CustomMath.ReLU(-alignment);
-        Vector3 accel = (rawAccel + disparity * inputDirection).normalized;   // remove negative alignment factor from the acceleration vector to derive acceleration direction
+        Vector3 negativeAlignment = -disparity * inputDirection;
+        Vector3 accel = (rawAccel - negativeAlignment).normalized;   // remove negative alignment factor from the acceleration vector. in short, accelerates in input direction only if character is slower than input.
         float magnitude = _aerialAcceleration * Mathf.Clamp(alignment, 0, 1) * Time.fixedDeltaTime;
 
         _sampler.linearVelocity += magnitude * accel;
 
         // integrate velocity spaces
-        _rigidbody.MovePosition(_sampler.position);
+        _rigidbody.position = _sampler.position;
         _rigidbody.linearVelocity = _sampler.linearVelocity;
     }
 

@@ -1276,7 +1276,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2238615235757070720}
@@ -7698,6 +7698,7 @@ MonoBehaviour:
     PublicKeyToken=null
   _machine: {fileID: 0}
   _resetOnEnter: 0
+  _componentStates: []
   _currentStateName: 
 --- !u!1 &6967588031659333718
 GameObject:
