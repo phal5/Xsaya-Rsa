@@ -69,13 +69,13 @@ Material:
     m_Floats:
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _lightThreshold: 0.96
+    - _lightThreshold: 0.56
     - _threshold: 0.14
     m_Colors:
     - _Albedo_Clamp: {r: 0, g: 0, b: 0, a: 0}
     - _Albedo_Remap: {r: 0.745283, g: 0.745283, b: 0.745283, a: 0}
-    - _Color: {r: 1, g: 0.94049346, b: 0.8066038, a: 1}
-    - _LightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.8490566, g: 0.7595575, b: 0.5566928, a: 1}
+    - _LightColor: {r: 0.9339623, g: 0.8431604, b: 0.7004717, a: 1}
     - _ShadedColor: {r: 0.239, g: 0.239, b: 0.239, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
