@@ -1,4 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CharacterManager : EntityManager
 {
@@ -32,9 +33,6 @@ public class CharacterManager : EntityManager
     [field: SerializeField] public float StunTime { get; private set; } = 0.4f;
     [Tooltip("다운 후 부활까지 걸리는 시간.")]
     [field: SerializeField] public float RespawnDelay { get; private set; } = 2f;
-    [Tooltip("부활 지점. 비워두면 쓰러진 자리에서 일어난다.")]
-    [field: SerializeField] public Transform RespawnPoint { get; private set; }
-
     [Header("Heal - 자원 소모형")]
     [Tooltip("최대 회복 횟수. 시작 시 이만큼 채워진다.")]
     [field: SerializeField] public int HealChargeMax { get; private set; } = 3;
@@ -103,6 +101,51 @@ public class CharacterManager : EntityManager
 
         return camera.transform.InverseTransformVector(forward);
     }
+
+    #region Checkpoint
+
+    /// <summary>
+    /// 마지막으로 쉬어간 자리. <b>체크포인트 오브젝트가 아니라 그때 몸이 서 있던 자리</b>다.
+    ///
+    /// 이 기록이 매니저에 있는 이유는 캐릭터 씬이 내려가지 않기 때문이다 —
+    /// Background만 갈아끼우는 구성이라 여기 적어둔 것이 씬을 넘어 살아남는다.
+    /// 직렬화하지 않는다. 앱을 껐다 켜도 남아야 하는 것은 체크포인트가 아니라 세이브의 몫이다.
+    /// </summary>
+    string _restScene;
+    Vector3 _restPlace;
+    Quaternion _restFacing;
+
+    /// <param name="scene">그 자리가 속한 Background 씬의 이름.</param>
+    public void SetCheckpoint(string scene)
+    {
+        if (Body == null) return;
+
+        _restScene = scene;
+        _restPlace = Body.position;
+        _restFacing = Body.rotation;
+    }
+
+    /// <summary>
+    /// 쉬어간 자리를 묻는다. <b>지금 올라와 있는 씬의 것만</b> 돌려준다.
+    ///
+    /// 다른 씬에 적힌 좌표는 그 씬을 불러오기 전까지 뜻이 없다. 씬 이름을 처음부터 함께 적어두므로,
+    /// 씬을 넘는 부활을 붙일 때 기록은 이미 있고 읽는 쪽만 늘리면 된다.
+    /// </summary>
+    public bool TryCheckpoint(out Vector3 place, out Quaternion facing)
+    {
+        place = Vector3.zero;
+        facing = Quaternion.identity;
+
+        if (string.IsNullOrEmpty(_restScene)) return false;
+        if (!SceneManager.GetSceneByName(_restScene).isLoaded) return false;
+
+        place = _restPlace;
+        facing = _restFacing;
+
+        return true;
+    }
+
+    #endregion
 
     #region Heal Charges
 

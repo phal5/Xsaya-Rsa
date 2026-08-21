@@ -207,7 +207,7 @@ Transform:
   m_GameObject: {fileID: 499199916}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: -0.000008800916, w: 1}
-  m_LocalPosition: {x: 1, y: 0.75, z: -10}
+  m_LocalPosition: {x: 1, y: 1.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -357,9 +357,13 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2009970510}
     - target: {fileID: 7331603633654483453, guid: 602c1357c11560f459194d910f230f32, type: 3}
+      propertyPath: <targeter>k__BackingField
+      value: 
+      objectReference: {fileID: 2011576577}
+    - target: {fileID: 7331603633654483453, guid: 602c1357c11560f459194d910f230f32, type: 3}
       propertyPath: <cameraRig>k__BackingField
       value: 
-      objectReference: {fileID: 1971465456}
+      objectReference: {fileID: 0}
     - target: {fileID: 7331603633654483453, guid: 602c1357c11560f459194d910f230f32, type: 3}
       propertyPath: <dimension>k__BackingField
       value: 
@@ -377,128 +381,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 602c1357c11560f459194d910f230f32, type: 3}
---- !u!1 &1971465453
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1971465455}
-  - component: {fileID: 1971465454}
-  - component: {fileID: 1971465456}
-  m_Layer: 0
-  m_Name: CinemachineCamera
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1971465454
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1971465453}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
-  Priority:
-    Enabled: 0
-    m_Value: 0
-  OutputChannel: 1
-  StandbyUpdate: 2
-  m_StreamingVersion: 20241001
-  m_LegacyPriority: 0
-  Target:
-    TrackingTarget: {fileID: 0}
-    LookAtTarget: {fileID: 0}
-    CustomLookAtTarget: 0
-  Lens:
-    FieldOfView: 60
-    OrthographicSize: 5
-    NearClipPlane: 0.3
-    FarClipPlane: 1000
-    Dutch: 0
-    ModeOverride: 0
-    PhysicalProperties:
-      GateFit: 2
-      SensorSize: {x: 21.946, y: 16.002}
-      LensShift: {x: 0, y: 0}
-      FocusDistance: 10
-      Iso: 200
-      ShutterSpeed: 0.005
-      Aperture: 16
-      BladeCount: 5
-      Curvature: {x: 2, y: 11}
-      BarrelClipping: 0.25
-      Anamorphism: 0
-  BlendHint: 0
---- !u!4 &1971465455
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1971465453}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 0.75, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1971465456
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1971465453}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31ff0d33f5d0e5e43b3885d43531e44a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HybridCameraRig
-  character: {fileID: 2009970510}
-  targeter: {fileID: 2011576577}
-  is2DMode: 1
-  offset2D: {x: 1, y: 0, z: -10}
-  targetGravity: 0.1
-  positionDamping2D: 0.2
-  offset3DWorld: {x: 0, y: 0.5, z: 0}
-  offset3DLocal: {x: 0, y: 0, z: -1.7}
-  rotationDamping3D: 10
-  transitionSpeed: 1.2
-  transitionCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
 --- !u!114 &1989354502 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9082050631393552429, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
@@ -599,6 +481,5 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 499199919}
-  - {fileID: 1971465455}
   - {fileID: 1770173470}
   - {fileID: 2006399640}

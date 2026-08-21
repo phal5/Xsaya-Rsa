@@ -1,10 +1,19 @@
-using UnityEngine;
+﻿using UnityEngine;
 
+/// <summary>
+/// 2D와 3D 사이를 오가는 카메라 리그. <b>꽂아준 것을 따라간다</b> — 그것이 무엇인지는 묻지 않는다.
+///
+/// 플레이어를 따라가는 경우는 <see cref="PlayerCameraRig"/>가 맡는다.
+/// 컷신의 주인공이나 탈것처럼 플레이어가 아닌 것을 따라가는 리그가 있을 수 있어,
+/// 대상을 찾아내는 일을 여기 섞지 않는다.
+/// </summary>
 public class HybridCameraRig : MonoBehaviour
 {
     [Header("Core References")]
-    [SerializeField] private Transform character;
-    [SerializeField] private AutoTarget targeter;
+    [Tooltip("따라다닐 대상. 플레이어를 따라가는 리그는 PlayerCameraRig가 실행 중에 채운다.")]
+    [SerializeField] protected Transform character;
+    [Tooltip("바라볼 대상을 고르는 쪽. 3D 모드의 회전이 여기서 나온다.")]
+    [SerializeField] protected AutoTarget targeter;
 
     [Header("State")]
     [SerializeField] private bool is2DMode = true;
@@ -35,9 +44,10 @@ public class HybridCameraRig : MonoBehaviour
         transitionRate = is2DMode ? 0f : 1f;
     }
 
-    void LateUpdate()
+    /// <summary>대상을 어디서 얻느냐만 갈리므로, 물려받는 쪽은 여기 앞에 한 줄을 더한다.</summary>
+    protected virtual void LateUpdate()
     {
-        if (character == null) return;
+        if (character == null || targeter == null) return;
 
         if (TargetTransitionWeight() != transitionRate)
         {

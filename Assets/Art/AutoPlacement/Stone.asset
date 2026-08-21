@@ -10,22 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 806489433808c2a409d697ad98e3e0c3, type: 3}
-  m_Name: Overgrowth
+  m_Name: Stone
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentPlacerProfile
   _entries:
-  - Prefab: {fileID: 3149934543208911127, guid: 6f89ce1dd1d073142b04db24a18e2ca7, type: 3}
-    Weight: 10
-    MinScale: 1
-    MaxScale: 2
+  - Prefab: {fileID: 173574, guid: 7c87c256106f82c418e4cb87b23d93d0, type: 3}
+    Weight: 1
+    MinScale: 0.1
+    MaxScale: 1
     RandomYRotation: 1
-    GpuInstancing: 0
-  - Prefab: {fileID: 656825216535829528, guid: c29569ded283b9143abc4c6cef0d120a, type: 3}
-    Weight: 10
-    MinScale: 1
-    MaxScale: 2
+    GpuInstancing: 1
+  - Prefab: {fileID: 122560, guid: 0c4dafd7e3e09e844a13b1a80406551f, type: 3}
+    Weight: 1
+    MinScale: 0.1
+    MaxScale: 1
     RandomYRotation: 1
-    GpuInstancing: 0
-  _minimumSpacing: 3
+    GpuInstancing: 1
+  - Prefab: {fileID: 174630, guid: dbaf764bc4239df438dd5f405411368e, type: 3}
+    Weight: 1
+    MinScale: 0.1
+    MaxScale: 1
+    RandomYRotation: 1
+    GpuInstancing: 1
+  _minimumSpacing: 1
   _isRandomPlacement: 1
   _samplesBeforeRejection: 15
   _yOffset: 0

@@ -330,12 +330,17 @@ public class PrefabFillerWindow : EditorWindow
             return;
         }
 
-        // 컨테이너는 손대지 않는다. 배치물을 월드에서 완성한 뒤 편입시키는 방식이라
-        // 부모 스케일을 역수로 상쇄할 필요가 없다.
+        // 컨테이너는 씬 루트에서 만들어 다 채운 뒤, 맨 마지막에 통째로 편입시킨다.
+        //
+        // 대상의 자식으로 먼저 만들면 대상의 비균일 스케일이 위에서 내려온다. 그 아래에서
+        // 비스듬히 회전한 배치물은 전단(shear)으로 찌그러지고, 축 사이 각도가 90도를 벗어난다.
+        // 스케일은 축 길이만 바꿀 뿐 각도를 되돌리지 못하므로 나중에 손쓸 방법이 없다.
+        //
+        // 회전은 처음부터 대상에 맞춰 둔다. 항등으로 두면 편입할 때 대상과의 상대 회전이 남아
+        // 그것만으로 전단이 생긴다. 상대 회전이 0이어야 대상의 스케일이 축 대 축으로 대응된다.
         GameObject container = new GameObject($"{CONTAINER_PREFIX}_{_prefab.name}");
-        container.transform.SetParent(target.transform, false);
-        container.transform.localPosition = Vector3.zero;
-        container.transform.localRotation = Quaternion.identity;
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(container, target.scene);
+        container.transform.SetPositionAndRotation(target.transform.position, target.transform.rotation);
         container.transform.localScale = Vector3.one;
         Undo.RegisterCreatedObjectUndo(container, "Prefab Filler Fill");
 
@@ -377,8 +382,10 @@ public class PrefabFillerWindow : EditorWindow
 
             float scale = Mathf.Lerp(_minScale, _maxScale, (float)rng.NextDouble());
 
-            instance.transform.SetPositionAndRotation(world, rotation);
+            // 회전 -> 스케일 -> 위치 순으로 잡는다.
+            instance.transform.rotation = rotation;
             instance.transform.localScale = Vector3.one * scale;
+            instance.transform.position = world;
 
             // 다 잡은 뒤 편입. 로컬 값 역산은 유니티가 한다.
             instance.transform.SetParent(container.transform, true);
@@ -386,6 +393,9 @@ public class PrefabFillerWindow : EditorWindow
             Undo.RegisterCreatedObjectUndo(instance, "Prefab Filler Fill");
             count++;
         }
+
+        // 다 채웠으니 통째로 편입시킨다.
+        container.transform.SetParent(target.transform, true);
 
         _lastCount = count;
         _lastTargetName = target.name;

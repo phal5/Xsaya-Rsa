@@ -372,10 +372,17 @@ public class SurfaceScatterWindow : EditorWindow
 
         ClearContainers(target);
 
+        // 컨테이너는 씬 루트에서 만들어 다 채운 뒤, 맨 마지막에 통째로 편입시킨다.
+        //
+        // 대상의 자식으로 먼저 만들면 대상의 비균일 스케일이 위에서 내려온다. 그 아래에서
+        // 비스듬히 회전한 배치물은 전단(shear)으로 찌그러지고, 축 사이 각도가 90도를 벗어난다.
+        // 스케일은 축 길이만 바꿀 뿐 각도를 되돌리지 못하므로 나중에 손쓸 방법이 없다.
+        //
+        // 회전은 처음부터 대상에 맞춰 둔다. 항등으로 두면 편입할 때 대상과의 상대 회전이 남아
+        // 그것만으로 전단이 생긴다. 상대 회전이 0이어야 대상의 스케일이 축 대 축으로 대응된다.
         GameObject container = new GameObject($"{CONTAINER_PREFIX}_{_profile.name}");
-        container.transform.SetParent(target.transform, false);
-        container.transform.localPosition = Vector3.zero;
-        container.transform.localRotation = Quaternion.identity;
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(container, target.scene);
+        container.transform.SetPositionAndRotation(target.transform.position, target.transform.rotation);
         container.transform.localScale = Vector3.one;
         Undo.RegisterCreatedObjectUndo(container, "Surface Scatter");
 
@@ -444,8 +451,10 @@ public class SurfaceScatterWindow : EditorWindow
             GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, target.scene);
             if (instance == null) continue;
 
-            instance.transform.SetPositionAndRotation(hit.point + hit.normal * _surfaceOffset, rotation);
+            // 회전 -> 스케일 -> 위치 순으로 잡는다.
+            instance.transform.rotation = rotation;
             instance.transform.localScale = Vector3.one * scale;
+            instance.transform.position = hit.point + hit.normal * _surfaceOffset;
             instance.transform.SetParent(container.transform, true);
 
             Undo.RegisterCreatedObjectUndo(instance, "Surface Scatter");
@@ -454,6 +463,9 @@ public class SurfaceScatterWindow : EditorWindow
 
             count++;
         }
+
+        // 다 심었으니 통째로 편입시킨다.
+        container.transform.SetParent(target.transform, true);
 
         _lastCount = count;
         _lastMissCount = missed;

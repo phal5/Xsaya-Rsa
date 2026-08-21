@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
@@ -50,7 +50,7 @@ public class InteractableEvent : MonoBehaviour, IInteractable
         _onUnfocus.Invoke();
     }
 
-    public void Interact(CharacterManager character)
+    public virtual void Interact(CharacterManager character)
     {
         if (!Available) return;
 

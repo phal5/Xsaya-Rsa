@@ -1020,7 +1020,6 @@ MonoBehaviour:
       start: 13
   <StunTime>k__BackingField: 0.4
   <RespawnDelay>k__BackingField: 2
-  <RespawnPoint>k__BackingField: {fileID: 0}
   <HealChargeMax>k__BackingField: 3
   <HealAmount>k__BackingField: 40
   <HealTime>k__BackingField: 1.2

@@ -1,14 +1,16 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
     [field: SerializeField] public Transform player {  get; private set; }
+    [Tooltip("자동 조준. 3D 모드에서 카메라가 이 대상을 향해 돈다.")]
+    [field: SerializeField] public AutoTarget targeter { get; private set; }
     [field: SerializeField] public DamagableBase playerDamagable {  get; private set; }
     [Tooltip("적이 공격 시작 시점을 감지하는 통로. 회피/방어 판정에 쓰인다.")]
     [field: SerializeField] public MeleeWeapon playerWeapon { get; private set; }
 
     [Header("Dimension")]
-    [Tooltip("2D/3D를 전환할 카메라 리그.")]
+    [Tooltip("2D/3D를 전환할 카메라 리그. 배경 씬에 있으면 여기서 꽂을 수 없고 리그가 스스로 등록한다.")]
     [field: SerializeField] public HybridCameraRig cameraRig { get; private set; }
 
     [Tooltip("플레이어 몸의 Z 정렬과 잠금을 담당한다.")]
@@ -23,6 +25,18 @@ public class PlayerManager : MonoBehaviour
             instance = this;
         }
         else Destroy(this);
+    }
+
+    /// <summary>
+    /// 리그가 스스로 등록한다. <b>반대 방향으로는 꽂을 수 없다.</b>
+    ///
+    /// 리그를 배경 씬에 두면 캐릭터 씬의 이 매니저가 그것을 직렬화할 수 없다 —
+    /// 씬을 넘는 참조는 유니티가 저장하지 못하므로, 인스펙터에 꽂아둔 것처럼 보여도 로드되면 비어 있다.
+    /// 찾아 나서는 쪽을 리그로 뒤집으면 스테이지마다 리그가 갈려도 이 자리가 저절로 맞는다.
+    /// </summary>
+    public void UseCameraRig(HybridCameraRig rig)
+    {
+        if (rig != null) cameraRig = rig;
     }
 
     /// <summary>

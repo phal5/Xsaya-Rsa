@@ -555,16 +555,18 @@ public class EnvironmentPlacerWindow : EditorWindow
             return 0;
         }
 
-        // 레이어별 컨테이너 생성
+        // 컨테이너는 씬 루트에서 만들어 다 채운 뒤, 맨 마지막에 통째로 편입시킨다.
         //
-        // 예전에는 여기에 부모 스케일의 역수를 걸어 상쇄했다. 대상에 회전까지 섞이면
-        // lossyScale로는 그 상쇄가 성립하지 않아 배치물이 늘어나거나 기울었다.
-        // 지금은 컨테이너를 그대로 두고, 배치물을 월드에서 완성한 뒤 편입시킨다.
+        // 대상의 자식으로 먼저 만들면 대상의 비균일 스케일이 위에서 내려온다. 그 아래에서
+        // 비스듬히 회전한 배치물은 전단(shear)으로 찌그러지고, 축 사이 각도가 90도를 벗어난다.
+        // 스케일은 축 길이만 바꿀 뿐 각도를 되돌리지 못하므로 나중에 손쓸 방법이 없다.
+        //
+        // 회전은 처음부터 대상에 맞춰 둔다. 항등으로 두면 편입할 때 대상과의 상대 회전이 남아
+        // 그것만으로 전단이 생긴다. 상대 회전이 0이어야 대상의 스케일이 축 대 축으로 대응된다.
         string containerName = GetContainerName(layerIndex);
         GameObject container = new GameObject(containerName);
-        container.transform.SetParent(target.transform, false);
-        container.transform.localPosition = Vector3.zero;
-        container.transform.localRotation = Quaternion.identity;
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(container, target.scene);
+        container.transform.SetPositionAndRotation(target.transform.position, target.transform.rotation);
         container.transform.localScale = Vector3.one;
         Undo.RegisterCreatedObjectUndo(container, "Environment Placer Generate");
 
@@ -712,8 +714,12 @@ public class EnvironmentPlacerWindow : EditorWindow
             GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, target.scene);
             if (instance != null)
             {
-                instance.transform.SetPositionAndRotation(position, rotation);
+                // 회전 -> 스케일 -> 위치 순으로 잡는다.
+                // 루트에서는 셋이 서로 독립이라 결과는 같지만, 순서를 고정해 두면
+                // 나중에 부모 밑에서 손대는 코드가 끼어들어도 의도가 드러난다.
+                instance.transform.rotation = rotation;
                 instance.transform.localScale = Vector3.one * scaleFactor;
+                instance.transform.position = position;
 
                 // 면 회전을 건너뛰면 프리팹이 자기 +Y로 자라 블록을 파고든다.
                 // 건너뛴 만큼을 여기서 보정한다.
@@ -731,6 +737,9 @@ public class EnvironmentPlacerWindow : EditorWindow
                 count++;
             }
         }
+
+        // 다 채웠으니 통째로 편입시킨다.
+        container.transform.SetParent(target.transform, true);
 
         Debug.Log($"[EnvironmentPlacer] \"{target.name}\" > \"{containerName}\": {count}개 배치. (Seed: {seed})");
 
