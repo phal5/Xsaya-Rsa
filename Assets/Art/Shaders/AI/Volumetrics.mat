@@ -26,6 +26,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Anisotropy: 0.732
+    - _DebugShadow: 0
     - _Density: 0.02
     - _JitterIntensity: 1
     - _StepCount: 32

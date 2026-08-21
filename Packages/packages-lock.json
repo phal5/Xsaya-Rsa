@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.tripo3d.unitybridge": {
-      "version": "file:C:/Users/phlnx/Downloads/Tripo3d_Unity_Bridge-latest/Tripo3d_Unity_Bridge",
+      "version": "file:C:/Users/phlnx/Downloads/Tripo3d_Unity_Bridge-latest (1)/Tripo3d_Unity_Bridge",
       "depth": 0,
       "source": "local",
       "dependencies": {

@@ -1,7 +1,10 @@
 using UnityEngine;
 
 /// <summary>
-/// 다운. 체력이 0이 되면 들어오고, RespawnDelay 뒤에 부활해 조작으로 돌아간다.
+/// 사망(다운). 체력이 0이 되면 들어오고, RespawnDelay 뒤에 부활해 조작으로 돌아간다.
+///
+/// <b>CharacterRoot 직속</b>이다. 피격을 거쳐 들어오는 것이 보통이지만 피격에 속하지 않으므로,
+/// 낙사나 함정처럼 때린 주체가 없는 죽음도 <see cref="CharacterRoot.ToDown"/> 하나로 들어온다.
 ///
 /// DamagableBase의 Destroy On Death를 꺼두어야 오브젝트가 살아남아 이 상태가 성립한다.
 /// 다운 동안에는 추가 피격을 받지 않는다.
@@ -13,8 +16,10 @@ public class Character_Down : BaseCharacterState
     public override void Enter()
     {
         _reviveTime = Time.time + characterManager.RespawnDelay;
+        characterManager.Animation.Play("Down");
 
-        characterManager.Steering.Move(Vector3.zero, Vector3.up);
+        // 조종만 잃는다. 쓰러지기 직전 속도는 그대로 흘러야 한다.
+        characterManager.Steering.Coast();
 
         // 쓰러져 있는 동안 계속 맞아 피격 상태가 헛돌지 않게 한다.
         if (characterManager.Damagable != null) characterManager.Damagable.Invulnerable = true;
@@ -22,7 +27,7 @@ public class Character_Down : BaseCharacterState
 
     public override void FixedUpdateState()
     {
-        characterManager.Steering.Move(Vector3.zero, Vector3.up);
+        characterManager.Steering.Coast();
         Transitions();
     }
 
@@ -37,7 +42,8 @@ public class Character_Down : BaseCharacterState
 
         Respawn();
 
-        if (fsm is Character_Hit hit) hit.Complete();
+        // 이제 부모는 최상위다. 피격을 거쳐 들어왔든 낙사로 들어왔든 여기로 돌아간다.
+        if (fsm is CharacterRoot root) root.ToControl();
     }
 
     void Respawn()

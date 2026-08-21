@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.Collections;
-using UnityEngine.Rendering;
 
 public class HybridCameraRig : MonoBehaviour
 {
@@ -35,14 +33,6 @@ public class HybridCameraRig : MonoBehaviour
         targetRotation2D = transform.rotation;
         targetRotation3D = transform.rotation;
         transitionRate = is2DMode ? 0f : 1f;
-    }
-
-    private void Update()
-    {
-        if (!is2DMode)
-        {
-
-        }
     }
 
     void LateUpdate()
@@ -128,7 +118,7 @@ public class HybridCameraRig : MonoBehaviour
             idealPos = flatOffsetPos + zOffset + yOffset;
         }
 
-            return (idealPos, idealRot);
+        return (idealPos, idealRot);
     }
 
     private (Vector3 pos, Quaternion rot) GetIdeal3DState()
@@ -177,6 +167,4 @@ public class HybridCameraRig : MonoBehaviour
     // --- Public API ---
 
     public void ToggleMode(bool to2DMode) { is2DMode = to2DMode; }
-
-    // (Include the previously written SetTarget, Set2DDirection, and Apply3DManualRotation methods here)
 }

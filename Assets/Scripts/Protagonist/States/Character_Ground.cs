@@ -21,6 +21,7 @@ public class Character_Ground : FiniteStateMachine
     // 입력 콜백이 세우고 Transitions()가 소비한다.
     bool _jumpRequested;
     bool _dodgeRequested;
+    bool _climbDownRequested;
 
     public CharacterManager Character => manager as CharacterManager;
 
@@ -39,7 +40,23 @@ public class Character_Ground : FiniteStateMachine
 
         // base.Enter()의 "떠났던 자리에서 재개"를 쓰면 안 된다.
         // 축을 떠날 때 Dodge 중이었으면 돌아오자마자 되살아난다. 축에 들어오면 항상 Idle/Move부터.
-        ToLocomotion();
+        //
+        // 착지 마무리는 축에 들어오는 이 순간에만 따진다.
+        // 하위 상태가 ToLocomotion으로 되돌아오는 경우(회피 종료 등)는 착지가 아니다.
+        if (Landing()) TransitTo<Ground_Land>();
+        else ToLocomotion();
+    }
+
+    /// <summary>
+    /// 방금 점프로 착지했고, 마무리 동작을 볼 여유가 있는지.
+    ///
+    /// 착지 신호를 공중 축에서 따로 넘겨받지 않는다 — 점프 클립이 하강 자세로 멈춰 있다는 사실
+    /// 자체가 신호다. 공중에서 회피나 스킬이 끼어들어 클립이 갈렸으면 저절로 거짓이 된다.
+    /// </summary>
+    bool Landing()
+    {
+        if (InputManager.CharacterMove.sqrMagnitude > 0.01f) return false;
+        return Character.Jump.TailPending(Character.Animation);
     }
 
     public override void Exit()
@@ -60,7 +77,17 @@ public class Character_Ground : FiniteStateMachine
             if (_currentStateType != typeof(Ground_Dodge)) { TransitTo<Ground_Dodge>(); return; }
         }
 
+        // 가장자리에서 내려가 매달리기. 잡을 곳이 없으면 아무 일도 일어나지 않는다.
+        if (Consume(ref _climbDownRequested) && ToLedge()) return;
+
         ToAirborne();
+    }
+
+    /// <returns>가장자리를 잡아 축을 넘겼는지.</returns>
+    bool ToLedge()
+    {
+        return fsm is Character_Controlled controlled
+            && controlled.TryLedgeGrab(Character_Ledge.Entry.Ground);
     }
 
     static bool Consume(ref bool flag)
@@ -107,6 +134,7 @@ public class Character_Ground : FiniteStateMachine
 
         InputManager.instance.move_jump.action.performed += OnJump;
         InputManager.instance.move_dash.action.performed += OnDodge;
+        InputManager.instance.move_climbDown.action.performed += OnClimbDown;
         _subscribed = true;
     }
 
@@ -116,12 +144,15 @@ public class Character_Ground : FiniteStateMachine
 
         InputManager.instance.move_jump.action.performed -= OnJump;
         InputManager.instance.move_dash.action.performed -= OnDodge;
+        InputManager.instance.move_climbDown.action.performed -= OnClimbDown;
         _subscribed = false;
     }
 
     void OnJump(InputAction.CallbackContext _) { _jumpRequested = true; }
 
     void OnDodge(InputAction.CallbackContext _) { _dodgeRequested = true; }
+
+    void OnClimbDown(InputAction.CallbackContext _) { _climbDownRequested = true; }
 
     #endregion
 

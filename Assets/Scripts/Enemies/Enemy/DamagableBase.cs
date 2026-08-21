@@ -11,7 +11,7 @@ public class DamagableBase : MonoBehaviour, IDamageable
     [SerializeField] private bool _destroyOnDeath = true;
     [Space(10f)]
     [SerializeField] private UnityEvent<float> onDamage;
-    [SerializeField] private UnityEvent onDestroy;
+    [SerializeField] private UnityEvent onDeath;
 
     private float _damageScale = 1f;
 
@@ -54,8 +54,8 @@ public class DamagableBase : MonoBehaviour, IDamageable
 
     private void Die()
     {
-        Debug.Log($"{gameObject.name} Destroyed!");
-        onDestroy.Invoke();
+        Debug.Log($"{gameObject.name} Died!");
+        onDeath.Invoke();
 
         // 플레이어처럼 다운 후 부활하는 대상은 파괴하지 않는다.
         if (_destroyOnDeath) Destroy(gameObject);

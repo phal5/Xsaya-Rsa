@@ -24,6 +24,21 @@ public class Character_Controlled : FiniteStateMachine
         Subscribe();
     }
 
+    /// <summary>
+    /// 조작을 돌려받는 지점. 조작이 없던 동안 쌓인 입력을 여기서 버린다.
+    ///
+    /// 상호작용 구독은 Bootstrap에 걸려 있고 콤보는 FSM 밖의 옵저버라,
+    /// 피격·UI로 조작을 잃은 동안에도 표시는 계속 쌓인다.
+    /// 그대로 두면 스턴이 풀리는 순간 눌러둔 것들이 한꺼번에 터진다.
+    /// </summary>
+    public override void Enter()
+    {
+        _interactRequested = false;
+        Execution?.Discard();
+
+        base.Enter();
+    }
+
     protected override void OnDestroyed()
     {
         Unsubscribe();
@@ -73,18 +88,21 @@ public class Character_Controlled : FiniteStateMachine
     }
 
     Character_Execution _execution;
+    Character_Ledge _ledge;
 
-    Character_Execution Execution
+    Character_Execution Execution => Find(ref _execution);
+
+    Character_Ledge Ledge => Find(ref _ledge);
+
+    /// <summary>등록된 컴포넌트 상태 중 그 타입인 것을 찾아 기억해둔다.</summary>
+    T Find<T>(ref T cache) where T : MonoBehaviour
     {
-        get
-        {
-            if (_execution == null && _componentStates != null)
-            {
-                foreach (MonoBehaviour c in _componentStates)
-                    if (c is Character_Execution e) { _execution = e; break; }
-            }
-            return _execution;
-        }
+        if (cache != null || _componentStates == null) return cache;
+
+        foreach (MonoBehaviour component in _componentStates)
+            if (component is T found) { cache = found; break; }
+
+        return cache;
     }
 
     public void ToInteract()
@@ -127,14 +145,35 @@ public class Character_Controlled : FiniteStateMachine
         TransitTo<Character_Execution>();
     }
 
+    public void ToLedge()
+    {
+        if (_currentStateType == typeof(Character_Ledge)) return;
+        TransitTo<Character_Ledge>();
+    }
+
+    /// <summary>
+    /// 앞에 잡을 턱이 있으면 잡는다.
+    ///
+    /// 판정과 자리 계산은 턱 축이 한다. 이동 축은 "잡혔나"만 알면 되고,
+    /// 그래서 회피 티켓이나 스킬 요청과 같은 모양이 된다 — 물어보고, 참이면 넘긴다.
+    /// </summary>
+    public bool TryLedgeGrab(Character_Ledge.Entry entry)
+    {
+        Character_Ledge ledge = Ledge;
+        if (ledge == null || !ledge.TryGrab(entry)) return false;
+
+        ToLedge();
+        return true;
+    }
+
     // Heal / Swap은 아직 전용 입력 액션이 없다.
     // KeyInvoke 컴포넌트나 UI 버튼의 UnityEvent에서 이 메서드를 직접 부르면 된다.
 
     public void ToHeal()
     {
         if (_currentStateType == typeof(Character_Heal)) return;
-        if (Character != null && !Character.HasHealCharge) return;   // 헛동작 방지
 
+        // 남은 횟수 판정은 Character_Heal.Enter()가 소모와 함께 한다. 여기서 미리 보지 않는다.
         TransitTo<Character_Heal>();
     }
 

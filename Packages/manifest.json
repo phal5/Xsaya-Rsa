@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.tripo3d.unitybridge": "file:C:/Users/phlnx/Downloads/Tripo3d_Unity_Bridge-latest/Tripo3d_Unity_Bridge",
+    "com.tripo3d.unitybridge": "file:C:/Users/phlnx/Downloads/Tripo3d_Unity_Bridge-latest (1)/Tripo3d_Unity_Bridge",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.assistant": "2.17.0-pre.1",
     "com.unity.ai.navigation": "2.0.14",

@@ -2,16 +2,13 @@ using UnityEngine;
 
 public class PauseGame : MonoBehaviour
 {
-    float timeScale;
-
     private void OnEnable()
     {
-        timeScale = Time.timeScale;
-        Time.timeScale = 0;
+        TimeManager.Stop();
     }
 
     private void OnDisable()
     {
-        Time.timeScale = timeScale;
+        TimeManager.Resume();
     }
 }

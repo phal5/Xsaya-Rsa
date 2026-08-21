@@ -10,7 +10,7 @@ public class RayCaster : MonoBehaviour
 
     public bool Cast(out RaycastHit hit, int layerMask = -1)
     {
-        _hit = Physics.Raycast(transform.position, _direction, out hit, _distance);
+        _hit = Physics.Raycast(transform.position, _direction, out hit, _distance, layerMask);
         if (_hit) hitPoint = hit.point;
         return _hit;
     }

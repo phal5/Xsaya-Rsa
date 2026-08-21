@@ -27,9 +27,10 @@ public class Agnostos_Stun : BaseEntityState<AgnostosManager>
 
     private void ToSober()
     {
-        if(_timer <= 0)
-        {
-            fsm.TransitTo<Agnostos_Sober>();
-        }
+        if (_timer > 0) return;
+
+        // 부모가 피격 머신으로 바뀌었다. 형제인 Sober로 직접 건너뛰지 않고 부모에게 넘긴다 —
+        // 돌아갈 곳을 정하는 것은 이 상태가 아니라 나를 부른 머신의 몫이다.
+        if (fsm is Agnostos_Damage damage) damage.Complete();
     }
 }

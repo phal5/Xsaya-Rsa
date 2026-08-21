@@ -39,6 +39,16 @@ public class Character_Execution : FiniteStateMachine
         _requested = true;
     }
 
+    /// <summary>
+    /// 쌓인 요청을 버린다. 조작을 잃은 동안 콤보가 남긴 것을 조작 복귀 시점에 지우는 용도다.
+    /// 콤보는 FSM 밖의 옵저버라 피격 중에도 계속 Play를 부른다.
+    /// </summary>
+    public void Discard()
+    {
+        _pending = null;
+        _requested = false;
+    }
+
     /// <summary>소유 머신이 갱신 주기에서 요청을 가져간다.</summary>
     public bool ConsumeRequest()
     {

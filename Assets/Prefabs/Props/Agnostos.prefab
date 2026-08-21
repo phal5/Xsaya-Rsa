@@ -329,6 +329,7 @@ MonoBehaviour:
   _yDamp: 0.1
   _raycastOffset: {x: 0, y: 0, z: 0.15}
   _root: {fileID: 3498036701308238519}
+  _body: {fileID: 4430875827497051076}
   _target: {fileID: 3651176900839324956}
   onFootChange:
     m_PersistentCalls:
@@ -1303,11 +1304,12 @@ MonoBehaviour:
   <speed>k__BackingField: 3
   <awakeRadius>k__BackingField: 3
   <attackRadius>k__BackingField: 4
-  <retreatRadius>k__BackingField: 4.2
+  <retreatRadius>k__BackingField: 2
   <attackReadyTime>k__BackingField: 0.7
   <attackTime>k__BackingField: 0.1
   <attackCooldown>k__BackingField: 0.3
   <stunRecoveryTime>k__BackingField: 0.3
+  <despawnDelay>k__BackingField: 2
   <footTargets>k__BackingField:
   - {fileID: 207311121701995700}
   - {fileID: 8000426332081643030}
@@ -1826,6 +1828,7 @@ MonoBehaviour:
   _yDamp: 0.1
   _raycastOffset: {x: 0, y: 0, z: 0.15}
   _root: {fileID: 3096150706387027760}
+  _body: {fileID: 4430875827497051076}
   _target: {fileID: 9124832973263135275}
   onFootChange:
     m_PersistentCalls:
@@ -2322,6 +2325,7 @@ MonoBehaviour:
   _yDamp: 0.1
   _raycastOffset: {x: 0, y: 0, z: 0.15}
   _root: {fileID: 3095157750747115228}
+  _body: {fileID: 4430875827497051076}
   _target: {fileID: 4427599364529350318}
   onFootChange:
     m_PersistentCalls:
@@ -3415,6 +3419,56 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &3194591283692241621
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4965020437187394564}
+  - component: {fileID: 2519663698145646057}
+  m_Layer: 0
+  m_Name: Sober
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4965020437187394564
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3194591283692241621}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2238615235757070720}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2519663698145646057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3194591283692241621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dba6e826fe03fc841988e0af709e0758, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Agnostos_Sober
+  manager: {fileID: 2902917445375835067}
+  _initialStateScript: {fileID: 11500000, guid: eb793879e078d0d48af9de4c517c01d8, type: 3}
+  _initialStateTypeName: Agnostos_Sleep, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    PublicKeyToken=null
+  _componentStates: []
+  _currentStateName: 
 --- !u!1 &3297442956706706203
 GameObject:
   m_ObjectHideFlags: 0
@@ -3543,12 +3597,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf8b8b257dd38f4caceacff753ed608, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuadrupedicTilt
+  _sway: 0.15
+  _referenceLift: 0.5
   _tiltAmount: 50
-  _rigidBody: {fileID: 4646335551844989908}
-  foot1: {fileID: 4427599364529350318}
-  foot2: {fileID: 4641552194067115109}
-  foot3: {fileID: 3651176900839324956}
-  foot4: {fileID: 9124832973263135275}
+  _rearLeft: {fileID: 4528923841512707735}
+  _frontLeft: {fileID: 5273875788930092735}
+  _rearRight: {fileID: 999527556511873798}
+  _frontRight: {fileID: 1762934478419269078}
 --- !u!114 &3096493531891347187
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3575,24 +3630,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Agnostos
   <MaxHealth>k__BackingField: 60
   <CurrentHealth>k__BackingField: 0
+  _destroyOnDeath: 0
   onDamage:
     m_PersistentCalls:
       m_Calls: []
-  onDestroy:
+  onDeath:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1288793160508428008}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &3377833652235976858
 GameObject:
   m_ObjectHideFlags: 0
@@ -4182,6 +4226,9 @@ MonoBehaviour:
   _maxTilt: 0.2
   localEyeOffset: {x: 0, y: 1, z: 0}
   lookTarget: {fileID: 0}
+  _vertical: {fileID: 0}
+  _plane: 0
+  _modelForward: {x: -1, y: 0, z: 0}
 --- !u!1 &3814457349695636464
 GameObject:
   m_ObjectHideFlags: 0
@@ -7298,6 +7345,55 @@ Transform:
   - {fileID: 5554750059797741385}
   m_Father: {fileID: 8535207351588035018}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6858053177995796282
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4207416156180324427}
+  - component: {fileID: 8777524109879641059}
+  m_Layer: 0
+  m_Name: Damage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4207416156180324427
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6858053177995796282}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2238615235757070720}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8777524109879641059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6858053177995796282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b0cf1357e5e554ca7e832e90b3b4e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Agnostos_Damage
+  manager: {fileID: 2902917445375835067}
+  _initialStateScript: {fileID: 0}
+  _initialStateTypeName: 
+  _componentStates: []
+  _currentStateName: 
 --- !u!1 &6861902929633148757
 GameObject:
   m_ObjectHideFlags: 0
@@ -7677,7 +7773,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 4965020437187394564}
+  - {fileID: 4207416156180324427}
   m_Father: {fileID: 4051608200893165733}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2151595908819966843
@@ -7693,12 +7791,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FiniteStateMachine
   manager: {fileID: 2902917445375835067}
-  _initialStateScript: {fileID: 11500000, guid: eb793879e078d0d48af9de4c517c01d8, type: 3}
-  _initialStateTypeName: Agnostos_Idle, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+  _initialStateScript: {fileID: 11500000, guid: dba6e826fe03fc841988e0af709e0758, type: 3}
+  _initialStateTypeName: Agnostos_Sober, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
     PublicKeyToken=null
-  _machine: {fileID: 0}
-  _resetOnEnter: 0
-  _componentStates: []
+  _componentStates:
+  - {fileID: 2519663698145646057}
+  - {fileID: 8777524109879641059}
   _currentStateName: 
 --- !u!1 &6967588031659333718
 GameObject:
@@ -8482,6 +8580,7 @@ MonoBehaviour:
   _yDamp: 0.1
   _raycastOffset: {x: 0, y: 0, z: 0.15}
   _root: {fileID: 3004669995401254478}
+  _body: {fileID: 4430875827497051076}
   _target: {fileID: 4641552194067115109}
   onFootChange:
     m_PersistentCalls:

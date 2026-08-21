@@ -53,6 +53,8 @@ MonoBehaviour:
   move_skill: {fileID: 1120369429361536294, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   move_interact: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   move_crouch: {fileID: 7040659881675835329, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  move_climbUp: {fileID: -5065456967626723514, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  move_climbDown: {fileID: -7140101031733553122, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &7331603633654483453
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,6 +69,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
   <player>k__BackingField: {fileID: 0}
   <playerDamagable>k__BackingField: {fileID: 0}
+  <playerWeapon>k__BackingField: {fileID: 0}
+  <cameraRig>k__BackingField: {fileID: 0}
+  <dimension>k__BackingField: {fileID: 0}
 --- !u!114 &4166453826126517148
 MonoBehaviour:
   m_ObjectHideFlags: 0

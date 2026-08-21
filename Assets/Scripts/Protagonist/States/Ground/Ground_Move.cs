@@ -3,6 +3,11 @@ using UnityEngine;
 /// <summary>지상 이동(Run/Walk). 입력이 끊기면 Idle로 돌아간다.</summary>
 public class Ground_Move : BaseCharacterState
 {
+    public override void Enter()
+    {
+        characterManager.Animation.Play("Run");
+    }
+
     public override void FixedUpdateState()
     {
         Move();

@@ -19,11 +19,28 @@ public class Boss_ReactionMachine : FiniteStateMachine
         }
     }
 
+    /// <summary>
+    /// 다음 진입에서 옆으로 빠지라는 표시. 되날아오는 창을 알린 쪽이 세운다.
+    ///
+    /// 거리로 고르는 평소 규칙을 건너뛴다 — 날아오는 것에는 방어가 소용없고,
+    /// 뒤로 물러나는 것도 소용없다. 사선에서 벗어나는 것만이 답이다.
+    /// </summary>
+    bool _sidestepNext;
+
+    public void RequestSidestep() { _sidestepNext = true; }
+
     public override void Enter()
     {
         if (Boss == null)
         {
             Complete();
+            return;
+        }
+
+        if (_sidestepNext)
+        {
+            _sidestepNext = false;
+            TransitTo<Boss_Sidestep>();
             return;
         }
 

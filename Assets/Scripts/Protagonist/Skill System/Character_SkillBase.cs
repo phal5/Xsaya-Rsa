@@ -76,10 +76,20 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
         OnEnd();
     }
 
+    /// <summary>
+    /// 스킬 중 이동. 방향은 <b>지금 보는 쪽</b>으로 고정하고 입력은 세기만 정한다.
+    ///
+    /// 입력 방향을 그대로 넘기면 Steering이 그쪽으로 몸을 돌린다.
+    /// 2D에서는 위치만 잠겨 있어 깊이 입력이 이동은 못 만들고 회전만 만들고,
+    /// 그래서 공격 도중 캐릭터가 화면을 바라보게 된다.
+    /// </summary>
     void Steer()
     {
-        Vector3 input = InputManager.CharacterMove;
-        manager.Steering.Move(input * manager.GroundSpeed, Vector3.up);
+        float amount = InputManager.CharacterMove.magnitude;
+
+        if (amount < 0.01f) { manager.Steering.Move(Vector3.zero, Vector3.up); return; }
+
+        manager.Steering.Move(manager.FacingAsInput() * (amount * manager.GroundSpeed), Vector3.up);
     }
 
     void Finish()

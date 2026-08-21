@@ -1,0 +1,161 @@
+using UnityEngine;
+
+/// <summary>
+/// 상태기계가 애니메이터에 말을 거는 유일한 창구.
+///
+/// 가짜 애니메이터는 매 프레임 속도와 체력을 보고 "지금 무슨 상태겠지"를 <b>추측</b>했다.
+/// FSM이 이미 정답을 들고 있으므로 그 추측은 군더더기다.
+/// 그래서 여기엔 판단이 없다. 상태가 Enter에서 이름을 부르면 그대로 튼다.
+///
+/// 진행도를 되돌려주는 것까지가 여기의 일이고, 그 숫자로 무엇을 할지는 상태가 정한다.
+/// </summary>
+public class Character_Animation : MonoBehaviour
+{
+    [SerializeField] Animator _animator;
+
+    [Tooltip("상태 전환 시 섞는 시간(초).")]
+    [SerializeField, Min(0f)] float _fade = 0.1f;
+
+    string _current;
+
+    bool _claimed;
+
+    /// <summary>
+    /// 방금 건 한 컷을 <b>다음 축이 덮지 않게</b> 표시한다.
+    ///
+    /// 축을 넘기며 자세를 이미 정해 놓은 쪽이 부르고, 받는 쪽은 <see cref="Claimed"/>를 보고
+    /// 제 자세를 걸지 말지 정한다. CrossFade는 섞이는 데 시간이 걸려서, 표시가 없으면
+    /// 받는 쪽이 같은 프레임에 덮어써 앞의 클립이 현재 상태가 되어 보지도 못한다.
+    /// </summary>
+    public void Claim() => _claimed = true;
+
+    /// <summary>표시가 서 있었는지. <b>읽으면 풀린다</b> — 다음 전환까지 남아 다른 자세를 막지 않도록.</summary>
+    public bool Claimed
+    {
+        get
+        {
+            bool claimed = _claimed;
+            _claimed = false;
+            return claimed;
+        }
+    }
+
+    /// <summary>컨트롤러의 상태 이름을 그대로 넘긴다. 같은 이름이면 다시 걸지 않는다.</summary>
+    public void Play(string state) => Play(state, _fade);
+
+    /// <param name="fade">섞이는 시간. 자세가 크게 다른 두 동작을 잇는 곳이 기본값보다 길게 준다.</param>
+    public void Play(string state, float fade)
+    {
+        if (_animator == null || string.IsNullOrEmpty(state)) return;
+        if (_current == state) return;
+
+        _current = state;
+
+        Warn(state);
+        _animator.CrossFadeInFixedTime(state, fade);
+    }
+
+    /// <summary>
+    /// 컨트롤러에 그 이름의 상태가 있는지.
+    ///
+    /// 유니티는 없는 이름으로 CrossFade를 걸면 <b>아무 말 없이 무시한다.</b>
+    /// 상태가 안 만들어졌는지, FSM이 안 불렀는지, 이름이 틀렸는지가 화면상 똑같이 보여
+    /// 원인을 가릴 수가 없다. 그 침묵을 여기서 깬다.
+    ///
+    /// 같은 이름으로 두 번 나무라지는 않는다. 매 프레임 부르는 자리가 있어 로그가 잠긴다.
+    ///
+    /// <b>재생을 막지는 않는다.</b> 이 조회가 틀릴 수도 있는데 그걸 근거로 호출을 끊으면
+    /// 알려주려던 고장 대신 새 고장을 만든다. 말만 하고 걸어보는 것이 맞다.
+    /// </summary>
+    void Warn(string state)
+    {
+        if (_animator.HasState(0, Animator.StringToHash(state))) return;
+
+        if (_missing.Add(state))
+            Debug.LogWarning($"[{name}] 애니메이터에 '{state}' 상태가 없는 것으로 읽힙니다. " +
+                             $"이름이 틀렸거나 컨트롤러에 그 상태가 없습니다.", this);
+    }
+
+    readonly System.Collections.Generic.HashSet<string> _missing = new System.Collections.Generic.HashSet<string>();
+
+    #region Root Motion
+
+    Vector3 _rootMotion;
+
+    /// <summary>
+    /// 루트 모션을 유니티가 스스로 적용하지 못하게 가로챈다.
+    ///
+    /// Animator가 몸이 아니라 자식 오브젝트에 붙어 있어, 그대로 두면 <b>메시만 몸에서 떨어져 나간다.</b>
+    /// 피격 판정은 몸에 있으므로 그건 판정과 그림이 어긋난다는 뜻이다.
+    /// 여기서 받아두고, 쓰겠다는 상태가 가져가 몸에 싣는다.
+    ///
+    /// 이 함수가 있는 것만으로 유니티는 자동 적용을 그만둔다. 아무도 가져가지 않으면 그냥 버려진다.
+    /// </summary>
+    void OnAnimatorMove()
+    {
+        if (_animator == null) return;
+
+        // 한 번의 FixedUpdate 사이에 애니메이터가 여러 번 돌 수 있어 더한다.
+        _rootMotion += _animator.deltaPosition;
+    }
+
+    /// <summary>쌓인 루트 모션을 가져가고 비운다. 가져간 쪽이 몸에 싣는 책임을 진다.</summary>
+    public Vector3 ConsumeRootMotion()
+    {
+        Vector3 delta = _rootMotion;
+        _rootMotion = Vector3.zero;
+        return delta;
+    }
+
+    #endregion
+
+
+    /// <summary>
+    /// 클립의 첫 프레임이 아니라 지정한 지점으로 섞어 들어간다.
+    ///
+    /// 같은 이름이어도 다시 건다 — 어디서부터 트느냐가 인자의 일부이므로,
+    /// 이름만 보고 걸러내면 "같은 클립의 다른 지점"을 부를 방법이 없어진다.
+    /// </summary>
+    public void PlayFrom(string state, float offsetSeconds)
+    {
+        if (_animator == null || string.IsNullOrEmpty(state)) return;
+
+        _current = state;
+
+        Warn(state);
+        _animator.CrossFadeInFixedTime(state, _fade, 0, offsetSeconds);
+    }
+
+    public void SetFloat(string parameter, float value)
+    {
+        if (_animator == null || string.IsNullOrEmpty(parameter)) return;
+        _animator.SetFloat(parameter, value);
+    }
+
+    /// <summary>
+    /// 지정한 상태가 지금 재생 중인지. 맞으면 진행도(0~1)를 함께 돌려준다.
+    ///
+    /// 전환 중에는 GetCurrentAnimatorStateInfo가 아직 <b>떠나는 쪽</b>을 가리키므로,
+    /// 들어오는 쪽도 같이 본다. 이게 없으면 섞이는 동안 "재생 중이 아니다"로 읽힌다.
+    /// </summary>
+    public bool IsPlaying(string state, out float normalizedTime)
+    {
+        normalizedTime = 0f;
+        if (_animator == null || string.IsNullOrEmpty(state)) return false;
+
+        AnimatorStateInfo current = _animator.GetCurrentAnimatorStateInfo(0);
+        if (current.IsName(state))
+        {
+            normalizedTime = current.normalizedTime;
+            return true;
+        }
+
+        if (!_animator.IsInTransition(0)) return false;
+
+        AnimatorStateInfo next = _animator.GetNextAnimatorStateInfo(0);
+        if (!next.IsName(state)) return false;
+
+        normalizedTime = next.normalizedTime;
+        return true;
+    }
+}

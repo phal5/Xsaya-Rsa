@@ -40,6 +40,17 @@ public class EnvironmentPlacerWindow : EditorWindow
     Vector2 _scrollPos;
     bool _fitBlockZScale = false;
 
+    // 배치물 렌더링 옵션
+    bool _applyStaticFlags = true;
+    StaticEditorFlags _staticFlags =
+        StaticEditorFlags.BatchingStatic |
+        StaticEditorFlags.OccluderStatic |
+        StaticEditorFlags.OccludeeStatic |
+        StaticEditorFlags.ContributeGI;
+
+    // 취소 상태. 진행바에서 취소를 누르면 켜지고, 작업 루프들이 이걸 보고 빠져나온다.
+    bool _canceled;
+
     // 6개 방향별 그룹 폴드아웃 상태
     bool[] _sideGroupFoldouts = new bool[6] { true, true, true, true, true, true };
 
@@ -261,7 +272,7 @@ public class EnvironmentPlacerWindow : EditorWindow
                             EditorGUI.BeginDisabledGroup(!canGen);
                             if (GUILayout.Button("Generate", EditorStyles.miniButton, GUILayout.Height(18)))
                             {
-                                GenerateLayer(sel, layer, globalIndex);
+                                GenerateLayerCommand(sel, layer, globalIndex);
                             }
                             EditorGUI.EndDisabledGroup();
 
@@ -315,6 +326,9 @@ public class EnvironmentPlacerWindow : EditorWindow
 
         GUILayout.Label("옵션 및 실행", EditorStyles.boldLabel);
         _fitBlockZScale = EditorGUILayout.Toggle("Z 스케일 자동 맞춤", _fitBlockZScale);
+
+        DrawRenderingOptions();
+
         GUILayout.Space(5);
 
         // Generate All 버튼
@@ -322,7 +336,7 @@ public class EnvironmentPlacerWindow : EditorWindow
         EditorGUI.BeginDisabledGroup(!canGenerate);
         if (GUILayout.Button($"🌿 Generate All ({EnabledLayerCount()}개 레이어)", GUILayout.Height(32)))
         {
-            GenerateAllLayers(selected);
+            GenerateAllLayersCommand(selected);
         }
         EditorGUI.EndDisabledGroup();
 
@@ -357,6 +371,46 @@ public class EnvironmentPlacerWindow : EditorWindow
         GUILayout.Space(5);
     }
 
+    void DrawRenderingOptions()
+    {
+        GUILayout.Space(5);
+        GUILayout.Label("렌더링", EditorStyles.miniBoldLabel);
+
+        _applyStaticFlags = EditorGUILayout.Toggle("정적 플래그 지정", _applyStaticFlags);
+
+        if (_applyStaticFlags)
+        {
+            EditorGUI.indentLevel++;
+            _staticFlags = (StaticEditorFlags)EditorGUILayout.EnumFlagsField("플래그", _staticFlags);
+            EditorGUI.indentLevel--;
+        }
+
+        EditorGUILayout.LabelField(
+            "GPU 인스턴싱은 프로파일에서 정합니다. (프로파일 전체 / 엔트리별)",
+            EditorStyles.miniLabel
+        );
+
+        // 정적 배칭이 걸린 렌더러는 인스턴싱을 타지 않는다. 둘 다 걸면 조용히 한쪽이 죽는다.
+        bool batchingStatic = _applyStaticFlags && (_staticFlags & StaticEditorFlags.BatchingStatic) != 0;
+        if (batchingStatic && AnyLayerWantsInstancing())
+        {
+            EditorGUILayout.HelpBox(
+                "Batching Static이 켜져 있는데 GPU 인스턴싱을 요구하는 프로파일이 있습니다.\n정적 배칭이 우선하므로 그쪽 인스턴싱은 무시됩니다.\n플래그에서 Batching Static을 빼거나, 프로파일의 체크를 해제하세요.",
+                MessageType.Warning
+            );
+        }
+    }
+
+    bool AnyLayerWantsInstancing()
+    {
+        foreach (var layer in _layers)
+        {
+            if (layer.enabled && layer.profile != null && layer.profile.AnyGpuInstancing) return true;
+        }
+
+        return false;
+    }
+
     void DrawLastResult()
     {
         if (_lastGeneratedCount > 0 && !string.IsNullOrEmpty(_lastTargetName))
@@ -389,20 +443,87 @@ public class EnvironmentPlacerWindow : EditorWindow
         return count;
     }
 
+    /// <summary>
+    /// 취소 가능한 작업 한 단위를 감싼다.
+    ///
+    /// Undo 그룹을 열어두고, 취소되면 그룹 전체를 되돌린다.
+    /// 중간에 멈춘 절반짜리 결과를 남기지 않기 위해서다. 컨테이너 생성도, 시작할 때 지운
+    /// 기존 배치물도 모두 이 그룹 안에 있으므로 "취소 = 아무 일도 없었음"이 된다.
+    /// </summary>
+    void RunCancelable(string groupName, System.Action work)
+    {
+        Undo.IncrementCurrentGroup();
+        int group = Undo.GetCurrentGroup();
+        Undo.SetCurrentGroupName(groupName);
+
+        _canceled = false;
+
+        try
+        {
+            work();
+        }
+        finally
+        {
+            // 예외가 나도 진행바는 반드시 내린다. 남으면 에디터가 잠긴 것처럼 보인다.
+            EditorUtility.ClearProgressBar();
+        }
+
+        if (_canceled)
+        {
+            Undo.RevertAllDownToGroup(group);
+            Debug.Log("[EnvironmentPlacer] 취소되었습니다. 작업 전 상태로 되돌렸습니다.");
+            return;
+        }
+
+        Undo.CollapseUndoOperations(group);
+    }
+
+    /// <summary>
+    /// 진행바를 그리고 취소 여부를 돌려준다. 매 반복 부르면 그리는 비용이 더 크므로
+    /// 호출하는 쪽에서 솎아서 부른다.
+    /// </summary>
+    bool PollCancel(string title, string info, float progress)
+    {
+        if (_canceled) return true;
+
+        if (EditorUtility.DisplayCancelableProgressBar(title, info, progress))
+        {
+            _canceled = true;
+        }
+
+        return _canceled;
+    }
+
+    void GenerateAllLayersCommand(GameObject target)
+    {
+        RunCancelable("Environment Placer Generate All", () => GenerateAllLayers(target));
+    }
+
+    void GenerateLayerCommand(GameObject target, PlacementLayer layer, int layerIndex)
+    {
+        RunCancelable("Environment Placer Generate", () => GenerateLayer(target, layer, layerIndex));
+    }
+
     void GenerateAllLayers(GameObject target)
     {
-        Undo.SetCurrentGroupName("Environment Placer Generate All");
         ClearAllLayersOnTarget(target);
 
         int totalCount = 0;
+        int enabled = Mathf.Max(EnabledLayerCount(), 1);
+        int done = 0;
 
         for (int i = 0; i < _layers.Count; i++)
         {
             PlacementLayer layer = _layers[i];
             if (!layer.enabled || layer.profile == null) continue;
 
+            if (PollCancel("Environment Placer", $"레이어 {done + 1}/{enabled}: {layer.name}", (float)done / enabled)) return;
+
             int count = GenerateLayer(target, layer, i, false);
+            if (_canceled) return;
+
             totalCount += count;
+            done++;
         }
 
         if (_fitBlockZScale)
@@ -452,137 +573,90 @@ public class EnvironmentPlacerWindow : EditorWindow
 
         System.Random rng = new System.Random(seed);
 
-        List<Vector2> points;
         Quaternion sideRotation;
         Vector3 surfacePos;
+
+        // 배치면마다 다른 건 회전, 표면 위치, 그리고 어느 두 축으로 샘플링하느냐뿐이다.
+        // 샘플링 호출 자체는 아래에서 한 번만 한다.
+        Vector2 regionMin, regionMax;
+        float linearMin, linearMax, linearCenter;
 
         switch (layer.side)
         {
             case PlacementSide.Top:
                 sideRotation = Quaternion.identity;
                 surfacePos = new Vector3(0f, bounds.max.y + layer.profile.YOffset, 0f);
-                if (layer.profile.IsRandomPlacement)
-                {
-                    points = PoissonDiskSample(
-                        new Vector2(bounds.min.x, bounds.min.z),
-                        new Vector2(bounds.max.x, bounds.max.z),
-                        spacing,
-                        layer.profile.SamplesBeforeRejection,
-                        rng
-                    );
-                }
-                else
-                {
-                    points = LinearSample(bounds.min.x, bounds.max.x, bounds.center.z, spacing);
-                }
+                regionMin = new Vector2(bounds.min.x, bounds.min.z);
+                regionMax = new Vector2(bounds.max.x, bounds.max.z);
+                linearMin = bounds.min.x; linearMax = bounds.max.x; linearCenter = bounds.center.z;
                 break;
 
             case PlacementSide.Bottom:
                 sideRotation = Quaternion.Euler(180f, 0f, 0f);
                 surfacePos = new Vector3(0f, bounds.min.y - layer.profile.YOffset, 0f);
-                if (layer.profile.IsRandomPlacement)
-                {
-                    points = PoissonDiskSample(
-                        new Vector2(bounds.min.x, bounds.min.z),
-                        new Vector2(bounds.max.x, bounds.max.z),
-                        spacing,
-                        layer.profile.SamplesBeforeRejection,
-                        rng
-                    );
-                }
-                else
-                {
-                    points = LinearSample(bounds.min.x, bounds.max.x, bounds.center.z, spacing);
-                }
+                regionMin = new Vector2(bounds.min.x, bounds.min.z);
+                regionMax = new Vector2(bounds.max.x, bounds.max.z);
+                linearMin = bounds.min.x; linearMax = bounds.max.x; linearCenter = bounds.center.z;
                 break;
 
             case PlacementSide.Left:
                 sideRotation = Quaternion.Euler(0f, 0f, 90f);
                 surfacePos = new Vector3(bounds.min.x - layer.profile.YOffset, 0f, 0f);
-                if (layer.profile.IsRandomPlacement)
-                {
-                    points = PoissonDiskSample(
-                        new Vector2(bounds.min.z, bounds.min.y),
-                        new Vector2(bounds.max.z, bounds.max.y),
-                        spacing,
-                        layer.profile.SamplesBeforeRejection,
-                        rng
-                    );
-                }
-                else
-                {
-                    points = LinearSample(bounds.min.z, bounds.max.z, bounds.center.y, spacing);
-                }
+                regionMin = new Vector2(bounds.min.z, bounds.min.y);
+                regionMax = new Vector2(bounds.max.z, bounds.max.y);
+                linearMin = bounds.min.z; linearMax = bounds.max.z; linearCenter = bounds.center.y;
                 break;
 
             case PlacementSide.Right:
                 sideRotation = Quaternion.Euler(0f, 0f, -90f);
                 surfacePos = new Vector3(bounds.max.x + layer.profile.YOffset, 0f, 0f);
-                if (layer.profile.IsRandomPlacement)
-                {
-                    points = PoissonDiskSample(
-                        new Vector2(bounds.min.z, bounds.min.y),
-                        new Vector2(bounds.max.z, bounds.max.y),
-                        spacing,
-                        layer.profile.SamplesBeforeRejection,
-                        rng
-                    );
-                }
-                else
-                {
-                    points = LinearSample(bounds.min.z, bounds.max.z, bounds.center.y, spacing);
-                }
+                regionMin = new Vector2(bounds.min.z, bounds.min.y);
+                regionMax = new Vector2(bounds.max.z, bounds.max.y);
+                linearMin = bounds.min.z; linearMax = bounds.max.z; linearCenter = bounds.center.y;
                 break;
 
             case PlacementSide.Front:
                 sideRotation = Quaternion.Euler(90f, 0f, 0f);
                 surfacePos = new Vector3(0f, 0f, bounds.max.z + layer.profile.YOffset);
-                if (layer.profile.IsRandomPlacement)
-                {
-                    points = PoissonDiskSample(
-                        new Vector2(bounds.min.x, bounds.min.y),
-                        new Vector2(bounds.max.x, bounds.max.y),
-                        spacing,
-                        layer.profile.SamplesBeforeRejection,
-                        rng
-                    );
-                }
-                else
-                {
-                    points = LinearSample(bounds.min.x, bounds.max.x, bounds.center.y, spacing);
-                }
+                regionMin = new Vector2(bounds.min.x, bounds.min.y);
+                regionMax = new Vector2(bounds.max.x, bounds.max.y);
+                linearMin = bounds.min.x; linearMax = bounds.max.x; linearCenter = bounds.center.y;
                 break;
 
             case PlacementSide.Back:
                 sideRotation = Quaternion.Euler(-90f, 0f, 0f);
                 surfacePos = new Vector3(0f, 0f, bounds.min.z - layer.profile.YOffset);
-                if (layer.profile.IsRandomPlacement)
-                {
-                    points = PoissonDiskSample(
-                        new Vector2(bounds.min.x, bounds.min.y),
-                        new Vector2(bounds.max.x, bounds.max.y),
-                        spacing,
-                        layer.profile.SamplesBeforeRejection,
-                        rng
-                    );
-                }
-                else
-                {
-                    points = LinearSample(bounds.min.x, bounds.max.x, bounds.center.y, spacing);
-                }
+                regionMin = new Vector2(bounds.min.x, bounds.min.y);
+                regionMax = new Vector2(bounds.max.x, bounds.max.y);
+                linearMin = bounds.min.x; linearMax = bounds.max.x; linearCenter = bounds.center.y;
                 break;
 
             default:
-                points = new List<Vector2>();
                 sideRotation = Quaternion.identity;
                 surfacePos = Vector3.zero;
+                regionMin = regionMax = Vector2.zero;
+                linearMin = 0f; linearMax = -1f; linearCenter = 0f;   // min > max -> 빈 결과
                 break;
         }
 
+        List<Vector2> points = layer.profile.IsRandomPlacement
+            ? PoissonDiskSample(regionMin, regionMax, spacing, layer.profile.SamplesBeforeRejection, rng, layer.name)
+            : LinearSample(linearMin, linearMax, linearCenter, spacing);
+
+        if (_canceled) return 0;
+
         int count = 0;
+        int index = 0;
 
         foreach (Vector2 point in points)
         {
+            // 진행바 자체가 비싸다. 프리팹 몇십 개마다만 그린다.
+            if ((index++ & 0x3F) == 0 &&
+                PollCancel("Environment Placer", $"\"{layer.name}\" 배치 중 {index}/{points.Count}", (float)index / points.Count))
+            {
+                return count;
+            }
+
             GameObject prefab = layer.profile.PickRandomPrefab(rng);
             if (prefab == null) continue;
 
@@ -595,8 +669,12 @@ public class EnvironmentPlacerWindow : EditorWindow
                 (float)rng.NextDouble()
             ) * layer.globalScale;
 
-            // 회전: 배치면 회전 + Y축 랜덤 회전
-            Quaternion rotation = sideRotation;
+            // 회전: (프로파일이 켰을 때만) 배치면 회전 + Y축 랜덤 회전
+            //
+            // 면을 따라가지 않는 것이 기본이다. 벽이나 천장에 붙여도 오브젝트는 똑바로 선 자세를
+            // 유지한다. 나무나 풀처럼 중력 방향이 정해진 것들은 면을 따라 누우면 안 되기 때문이다.
+            // 이때 랜덤 Y 회전은 월드 Y축을 돈다. 켜면 면의 노멀을 축으로 돈다.
+            Quaternion rotation = layer.profile.AlignToSurface ? sideRotation : Quaternion.identity;
             if (entry.RandomYRotation)
             {
                 rotation *= Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f);
@@ -632,6 +710,7 @@ public class EnvironmentPlacerWindow : EditorWindow
                 instance.transform.rotation = rotation;
                 instance.transform.localScale = Vector3.one * scaleFactor;
                 Undo.RegisterCreatedObjectUndo(instance, "Environment Placer Generate");
+                ApplyRenderingOptions(instance, layer.profile.UsesGpuInstancing(entry));
                 count++;
             }
         }
@@ -644,6 +723,36 @@ public class EnvironmentPlacerWindow : EditorWindow
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// 배치된 인스턴스에 정적 플래그 / GPU 인스턴싱 설정을 입힌다.
+    /// 프리팹 루트만이 아니라 자식 렌더러까지 훑는다. 배칭은 렌더러 단위로 걸리기 때문이다.
+    /// </summary>
+    void ApplyRenderingOptions(GameObject instance, bool gpuInstancing)
+    {
+        if (_applyStaticFlags)
+        {
+            foreach (Transform t in instance.GetComponentsInChildren<Transform>(true))
+            {
+                GameObjectUtility.SetStaticEditorFlags(t.gameObject, _staticFlags);
+            }
+        }
+
+        if (!gpuInstancing) return;
+
+        // 머티리얼은 프리팹 인스턴스가 아니라 공유 에셋이다. 여기서 켜면 프로젝트 전역에 남는다.
+        foreach (Renderer renderer in instance.GetComponentsInChildren<Renderer>(true))
+        {
+            foreach (Material material in renderer.sharedMaterials)
+            {
+                if (material == null || material.enableInstancing) continue;
+
+                Undo.RecordObject(material, "Enable GPU Instancing");
+                material.enableInstancing = true;
+                EditorUtility.SetDirty(material);
+            }
+        }
     }
 
     void ClearLayer(GameObject target, int layerIndex)
@@ -890,7 +999,7 @@ public class EnvironmentPlacerWindow : EditorWindow
     /// Bridson 알고리즘 기반 Poisson Disk Sampling.
     /// 최소 간격을 유지하면서 자연스러운 포인트 분포를 생성합니다.
     /// </summary>
-    static List<Vector2> PoissonDiskSample(Vector2 regionMin, Vector2 regionMax, float minDist, int maxAttempts, System.Random rng)
+    List<Vector2> PoissonDiskSample(Vector2 regionMin, Vector2 regionMax, float minDist, int maxAttempts, System.Random rng, string layerName)
     {
         float cellSize = minDist / Mathf.Sqrt(2f);
         Vector2 regionSize = regionMax - regionMin;
@@ -915,8 +1024,23 @@ public class EnvironmentPlacerWindow : EditorWindow
 
         AddPoint(startPoint, points, activeList, grid, regionMin, cellSize);
 
+        // 간격이 좁고 면적이 넓으면 여기서만 수만 점이 나온다. 오브젝트가 하나도 생기기 전에
+        // 에디터가 멈춘 것처럼 보이는 구간이 바로 이 루프다. 취소를 받을 수 있게 열어둔다.
+        int sinceLastPoll = 0;
+
         while (activeList.Count > 0)
         {
+            if (++sinceLastPoll >= 256)
+            {
+                sinceLastPoll = 0;
+
+                // 언제 끝날지 모르는 루프라 진행률을 알 수 없다. 찾은 점 개수를 대신 보여준다.
+                if (PollCancel("Environment Placer", $"\"{layerName}\" 배치 지점 계산 중… {points.Count}개", -1f))
+                {
+                    return new List<Vector2>();
+                }
+            }
+
             int activeIndex = rng.Next(activeList.Count);
             int pointIndex = activeList[activeIndex];
             Vector2 center = points[pointIndex];

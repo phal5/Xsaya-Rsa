@@ -6,6 +6,7 @@ public class Ground_Idle : BaseCharacterState
     public override void Enter()
     {
         characterManager.Steering.Move(Vector3.zero, Vector3.up);
+        characterManager.Animation.Play("Idle");
     }
 
     public override void FixedUpdateState()

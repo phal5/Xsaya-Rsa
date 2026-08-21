@@ -8,14 +8,16 @@ public class Character_Stun : BaseCharacterState
     public override void Enter()
     {
         _endTime = Time.time + characterManager.StunTime;
+        characterManager.Animation.Play("Stun");
 
-        // 속도는 상태 밖에 남으므로 직접 세운다.
-        characterManager.Steering.Move(Vector3.zero, Vector3.up);
+        // 조종만 잃는다. 맞고 날아가던 속도는 그대로 흘러야 한다.
+        // 나가는 상태가 Exit에서 남긴 "0까지 감속하라"를 첫 물리 프레임 전에 덮어쓴다.
+        characterManager.Steering.Coast();
     }
 
     public override void FixedUpdateState()
     {
-        characterManager.Steering.Move(Vector3.zero, Vector3.up);
+        characterManager.Steering.Coast();
         Transitions();
     }
 

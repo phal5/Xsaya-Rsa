@@ -24,6 +24,14 @@ public class EnvironmentPlacerProfile : ScriptableObject
     [Tooltip("블록 표면으로부터의 Y 오프셋.")]
     [SerializeField] float _yOffset = 0f;
 
+    [Tooltip("배치된 면의 방향을 따라 오브젝트를 눕히거나 세웁니다. 끄면 어느 면에 붙든 똑바로 선 자세를 유지합니다. 기본값은 끔.")]
+    [SerializeField] bool _alignToSurface = false;
+
+    [Header("Rendering")]
+
+    [Tooltip("이 프로파일로 배치되는 모든 오브젝트에 GPU 인스턴싱을 적용합니다.\n끄면 엔트리별 체크박스를 각각 따릅니다.\n머티리얼은 공유 에셋이므로 배치물 밖의 오브젝트에도 함께 적용됩니다.")]
+    [SerializeField] bool _gpuInstancing = false;
+
     [Header("Randomization")]
     [Tooltip("활성화하면 매번 다른 시드를 사용합니다.")]
     [SerializeField] bool _useRandomSeed = false;
@@ -38,8 +46,10 @@ public class EnvironmentPlacerProfile : ScriptableObject
     public bool IsRandomPlacement => _isRandomPlacement;
     public int SamplesBeforeRejection => _samplesBeforeRejection;
     public float YOffset => _yOffset;
+    public bool AlignToSurface => _alignToSurface;
     public bool UseRandomSeed => _useRandomSeed;
     public int Seed => _seed;
+    public bool GpuInstancing => _gpuInstancing;
 
     #endregion
 
@@ -80,6 +90,34 @@ public class EnvironmentPlacerProfile : ScriptableObject
     }
 
     /// <summary>
+    /// 엔트리 중 하나라도 GPU 인스턴싱을 요구하는지. 배치 툴이 설정 충돌 경고에 씁니다.
+    /// </summary>
+    public bool AnyGpuInstancing
+    {
+        get
+        {
+            if (_entries == null) return false;
+            if (_gpuInstancing) return true;
+
+            foreach (var entry in _entries)
+            {
+                if (entry.GpuInstancing) return true;
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 이 엔트리를 GPU 인스턴싱할지 결정합니다.
+    /// 프로파일 전체 설정이 켜져 있으면 엔트리 개별 설정과 무관하게 적용됩니다.
+    /// </summary>
+    public bool UsesGpuInstancing(EnvironmentEntry entry)
+    {
+        return _gpuInstancing || entry.GpuInstancing;
+    }
+
+    /// <summary>
     /// 해당 프리팹에 대응하는 EnvironmentEntry를 반환합니다.
     /// </summary>
     public EnvironmentEntry GetEntryForPrefab(GameObject prefab)
@@ -115,4 +153,7 @@ public struct EnvironmentEntry
 
     [Tooltip("Y축 랜덤 회전 여부.")]
     public bool RandomYRotation;
+
+    [Tooltip("이 프리팹이 쓰는 머티리얼에 GPU 인스턴싱을 켠다.\n머티리얼은 공유 에셋이므로, 같은 머티리얼을 쓰는 배치물 밖의 오브젝트에도 함께 적용된다.\nBatching Static이 걸린 렌더러는 정적 배칭이 우선하므로 인스턴싱을 타지 않는다.")]
+    public bool GpuInstancing;
 }

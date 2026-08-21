@@ -13,6 +13,8 @@ public class AgnostosManager : EntityManager
     [field: SerializeField] public float attackTime { get; private set; }
     [field: SerializeField] public float attackCooldown { get; private set; } = 0.3f;
     [field: SerializeField] public float stunRecoveryTime { get; private set; }
+    [Tooltip("쓰러진 뒤 오브젝트가 사라지기까지의 시간. Agnostos의 Destroy On Death는 꺼두어야 한다.")]
+    [field: SerializeField] public float despawnDelay { get; private set; } = 2f;
     [field: SerializeField] public TransformWeightBlender[] footTargets { get; private set; }
     [field: SerializeField] public Transform[] legRoots { get; private set; }
     [field: SerializeField] public Transform[] walkTargets { get; private set; }

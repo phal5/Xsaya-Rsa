@@ -8,19 +8,15 @@ public class HPbar : MonoBehaviour
     [SerializeField] TextMeshProUGUI _text;
     [SerializeField][Range(0, 1)] float minSpeed;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     void Update()
     {
         DamagableBase playerDamagable = PlayerManager.instance.playerDamagable;
         float hpRate = playerDamagable.CurrentHealth / playerDamagable.MaxHealth;
         bar.fillAmount = hpRate;
-        Time.timeScale = hpRate * (1 - minSpeed) + minSpeed;
-        _text.text = (Mathf.Floor(Time.timeScale * 10) * 0.1f).ToString();
+        TimeManager.SetScale(hpRate * (1 - minSpeed) + minSpeed);
+
+        // 정지 중에는 Time.timeScale이 0이다. 표시는 체력이 정한 배속을 그대로 읽는다.
+        _text.text = (Mathf.Floor(TimeManager.Scale * 10) * 0.1f).ToString();
     }
 }

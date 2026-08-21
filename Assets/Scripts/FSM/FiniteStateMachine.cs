@@ -11,7 +11,7 @@ public class FiniteStateMachine : MonoBehaviour, IState
 {
     [SerializeField] protected EntityManager manager;
     [Space(10f)]
-    [Header("Initial State - only one of these are applied, top to down.")]
+    [Header("Initial State")]
 
 #if UNITY_EDITOR
     [SerializeField] protected MonoScript _initialStateScript;
@@ -20,7 +20,6 @@ public class FiniteStateMachine : MonoBehaviour, IState
     // We use this hidden string to save the type so the runtime build can read it.
     [SerializeField, HideInInspector] protected string _initialStateTypeName;
 
-    [SerializeField] protected FiniteStateMachine _machine;
     [Space(10f)]
     [Header("Component States - IState를 구현한 컴포넌트는 여기에 등록한다.")]
     [Tooltip("등록된 컴포넌트는 이 FSM이 직접 구동하므로 Awake에서 비활성화된다.")]
@@ -68,7 +67,6 @@ public class FiniteStateMachine : MonoBehaviour, IState
     {
         // 컴포넌트 상태는 이 FSM이 UpdateState/FixedUpdateState로 직접 구동한다.
         // Unity가 자체 Update를 함께 돌려 이중 구동되지 않도록 Start 이전에 꺼둔다.
-        Silence(_machine);
         if (_componentStates == null) return;
         foreach (MonoBehaviour component in _componentStates) Silence(component);
     }
@@ -103,23 +101,14 @@ public class FiniteStateMachine : MonoBehaviour, IState
         _states = new Dictionary<Type, IState>();
         _statePool = new Dictionary<Type, MonoBehaviour>();
 
-        PoolComponentStates();
+        // 컴포넌트 상태를 풀에 담아둔다. 실제 Init은 처음 쓰일 때(Resolve) 이루어진다.
+        if (_componentStates != null)
+            foreach (MonoBehaviour component in _componentStates) Pool(component);
 
         // 초기 상태가 없어도 그냥 둔다. Enter()에서 첫 상태를 직접 고르는 머신이 많고,
         // 잘못 비워둔 경우는 인스펙터의 Current State Check Window가 비어 있는 것으로 드러난다.
         _initialStateType = ResolveInitialStateType();
         if (_initialStateType != null) TransitTo(_initialStateType);
-    }
-
-    /// <summary>
-    /// 컴포넌트 상태를 풀에 담아둔다. 실제 Init은 처음 사용될 때(Resolve) 이루어진다.
-    /// </summary>
-    private void PoolComponentStates()
-    {
-        Pool(_machine);     // 구버전 슬롯. Component States와 동일하게 취급한다.
-
-        if (_componentStates == null) return;
-        foreach (MonoBehaviour component in _componentStates) Pool(component);
     }
 
     private void Pool(MonoBehaviour component)
@@ -132,25 +121,55 @@ public class FiniteStateMachine : MonoBehaviour, IState
             return;
         }
 
+        // 인스턴스로 가리는 머신은 타입 색인을 만들지 않는다. 같은 타입이 여럿인 게 정상이다.
+        if (ComponentStatesAreInstances) return;
+
         if (!_statePool.TryAdd(component.GetType(), component))
         {
             Debug.LogError($"[{gameObject.name}] {component.GetType().Name}이(가) 중복 등록되었습니다.");
         }
     }
 
+    /// <summary>
+    /// 컴포넌트 상태를 타입이 아니라 <b>인스턴스</b>로 가리는 머신인지.
+    ///
+    /// 기본은 거짓 — 상태 하나에 타입 하나라, TransitTo&lt;T&gt;로 고를 수 있다.
+    /// 참이면 같은 부품을 값만 달리해 여러 개 달 수 있는 대신, 타입으로는 고를 수 없고
+    /// 머신이 <see cref="ResolveComponent"/>로 직접 고른 인스턴스에 넘겨야 한다.
+    /// </summary>
+    protected virtual bool ComponentStatesAreInstances => false;
+
+    readonly HashSet<MonoBehaviour> _initializedComponents = new HashSet<MonoBehaviour>();
+
+    /// <summary>
+    /// 컴포넌트 상태 인스턴스를 쓸 수 있게 만들어 돌려준다. Init은 인스턴스마다 한 번만 돈다.
+    /// 타입 색인을 거치지 않으므로 같은 타입이 여럿이어도 서로를 덮지 않는다.
+    /// </summary>
+    protected IState ResolveComponent(MonoBehaviour component)
+    {
+        if (component == null) return null;
+
+        if (component is not IState state)
+        {
+            Debug.LogError($"[{gameObject.name}] {component.GetType().Name}은(는) IState를 구현하지 않습니다.");
+            return null;
+        }
+
+        if (_initializedComponents.Add(component)) state.Init(manager, this);
+
+        return state;
+    }
+
     private Type ResolveInitialStateType()
     {
         // Check the string instead of the MonoScript!
-        if (!string.IsNullOrEmpty(_initialStateTypeName))
-        {
-            Type named = Type.GetType(_initialStateTypeName);
-            if (named != null) return named;
+        if (string.IsNullOrEmpty(_initialStateTypeName)) return null;
 
+        Type named = Type.GetType(_initialStateTypeName);
+        if (named == null)
             Debug.LogError($"[{gameObject.name}] 초기 상태 타입을 찾을 수 없습니다: {_initialStateTypeName}");
-        }
 
-        // 초기 상태 스크립트가 없으면 구버전처럼 서브머신을 초기 상태로 삼는다.
-        return _machine != null ? _machine.GetType() : null;
+        return named;
     }
 
     #endregion
@@ -204,9 +223,12 @@ public class FiniteStateMachine : MonoBehaviour, IState
 
         _state = nextState;
         _stateExited = false;
-        _state.Enter();
 
+        // Enter()가 조건 검사에 실패해 곧바로 다른 상태로 넘길 수 있다.
+        // 그때 안쪽 Transit이 남긴 이름을 덮지 않도록, 이름은 Enter 전에 적는다.
         _currentStateName = nextState.GetType().Name;
+
+        _state.Enter();
     }
 
     // new() 제약을 두면 MonoBehaviour 상태가 컴파일은 통과하고 런타임에만 터진다.

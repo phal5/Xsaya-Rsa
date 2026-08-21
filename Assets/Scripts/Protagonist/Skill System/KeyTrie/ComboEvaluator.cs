@@ -70,25 +70,4 @@ public class ComboEvaluator
         //This is to ap[ply skillchains later on(if possible - sth like ^X>X<X).
         return true;
     }
-
-#nullable enable
-
-    private bool SearchStep(ref ComboTrieNode current, ref ComboTrieNode best, Key currentKey)
-    {
-        bool exit = false;
-        if (current.Children.TryGetValue(currentKey, out ComboTrieNode nextNode))
-        {
-            current = nextNode;
-            if (current.ComboAction != null) best = current;
-
-            exit = false;
-        }
-        else
-        {
-            exit = true;
-        }
-        return exit;
-    }
-
-#nullable disable
 }
