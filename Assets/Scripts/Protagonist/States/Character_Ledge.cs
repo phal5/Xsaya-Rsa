@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -34,13 +34,6 @@ public class Character_Ledge : FiniteStateMachine
 
     /// <summary>어디서 들어왔는지. 끝까지 가야 하는 동작인지를 가르는 데 쓰인다.</summary>
     public Entry Origin => _entry;
-
-    /// <summary>
-    /// 턱을 <b>실제로 잡고 있는지.</b> 진입 동작이 도는 동안은 아직 아니다 — 손을 뻗어 가는 중이다.
-    ///
-    /// 오르기·놓기·벽점프는 전부 "잡고 있다"를 전제로 하는 동작이라, 잡기 전에는 뜻이 없다.
-    /// </summary>
-    public bool Hanging => _currentStateType != typeof(Ledge_Catch);
 
     Entry _entry;
     bool _subscribed;
@@ -143,9 +136,9 @@ public class Character_Ledge : FiniteStateMachine
         // 콜라이더는 그대로 남으므로 피격 판정은 잃지 않는다.
         Character.Body.isKinematic = true;
 
-        // 자리와 방향을 정하는 것은 여기 한 번뿐이다. 중력이 꺼져 있으니 그대로 있는다.
-        // 매 프레임 다시 놓으면 물리가 밀어낸 것을 도로 끌어와 떨림이 된다.
-        Character.Movement.Pin(Anchor.hang);
+        // 자리는 옮기지 않는다. 문 자리에서 매달릴 자리로 하위 상태가 모아 간다 —
+        // 여기서 한 번에 옮기면 무는 순간 몸이 튄다.
+        Character.Movement.Pin(Character.Body.position);
         Character.Body.rotation = Anchor.facing;
 
         _upRequested = false;
@@ -195,37 +188,60 @@ public class Character_Ledge : FiniteStateMachine
     #region Requests
 
     /// <summary>
-    /// 오르기·놓기·벽점프는 <b>축 전체의 관심사</b>다. 특정 상태에 맡기지 않는다.
+    /// 턱에서 할 수 있는 일은 <b>오르기·놓기·벽점프 셋뿐이고, 그것을 정하는 곳은 여기 하나다.</b>
     ///
-    /// 매달려 있는 동안이면 진입 동작이 돌고 있든 쉬고 있든 같은 뜻이어야 하는데,
-    /// 대기 상태에만 두면 진입 클립이 끝나기를 기다리는 동안 입력이 통째로 죽는다.
-    /// 여기 두면 그 창이 없어지고, Update와 FixedUpdate 양쪽에서 확인되어 반응도 빨라진다.
+    /// 예전에는 같은 결정이 세 군데 흩어져 있었다 — 버튼은 여기서, 방향키는 대기 상태에서,
+    /// 그리고 진입 중이냐 아니냐로 한 번 더 갈렸다. 그래서 진입하는 동안 벽 쪽 키를 눌러도
+    /// 그 코드가 아예 돌지 않았고, 위·아래 버튼은 이 자리에서 버려졌다.
+    /// 눌렀는데 아무 일도 일어나지 않는 창은 그 갈래에서 나온다.
     ///
-    /// <b>턱 동작에는 끝까지 가야 하는 것이 없다.</b> 어느 구간이든 다음 입력이 이긴다 —
-    /// 구간마다 입력을 받을지 말지를 따로 두면, 눌렀는데 아무 일도 안 일어나는 창이 생긴다.
+    /// <b>구간을 가리지 않는다.</b> 손을 뻗는 중이든 매달려 쉬는 중이든 같은 입력은 같은 뜻이고,
+    /// 어느 구간이든 다음 입력이 이긴다. 진입 클립이 끝나기를 기다릴 이유가 없다 —
+    /// 오르기는 지금 있는 자리에서 설 자리까지를 스스로 재고, 놓기와 벽점프는 자리를 묻지도 않는다.
+    ///
+    /// 방향과 버튼을 나란히 두는 것은 둘이 같은 뜻이기 때문이다. 벽 쪽으로 밀어붙이면 넘어가고
+    /// 물러나면 떨어지는, 매달린 사람이 할 수 있는 두 가지가 곧 오르기와 놓기다.
     /// </summary>
     public override void Transitions()
     {
-        if (!Hanging)
-        {
-            // 아직 잡은 것이 아니다. 잡은 뒤에만 뜻이 있는 조작이므로 흘려보낸다 —
-            // 남겨두면 진입이 끝나는 순간 터져서, 누른 적 없는 동작이 저절로 나간다.
-            _upRequested = false;
-            _downRequested = false;
+        float push = Push();
 
-            // 점프만 다르다. 잡기 전의 점프는 턱 조작이 아니라 공중 도약이다.
-            if (Consume(ref _jumpRequested)) Abandon();
+        if (Consume(ref _upRequested) || push > Character.Ledge.pushMargin)
+        {
+            Switch(typeof(Ledge_Climb));
             return;
         }
 
-        if (Consume(ref _upRequested)) { Switch(typeof(Ledge_Climb)); return; }
-
-        if (Consume(ref _downRequested)) { Switch(typeof(Ledge_Release)); return; }
+        if (Consume(ref _downRequested) || push < -Character.Ledge.pushMargin)
+        {
+            Switch(typeof(Ledge_Release));
+            return;
+        }
 
         // 벽을 찰 발판이 없으면 뛰지 못한다. 그때 점프는 놓기가 된다 —
         // 어차피 내려가는 길이 그것뿐인데 키를 죽여두면 입력이 먹힌 것처럼 보인다.
         if (Consume(ref _jumpRequested))
             Switch(Braced ? typeof(Ledge_WallJump) : typeof(Ledge_Release));
+    }
+
+    /// <summary>
+    /// 조종 입력이 벽을 미는 정도. 벽 쪽이 양수, 반대가 음수, 안 밀면 0.
+    ///
+    /// <see cref="InputManager.CharacterMove"/>는 카메라 공간이라 그대로 벽 법선과 견줄 수 없다.
+    /// </summary>
+    float Push()
+    {
+        Vector3 input = InputManager.CharacterMove;
+        if (input.sqrMagnitude < 0.01f) return 0f;
+
+        Camera camera = Camera.main;
+        Vector3 world = camera != null ? camera.transform.TransformVector(input) : input;
+
+        world = CustomMath.RemoveY(world);
+        if (world.sqrMagnitude < 0.0001f) return 0f;
+
+        // facing이 벽을 보고 있으므로 그 앞이 벽 쪽이다.
+        return Vector3.Dot(world.normalized, Anchor.facing * Vector3.forward);
     }
 
     /// <summary>이미 그 상태면 아무것도 하지 않는다. 연타로 같은 동작이 처음부터 다시 돌지 않게.</summary>
@@ -244,26 +260,6 @@ public class Character_Ledge : FiniteStateMachine
     #endregion
 
     #region Exits
-
-    /// <summary>
-    /// 잡으려던 것을 포기하고 공중 도약한다. <b>진입 중에만 부른다.</b>
-    ///
-    /// 권리가 없으면 아무 일도 없고 진입이 이어진다 — 못 뛰는데 손까지 놓을 이유는 없다.
-    /// 잡은 뒤라면 이 길로 오지 않는다. 그때 점프는 벽을 차는 것이다.
-    /// </summary>
-    void Abandon()
-    {
-        if (fsm is not Character_Controlled controlled) return;
-        if (!controlled.ConsumeJump()) return;
-
-        // 뛰어서 나간다. 속도가 데려가므로 그 자리에서 권리를 돌려도 도로 물리지 않는다.
-        _charged = true;
-
-        // 속도는 넘기기 전에 싣는다. 외력 몸은 키네마틱이 아니라 지금 실어도 남는다.
-        Character.Steering.Jump(Character.JumpSpeed);
-
-        Drop();
-    }
 
     /// <summary>턱을 놓는다. 중력은 이 축의 Exit이 되돌린다.</summary>
     public void Drop()
@@ -307,11 +303,11 @@ public class Character_Ledge : FiniteStateMachine
     /// <summary>
     /// 다 올라섰다.
     ///
-    /// 세 가지를 <b>같은 순간에</b> 한다 — 설 자리에 놓고, 다음 자세로 섞기 시작하고, 축을 넘긴다.
+    /// 두 가지를 <b>같은 순간에</b> 한다 — 다음 자세로 섞기 시작하고, 축을 넘긴다.
     /// 섞이는 동안 이쪽에 더 붙들고 있으면 그만큼 조작을 잃고, 자세만 먼저 바꾸면 몸이 뒤늦게 따라와 튄다.
     ///
-    /// 자리를 여기서 정하는 이유는 오르기 클립이 끝나는 곳이 설 자리와 다르기 때문이다.
-    /// 상승량이 매달린 깊이에 못 미치고, 앞으로 가는 몫은 오르는 내내 몸이 턱보다 아래라 절벽 면에 막혀 먹힌다.
+    /// <b>자리는 여기서 정하지 않는다.</b> 오르기가 설 자리를 향해 모아 왔으므로 이미 거기 있다 —
+    /// 여기서 다시 놓으면 그때까지 남은 몫이 무엇이든 한 프레임에 지워져, 그게 곧 튀는 것이다.
     ///
     /// 섞이는 시간을 길게 주는 것은 오르기 자세와 선 자세가 너무 달라서다.
     /// 기본값으로는 한 프레임 만에 갈아타 순간이동처럼 보인다.
@@ -322,7 +318,6 @@ public class Character_Ledge : FiniteStateMachine
 
         LedgeGrab grab = Character.Ledge;
 
-        Character.Movement.Pin(Anchor.stand);
         Character.Animation.Play(grab.mount.state, grab.Seconds(grab.mount));
 
         if (fsm is Character_Controlled controlled) controlled.ToLocomotion();

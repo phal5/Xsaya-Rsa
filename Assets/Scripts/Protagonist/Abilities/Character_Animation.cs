@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 상태기계가 애니메이터에 말을 거는 유일한 창구.
@@ -123,6 +123,61 @@ public class Character_Animation : MonoBehaviour
     void Drop()
     {
         _rootMotion = Vector3.zero;
+    }
+
+    Transform _leftHand, _rightHand;
+    bool _handsLooked;
+
+    /// <summary>
+    /// 두 손의 가운데. <b>묻기만 한다</b> — 여기서 읽은 값으로 몸을 옮기지 않는다.
+    ///
+    /// 클립마다 손이 제자리에 놓이는 프레임이 다르고, 그것을 프레임 수로 적어두면
+    /// 클립이 바뀔 때마다 다시 재야 한다. 뼈에 직접 물으면 어느 클립이든 저절로 맞는다.
+    /// </summary>
+    public bool TryHandCenter(out Vector3 center)
+    {
+        center = Vector3.zero;
+
+        if (!_handsLooked)
+        {
+            _handsLooked = true;
+
+            if (_animator != null && _animator.isHuman)
+            {
+                _leftHand = _animator.GetBoneTransform(HumanBodyBones.LeftHand);
+                _rightHand = _animator.GetBoneTransform(HumanBodyBones.RightHand);
+            }
+        }
+
+        if (_leftHand == null || _rightHand == null) return false;
+
+        center = (_leftHand.position + _rightHand.position) * 0.5f;
+        return true;
+    }
+
+    /// <summary>
+    /// 지금 걸린 클립이 <b>통틀어</b> 몸을 얼마나 옮기는지. 클립의 제 좌표계로 돌려준다(z가 앞, y가 위).
+    ///
+    /// 믹사모 클립은 제 배우의 팔 길이와 제 턱 높이에 맞춰 찍힌 것이라 우리 몸과 우리 턱에
+    /// 맞을 이유가 없다. 얼마나 어긋나는지를 알아야 그만큼 늘려 걸 수 있다.
+    ///
+    /// 그 값을 손으로 재어 적어두지 않는다 — 임포트 설정을 건드리는 순간 조용히 틀려지고,
+    /// 틀린 줄도 모르게 된다. 자산에 직접 묻는 편이 언제나 맞다.
+    /// </summary>
+    public bool TryClipTravel(out Vector3 travel)
+    {
+        travel = Vector3.zero;
+        if (_animator == null) return false;
+
+        // 섞이는 동안 현재는 아직 떠나는 쪽을 가리킨다. 알고 싶은 것은 들어오는 쪽이다.
+        AnimatorClipInfo[] info = _animator.IsInTransition(0)
+            ? _animator.GetNextAnimatorClipInfo(0)
+            : _animator.GetCurrentAnimatorClipInfo(0);
+
+        if (info.Length == 0 || info[0].clip == null) return false;
+
+        travel = info[0].clip.averageSpeed * info[0].clip.length;
+        return true;
     }
 
     /// <summary>쌓인 루트 모션을 가져가고 비운다. 가져간 쪽이 몸에 싣는 책임을 진다.</summary>

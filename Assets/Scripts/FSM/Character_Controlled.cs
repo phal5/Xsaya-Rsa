@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 조작 가능한 동안의 서브머신. 이동 축(Ground/Airborne)과 스킬 실행을 갈아끼운다.
@@ -38,25 +38,6 @@ public class Character_Controlled : FiniteStateMachine
 
         base.Enter();
     }
-
-    #region Jump Ticket
-
-    Character_Airborne _airborne;
-
-    /// <summary>
-    /// 도약 권리를 쓴다. 없으면 거짓.
-    ///
-    /// 등록된 컴포넌트 상태에서 찾는다 — 축들은 저마다 다른 오브젝트에 붙어 있어
-    /// GetComponent로는 잡히지 않는다. 그러면 조용히 아무것도 안 하게 된다.
-    /// </summary>
-    public bool ConsumeJump()
-    {
-        Character_Airborne airborne = Find(ref _airborne);
-
-        return airborne != null && airborne.ConsumeJumpTicket();
-    }
-
-    #endregion
 
     protected override void OnDestroyed()
     {

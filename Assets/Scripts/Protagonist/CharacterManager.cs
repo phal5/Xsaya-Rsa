@@ -461,6 +461,9 @@ public class LedgeGrab
     [Tooltip("턱 윗면에서 몸까지의 낙차.")]
     [Min(0f)] public float hangDrop = 1.55f;
 
+    [Tooltip("매달릴 자리로 모이는 속도(초당 거리). 진입을 손이 닿는 순간에 끊으므로 남는 몫을 이 속도로 좁힌다.")]
+    [Min(0.01f)] public float settleSpeed = 2f;
+
     [Tooltip("올라선 뒤 턱 안쪽으로 들어갈 거리.")]
     [Min(0f)] public float standInset = 0.4f;
 
@@ -486,8 +489,8 @@ public class LedgeGrab
     [Min(0f)] public float wallJumpOut = 4f;
 
     [Header("동작")]
-    [Tooltip("벽 반대쪽으로 이만큼 이상 밀면 손을 놓는다. 1이면 정확히 반대로 밀 때만, 0이면 옆으로만 밀어도 놓는다.")]
-    [Range(0f, 1f)] public float releasePush = 0.5f;
+    [Tooltip("방향키가 이만큼 이상 기울어야 반응한다. 벽 쪽이면 오르고 반대쪽이면 놓는다.")]
+    [Range(0f, 1f)] public float pushMargin = 0.5f;
 
     [Header("애니메이션")]
     [Tooltip("아래 프레임 값들이 기준으로 삼는 프레임레이트.")]
@@ -500,16 +503,16 @@ public class LedgeGrab
     public LedgeClip freeHang = new LedgeClip("Free Hanging Idle", 0f);
 
     [Tooltip("공중에서 발 디딜 턱을 문 순간. 이 동안에도 조작은 받는다 — 길이는 가만히 뒀을 때 보이는 시간일 뿐이다.")]
-    public LedgeClip catchBraced = new LedgeClip("Jumping To Braced Hanging", 24f, 0f, new Vector2(0.504f, -0.529f));
+    public LedgeClip catchBraced = new LedgeClip("Jumping To Braced Hanging", 24f);
 
     [Tooltip("공중에서 디딜 것 없는 턱을 문 순간.")]
-    public LedgeClip catchFree = new LedgeClip("Jump To Free Hang", 24f, 0f, new Vector2(0.614f, -0.303f));
+    public LedgeClip catchFree = new LedgeClip("Jump To Free Hang", 24f);
 
     [Tooltip("가장자리에서 내려가 매달리는 동작. 지상 진입은 언제나 여기부터 시작한다.")]
-    public LedgeClip dropToFree = new LedgeClip("Drop To Freehang", 24f, 0f, new Vector2(0.279f, -1.603f));
+    public LedgeClip dropToFree = new LedgeClip("Drop To Freehang", 24f);
 
     [Tooltip("매달린 뒤 발 디딜 것이 있으면 이어서 트는 동작.")]
-    public LedgeClip freeToBraced = new LedgeClip("Free Hang To Braced", 16f, 0f, new Vector2(-0.319f, 0.212f));
+    public LedgeClip freeToBraced = new LedgeClip("Free Hang To Braced", 16f);
 
     [Tooltip("발을 디딘 채 올라서기.")]
     public LedgeClip climbBraced = new LedgeClip("Braced Hang To Crouch", 55f);
@@ -539,17 +542,11 @@ public class LedgeGrab
         [Tooltip("클립의 이 프레임부터 튼다. 앞부분이 이미 지나간 자세일 때 건너뛴다.")]
         [Min(0f)] public float start;
 
-        [Tooltip("이 클립이 루트를 옮기는 양. x는 벽 쪽, y는 위. 끝나는 자리를 맞추려고 시작점을 이만큼 물린다.")]
-        public Vector2 travel;
-
-        public LedgeClip(string state, float frames, float start = 0f) : this(state, frames, start, Vector2.zero) { }
-
-        public LedgeClip(string state, float frames, float start, Vector2 travel)
+        public LedgeClip(string state, float frames, float start = 0f)
         {
             this.state = state;
             this.frames = frames;
             this.start = start;
-            this.travel = travel;
         }
 
         public bool IsSet => !string.IsNullOrEmpty(state);
@@ -565,6 +562,27 @@ public class LedgeGrab
 
 
     /// <summary>잡을 자리. 잡는 순간 한 번 계산해 두고 매달린 동안 다시 재지 않는다.</summary>
+    /// <summary>
+    /// 매달릴 자리에서 되짚은 턱 윗면. <b>손이 여기 닿으면 잡은 것이다.</b>
+    ///
+    /// 클립마다 손이 놓이는 프레임이 다르다. 프레임 수로 적어두면 클립이 바뀔 때마다 다시 재야 하고,
+    /// 재려면 루트 모션을 켜야 한다. 손 위치를 직접 물어 이 높이와 견주면 어느 클립이든 저절로 맞는다.
+    /// </summary>
+    public float TopOf(Anchor anchor, float footOffset) => anchor.hang.y + hangDrop - footOffset;
+
+    /// <summary>
+    /// 붙잡는 지점. 벽면 위 턱 모서리다.
+    ///
+    /// 높이만으로 판정하면 안 된다 — 진입 클립은 손을 턱 <b>위로 뻗었다가</b> 내려놓아서,
+    /// 뻗는 도중에 이미 그 높이를 지난다. 모서리까지의 거리로 봐야 내려놓은 순간이 잡힌다.
+    /// </summary>
+    public Vector3 GripOf(Anchor anchor, float footOffset)
+    {
+        Vector3 toWall = anchor.facing * Vector3.forward;
+
+        return anchor.hang + toWall * wallOffset + Vector3.up * (hangDrop - footOffset);
+    }
+
     public struct Anchor
     {
         public Vector3 hang;
