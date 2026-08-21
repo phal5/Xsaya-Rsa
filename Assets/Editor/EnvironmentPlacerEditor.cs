@@ -555,19 +555,17 @@ public class EnvironmentPlacerWindow : EditorWindow
             return 0;
         }
 
-        // 레이어별 컨테이너 생성 (부모 스케일 보정)
+        // 레이어별 컨테이너 생성
+        //
+        // 예전에는 여기에 부모 스케일의 역수를 걸어 상쇄했다. 대상에 회전까지 섞이면
+        // lossyScale로는 그 상쇄가 성립하지 않아 배치물이 늘어나거나 기울었다.
+        // 지금은 컨테이너를 그대로 두고, 배치물을 월드에서 완성한 뒤 편입시킨다.
         string containerName = GetContainerName(layerIndex);
         GameObject container = new GameObject(containerName);
         container.transform.SetParent(target.transform, false);
         container.transform.localPosition = Vector3.zero;
         container.transform.localRotation = Quaternion.identity;
-
-        Vector3 parentLossyScale = target.transform.lossyScale;
-        container.transform.localScale = new Vector3(
-            1f / parentLossyScale.x,
-            1f / parentLossyScale.y,
-            1f / parentLossyScale.z
-        );
+        container.transform.localScale = Vector3.one;
         Undo.RegisterCreatedObjectUndo(container, "Environment Placer Generate");
 
         // 파라미터 결정
@@ -709,11 +707,12 @@ public class EnvironmentPlacerWindow : EditorWindow
                     break;
             }
 
-            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, container.transform);
+            // 부모를 붙이지 않고 씬 루트에 먼저 만든다. 루트에서는 localScale이 곧 월드 스케일이라
+            // 대상의 스케일이 섞여 들어오지 않는다.
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, target.scene);
             if (instance != null)
             {
-                instance.transform.position = position;
-                instance.transform.rotation = rotation;
+                instance.transform.SetPositionAndRotation(position, rotation);
                 instance.transform.localScale = Vector3.one * scaleFactor;
 
                 // 면 회전을 건너뛰면 프리팹이 자기 +Y로 자라 블록을 파고든다.
@@ -722,6 +721,10 @@ public class EnvironmentPlacerWindow : EditorWindow
                 {
                     PushOutsideSurface(instance, position, SideNormal(layer.side));
                 }
+
+                // 월드 값이 다 잡힌 뒤에 편입시킨다.
+                // worldPositionStays: true 로 두면 로컬 값 역산은 유니티가 한다.
+                instance.transform.SetParent(container.transform, true);
 
                 Undo.RegisterCreatedObjectUndo(instance, "Environment Placer Generate");
                 ApplyRenderingOptions(instance, layer.profile.UsesGpuInstancing(entry));
