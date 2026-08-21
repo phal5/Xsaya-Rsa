@@ -32,6 +32,7 @@ public class EnvironmentPlacerWindow : EditorWindow
         public float globalScale = 1f;
         public float zOffset = 0f;
         public PlacementSide side = PlacementSide.Top;
+        public bool alignRotationToSurface = false;
         public bool enabled = true;
         public bool foldout = true;
     }
@@ -261,6 +262,11 @@ public class EnvironmentPlacerWindow : EditorWindow
                             layer.density = EditorGUILayout.Slider("밀도", layer.density, 0.1f, 3f);
                             layer.globalScale = EditorGUILayout.Slider("전체 스케일", layer.globalScale, 0.1f, 5f);
                             layer.zOffset = EditorGUILayout.FloatField("깊이 오프셋 (Z)", layer.zOffset);
+
+                            layer.alignRotationToSurface = EditorGUILayout.Toggle(
+                                new GUIContent("회전을 배치면에 맞춤", "켜면 배치면 방향을 따라 오브젝트를 눕히거나 세운다. 끄면 어느 면에 붙든 똑바로 선 자세를 유지하고, 블록을 파고들지 않도록 면 바깥으로 밀어낸다. 위치가 배치면을 따르는 것은 이 설정과 무관하다."),
+                                layer.alignRotationToSurface
+                            );
 
                             // 개별 레이어 Generate/Clear
                             EditorGUILayout.BeginHorizontal();
@@ -669,12 +675,12 @@ public class EnvironmentPlacerWindow : EditorWindow
                 (float)rng.NextDouble()
             ) * layer.globalScale;
 
-            // 회전: (프로파일이 켰을 때만) 배치면 회전 + Y축 랜덤 회전
+            // 회전: (레이어가 켰을 때만) 배치면 회전 + Y축 랜덤 회전
             //
             // 면을 따라가지 않는 것이 기본이다. 벽이나 천장에 붙여도 오브젝트는 똑바로 선 자세를
             // 유지한다. 나무나 풀처럼 중력 방향이 정해진 것들은 면을 따라 누우면 안 되기 때문이다.
             // 이때 랜덤 Y 회전은 월드 Y축을 돈다. 켜면 면의 노멀을 축으로 돈다.
-            Quaternion rotation = layer.profile.AlignToSurface ? sideRotation : Quaternion.identity;
+            Quaternion rotation = layer.alignRotationToSurface ? sideRotation : Quaternion.identity;
             if (entry.RandomYRotation)
             {
                 rotation *= Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f);
@@ -709,6 +715,14 @@ public class EnvironmentPlacerWindow : EditorWindow
                 instance.transform.position = position;
                 instance.transform.rotation = rotation;
                 instance.transform.localScale = Vector3.one * scaleFactor;
+
+                // 면 회전을 건너뛰면 프리팹이 자기 +Y로 자라 블록을 파고든다.
+                // 건너뛴 만큼을 여기서 보정한다.
+                if (!layer.alignRotationToSurface && sideRotation != Quaternion.identity)
+                {
+                    PushOutsideSurface(instance, position, SideNormal(layer.side));
+                }
+
                 Undo.RegisterCreatedObjectUndo(instance, "Environment Placer Generate");
                 ApplyRenderingOptions(instance, layer.profile.UsesGpuInstancing(entry));
                 count++;
@@ -723,6 +737,75 @@ public class EnvironmentPlacerWindow : EditorWindow
         }
 
         return count;
+    }
+
+    /// <summary>배치면이 바라보는 바깥 방향.</summary>
+    static Vector3 SideNormal(PlacementSide side)
+    {
+        switch (side)
+        {
+            case PlacementSide.Top: return Vector3.up;
+            case PlacementSide.Bottom: return Vector3.down;
+            case PlacementSide.Left: return Vector3.left;
+            case PlacementSide.Right: return Vector3.right;
+            case PlacementSide.Front: return Vector3.forward;
+            case PlacementSide.Back: return Vector3.back;
+            default: return Vector3.up;
+        }
+    }
+
+    /// <summary>
+    /// 오브젝트가 배치면을 파고든 만큼 바깥으로 밀어낸다.
+    ///
+    /// 면 회전을 걸면 프리팹의 +Y가 면 바깥을 향하지만, 회전을 걸지 않으면 +Y가 그대로 월드 위쪽을
+    /// 향한다. 아래쪽 면에 세워둔 나무가 블록을 뚫고 위로 솟는 게 그래서다.
+    /// 여기서는 렌더러 경계를 재서, 면 안쪽으로 넘어간 깊이만큼 법선 방향으로 옮긴다.
+    ///
+    /// Top 면은 회전이 원래 항등이라 이 보정을 타지 않는다. 기존 배치 결과가 달라지지 않게 하기 위해서다.
+    /// </summary>
+    static void PushOutsideSurface(GameObject instance, Vector3 surfacePoint, Vector3 normal)
+    {
+        if (!TryGetWorldBounds(instance, out Bounds bounds)) return;
+
+        // 법선이 축 정렬이라 성분 하나만 남는다. 그래도 일반형으로 둔다.
+        float extent =
+            Mathf.Abs(bounds.extents.x * normal.x) +
+            Mathf.Abs(bounds.extents.y * normal.y) +
+            Mathf.Abs(bounds.extents.z * normal.z);
+
+        float objectMin = Vector3.Dot(bounds.center, normal) - extent;
+        float surface = Vector3.Dot(surfacePoint, normal);
+
+        float penetration = surface - objectMin;
+        if (penetration > 0f)
+        {
+            instance.transform.position += normal * penetration;
+        }
+    }
+
+    static bool TryGetWorldBounds(GameObject instance, out Bounds bounds)
+    {
+        bounds = default;
+
+        Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+        bool any = false;
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null) continue;
+
+            if (!any)
+            {
+                bounds = renderer.bounds;
+                any = true;
+            }
+            else
+            {
+                bounds.Encapsulate(renderer.bounds);
+            }
+        }
+
+        return any;
     }
 
     /// <summary>

@@ -19,7 +19,6 @@ public class Ledge_Catch : LedgeState
 
         _converting = false;
 
-        characterManager.Animation.ConsumeRootMotion();
         BeginAt(Ledge.CatchClip(), Ledge.Anchor.hang);
     }
 

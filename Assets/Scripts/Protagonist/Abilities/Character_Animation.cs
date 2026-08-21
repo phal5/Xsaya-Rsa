@@ -51,6 +51,8 @@ public class Character_Animation : MonoBehaviour
 
         _current = state;
 
+        Drop();
+
         Warn(state);
         _animator.CrossFadeInFixedTime(state, fade);
     }
@@ -99,6 +101,30 @@ public class Character_Animation : MonoBehaviour
         _rootMotion += _animator.deltaPosition;
     }
 
+    /// <summary>
+    /// 루트 모션을 <b>받아둘지</b>. 가져갈 쪽이 있는 구간만 켠다.
+    ///
+    /// 꺼두면 유니티가 <see cref="OnAnimatorMove"/>를 아예 부르지 않아 쌓일 것이 없다.
+    /// 켜둔 채 아무도 안 가져가면 그 몫이 계속 쌓이고, 다음에 가져가는 구간에 들어서는 순간
+    /// 그동안의 것이 한꺼번에 몸에 실린다 — 한 번 매달렸다 나온 뒤 다시 매달릴 때 몸이 홱 도는 이유였다.
+    ///
+    /// 몸에 그때그때 옮기는 방법도 있지만 그럴 수 없다. 지상·공중은 속도로 움직이는 설계라
+    /// 클립의 이동까지 실으면 달리기가 7.5에서 10.4로 빨라진다. 클립은 그쪽에서 자세만 준다.
+    /// </summary>
+    public void CaptureRootMotion(bool capture)
+    {
+        if (_animator == null) return;
+
+        _animator.applyRootMotion = capture;
+        Drop();
+    }
+
+    /// <summary>쌓인 몫을 통째로 버린다.</summary>
+    void Drop()
+    {
+        _rootMotion = Vector3.zero;
+    }
+
     /// <summary>쌓인 루트 모션을 가져가고 비운다. 가져간 쪽이 몸에 싣는 책임을 진다.</summary>
     public Vector3 ConsumeRootMotion()
     {
@@ -121,6 +147,8 @@ public class Character_Animation : MonoBehaviour
         if (_animator == null || string.IsNullOrEmpty(state)) return;
 
         _current = state;
+
+        Drop();
 
         Warn(state);
         _animator.CrossFadeInFixedTime(state, _fade, 0, offsetSeconds);

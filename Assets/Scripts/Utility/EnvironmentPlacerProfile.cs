@@ -24,9 +24,6 @@ public class EnvironmentPlacerProfile : ScriptableObject
     [Tooltip("블록 표면으로부터의 Y 오프셋.")]
     [SerializeField] float _yOffset = 0f;
 
-    [Tooltip("배치된 면의 방향을 따라 오브젝트를 눕히거나 세웁니다. 끄면 어느 면에 붙든 똑바로 선 자세를 유지합니다. 기본값은 끔.")]
-    [SerializeField] bool _alignToSurface = false;
-
     [Header("Rendering")]
 
     [Tooltip("이 프로파일로 배치되는 모든 오브젝트에 GPU 인스턴싱을 적용합니다.\n끄면 엔트리별 체크박스를 각각 따릅니다.\n머티리얼은 공유 에셋이므로 배치물 밖의 오브젝트에도 함께 적용됩니다.")]
@@ -46,7 +43,6 @@ public class EnvironmentPlacerProfile : ScriptableObject
     public bool IsRandomPlacement => _isRandomPlacement;
     public int SamplesBeforeRejection => _samplesBeforeRejection;
     public float YOffset => _yOffset;
-    public bool AlignToSurface => _alignToSurface;
     public bool UseRandomSeed => _useRandomSeed;
     public int Seed => _seed;
     public bool GpuInstancing => _gpuInstancing;

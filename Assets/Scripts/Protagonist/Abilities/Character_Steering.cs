@@ -14,7 +14,7 @@ public class Character_Steering : MonoBehaviour
 
     private void Awake()
     {
-        _character = _characterManager.Rigidbody;
+        _character = _characterManager.Body;
         _movement = _characterManager.Movement;
     }
 

@@ -35,15 +35,26 @@ public class Character_Ledge : FiniteStateMachine
     /// <summary>어디서 들어왔는지. 끝까지 가야 하는 동작인지를 가르는 데 쓰인다.</summary>
     public Entry Origin => _entry;
 
+    /// <summary>
+    /// 턱을 <b>실제로 잡고 있는지.</b> 진입 동작이 도는 동안은 아직 아니다 — 손을 뻗어 가는 중이다.
+    ///
+    /// 오르기·놓기·벽점프는 전부 "잡고 있다"를 전제로 하는 동작이라, 잡기 전에는 뜻이 없다.
+    /// </summary>
+    public bool Hanging => _currentStateType != typeof(Ledge_Catch);
+
     Entry _entry;
     bool _subscribed;
 
+    /// <summary>Compose가 준 그대로. 자세가 바뀔 때 여기서 다시 옮긴다 — 옮긴 것을 또 옮기지 않으려고 원본을 든다.</summary>
+    LedgeGrab.Anchor _raw;
+
     /// <summary>
-    /// 잡을 권리. 한 번 잡으면 소모되고, <b>턱에서 벗어나는 순간</b> 되돌아온다.
+    /// 잡을 권리. 한 번 잡으면 소모된다.
     ///
-    /// 되무는 것을 막는 것은 티켓이 아니라 속도다. 놓기도 벽점프도 한 방향으로 나아가는 동작이라
-    /// 이탈 속도가 살아 있으면 저절로 멀어진다 — 티켓이 할 일은 매달린 동안 두 번 물지 않게 하는 것뿐이고,
-    /// 나가고 나면 곧바로 다시 잡을 수 있어야 한다.
+    /// 되돌아오는 방식이 나가는 방식에 따라 다르다.
+    ///   <b>뛰어서</b> 나가면 그 자리에서 돌아온다 — 속도가 몸을 데려가므로 같은 턱을 도로 물 일이 없다.
+    ///   <b>놓아서</b> 나가면 잡을 곳이 없어질 때까지 기다린다 — 놓은 자리에 그대로 있어
+    ///   매 프레임 탐지가 성립하므로, 그때 권리가 있으면 손을 뗀 그 프레임에 도로 물린다.
     ///
     /// 처음에는 채워져 있다. 게임을 시작하자마자 벽 앞에 서 있을 수도 있기 때문이다.
     /// </summary>
@@ -65,7 +76,7 @@ public class Character_Ledge : FiniteStateMachine
         if (Character == null || Character.Ledge == null) return false;
 
         LedgeGrab grab = Character.Ledge;
-        Transform body = Character.Rigidbody.transform;
+        Transform body = Character.Body.transform;
 
         // 탐지 수치는 발밑 기준이고 몸의 원점은 캡슐 중앙에 있다. 그 차이를 여기서 넘긴다.
         float feet = Character.FootOffset;
@@ -74,7 +85,12 @@ public class Character_Ledge : FiniteStateMachine
             ? grab.Probe(body, feet, out LedgeGrab.Anchor anchor)
             : grab.ProbeFromTop(body, feet, out anchor);
 
-        if (!found) return false;
+        // 잡을 곳이 없다. 놓고 나온 뒤 권리가 돌아오는 자리다.
+        if (!found)
+        {
+            _charged = true;
+            return false;
+        }
 
         if (!_charged) return false;
 
@@ -89,7 +105,8 @@ public class Character_Ledge : FiniteStateMachine
         Braced = entry == Entry.Air && canBrace;
         BracingPending = entry == Entry.Ground && canBrace;
 
-        Anchor = anchor;
+        _raw = anchor;
+        Anchor = grab.Pose(_raw, Braced);
 
         return true;
     }
@@ -99,6 +116,9 @@ public class Character_Ledge : FiniteStateMachine
     {
         Braced = true;
         BracingPending = false;
+
+        // 자세가 바뀌면 손이 벽에 닿는 자리도 바뀐다. 팔을 접는 만큼 몸이 벽에서 물러난다.
+        Anchor = Character.Ledge.Pose(_raw, true);
     }
 
     #endregion
@@ -110,11 +130,23 @@ public class Character_Ledge : FiniteStateMachine
         // 중력을 끄는 것이 먼저다. 위치를 붙드는 것만으로는 속도가 계속 쌓인다.
         Character.Movement.SetGravity(false);
 
+        // 클립이 몸을 옮기는 구간은 여기뿐이다. 여기서만 받는다.
+        //
+        // 옮기는 것은 위치뿐이다. 방향은 턱 법선이 정하고 아래에서 한 번 세운다 —
+        // 진입 클립의 회전은 배우가 공중에서 몸을 트는 몫이라, 세워둔 방향 위에 또 실으면 두 번 돈다.
+        Character.Animation.CaptureRootMotion(true);
+
+        // 붙어 있는 동안은 물리가 몸을 밀지 못하게 한다.
+        //
+        // 매달린 자세는 손이 벽면에 닿아야 해서 몸이 벽보다 안쪽에 오기도 한다.
+        // 그대로 두면 솔버가 매 프레임 밀어내고 우리가 도로 끌어와 눈에 보이는 떨림이 된다.
+        // 콜라이더는 그대로 남으므로 피격 판정은 잃지 않는다.
+        Character.Body.isKinematic = true;
+
         // 자리와 방향을 정하는 것은 여기 한 번뿐이다. 중력이 꺼져 있으니 그대로 있는다.
         // 매 프레임 다시 놓으면 물리가 밀어낸 것을 도로 끌어와 떨림이 된다.
         Character.Movement.Pin(Anchor.hang);
-        Character.Rigidbody.rotation = Anchor.facing;
-        Character.Animation.ConsumeRootMotion();
+        Character.Body.rotation = Anchor.facing;
 
         _upRequested = false;
         _downRequested = false;
@@ -152,6 +184,9 @@ public class Character_Ledge : FiniteStateMachine
     {
         Unsubscribe();
 
+        Character.Animation.CaptureRootMotion(false);
+
+        Character.Body.isKinematic = false;
         Character.Movement.SetGravity(true);
 
         base.Exit();
@@ -171,6 +206,18 @@ public class Character_Ledge : FiniteStateMachine
     /// </summary>
     public override void Transitions()
     {
+        if (!Hanging)
+        {
+            // 아직 잡은 것이 아니다. 잡은 뒤에만 뜻이 있는 조작이므로 흘려보낸다 —
+            // 남겨두면 진입이 끝나는 순간 터져서, 누른 적 없는 동작이 저절로 나간다.
+            _upRequested = false;
+            _downRequested = false;
+
+            // 점프만 다르다. 잡기 전의 점프는 턱 조작이 아니라 공중 도약이다.
+            if (Consume(ref _jumpRequested)) Abandon();
+            return;
+        }
+
         if (Consume(ref _upRequested)) { Switch(typeof(Ledge_Climb)); return; }
 
         if (Consume(ref _downRequested)) { Switch(typeof(Ledge_Release)); return; }
@@ -198,11 +245,29 @@ public class Character_Ledge : FiniteStateMachine
 
     #region Exits
 
+    /// <summary>
+    /// 잡으려던 것을 포기하고 공중 도약한다. <b>진입 중에만 부른다.</b>
+    ///
+    /// 권리가 없으면 아무 일도 없고 진입이 이어진다 — 못 뛰는데 손까지 놓을 이유는 없다.
+    /// 잡은 뒤라면 이 길로 오지 않는다. 그때 점프는 벽을 차는 것이다.
+    /// </summary>
+    void Abandon()
+    {
+        if (fsm is not Character_Controlled controlled) return;
+        if (!controlled.ConsumeJump()) return;
+
+        // 뛰어서 나간다. 속도가 데려가므로 그 자리에서 권리를 돌려도 도로 물리지 않는다.
+        _charged = true;
+
+        // 속도는 넘기기 전에 싣는다. 외력 몸은 키네마틱이 아니라 지금 실어도 남는다.
+        Character.Steering.Jump(Character.JumpSpeed);
+
+        Drop();
+    }
+
     /// <summary>턱을 놓는다. 중력은 이 축의 Exit이 되돌린다.</summary>
     public void Drop()
     {
-        _charged = true;
-
         if (fsm is Character_Controlled controlled) controlled.ToAirborne();
     }
 
@@ -217,6 +282,9 @@ public class Character_Ledge : FiniteStateMachine
     {
         LedgeGrab grab = Character.Ledge;
         Vector3 outward = -(Anchor.facing * Vector3.forward);
+
+        // 뛰어서 나간다. 속도가 데려가므로 그 자리에서 권리를 돌려도 도로 물리지 않는다.
+        _charged = true;
 
         // 붙어 있는 동안 껐던 것을 되돌린다. 이제부터 몸은 물리가 가져간다.
         Character.Movement.SetGravity(true);

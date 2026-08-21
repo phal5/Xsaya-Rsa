@@ -942,7 +942,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfce28a6a32e80e469cca022cf0bb4c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterManager
-  <Rigidbody>k__BackingField: {fileID: 4497841181015544793}
+  <Body>k__BackingField: {fileID: 4497841181015544793}
   <Movement>k__BackingField: {fileID: 3728775688057023553}
   <Steering>k__BackingField: {fileID: 5643119508071096491}
   <Animation>k__BackingField: {fileID: 8741137196087071678}
@@ -973,11 +973,11 @@ MonoBehaviour:
       m_Bits: 4294967295
     reachHigh: 1.85
     reachLow: 1.5
-    reach: 0.7
-    edgeSamples: 5
+    reach: 0.4
     probeRadius: 0.2
     maxSlope: 40
-    wallOffset: 0.25
+    wallOffset: 0.19
+    freeWallOffset: -0.048
     hangDrop: 1.55
     standInset: 0.4
     braceOffset: 0
@@ -3645,7 +3645,7 @@ GameObject:
   - component: {fileID: 7322752863353892387}
   - component: {fileID: 7105664321761075555}
   m_Layer: 9
-  m_Name: Sampler (1)
+  m_Name: External
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4058,7 +4058,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: edbebdea524fe414ba56dfa0da50a890, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -5546,7 +5546,7 @@ GameObject:
   - component: {fileID: 4497841181015544793}
   - component: {fileID: 9082050631393552429}
   m_Layer: 10
-  m_Name: Main
+  m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6401,8 +6401,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f8d747f6634c8c4aa5e8542044b17c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Character_Movement
-  _sampler: {fileID: 7105664321761075555}
-  _rigidbody: {fileID: 4497841181015544793}
+  _external: {fileID: 7105664321761075555}
+  _own: {fileID: 4497841181015544793}
   _groundAcceleration: 100
   _aerialAcceleration: 100
   _singular: 0
@@ -6434,8 +6434,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b398be4c2328b047b02164d258522e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Dimensional
-  _rigidbody: {fileID: 4497841181015544793}
-  _sampler: {fileID: 7105664321761075555}
+  _own: {fileID: 4497841181015544793}
+  _external: {fileID: 7105664321761075555}
   _originalZ: 0
 --- !u!1 &8942072118336034522
 GameObject:

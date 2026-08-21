@@ -54,7 +54,7 @@ public class Character_Down : BaseCharacterState
         if (point == null) return;
 
         // 부활 지점이 지정돼 있으면 옮긴다. 남은 속도도 함께 지운다.
-        characterManager.Rigidbody.position = point.position;
-        characterManager.Rigidbody.linearVelocity = Vector3.zero;
+        characterManager.Body.position = point.position;
+        characterManager.Body.linearVelocity = Vector3.zero;
     }
 }

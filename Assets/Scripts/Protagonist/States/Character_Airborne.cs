@@ -93,8 +93,14 @@ public class Character_Airborne : FiniteStateMachine
     /// <summary>재생을 푼 시각. 가속을 시간으로 걸기 때문에 기준점이 필요하다.</summary>
     float _resumedAt;
 
-    /// <summary>지금 떠오르는 중인지. 공중에서는 rigidbody가 sampler의 수직 속도를 그대로 반영한다.</summary>
-    bool Rising => Character.Rigidbody.linearVelocity.y > 0f;
+    /// <summary>
+    /// 지금 떠오르는 중인지.
+    ///
+    /// 몸이 아니라 <b>속도의 원본</b>에 묻는다. 벽을 차고 넘어온 참이면 몸은 아직 그 속도를 받지 못했고,
+    /// 턱 축에 있는 동안은 키네마틱이라 아예 실리지도 않는다 — 그걸 0으로 읽으면
+    /// 차고 오르는 중인데도 떨어지는 중으로 보고 그 자리에서 턱을 다시 문다.
+    /// </summary>
+    bool Rising => Character.Movement.Velocity.y > 0f;
 
     float SinceResume => Time.time - _resumedAt;
 
@@ -225,6 +231,20 @@ public class Character_Airborne : FiniteStateMachine
     }
 
     #region Tickets
+
+    /// <summary>
+    /// 도약 권리를 쓴다. <b>공중 축 바깥에서도</b> 쓴다 — 턱 진입을 포기하고 뛰는 경우가 그렇다.
+    ///
+    /// 권리는 공중 축에 들어올 때 채워진다. 턱을 물기 전에 이미 공중이었으므로,
+    /// 진입 중에 남아 있는지를 물으면 "매달리기 전에 공중 도약을 썼는가"가 그대로 답이 된다.
+    /// </summary>
+    public bool ConsumeJumpTicket()
+    {
+        if (_jumpTicket == 0) return false;
+
+        _jumpTicket--;
+        return true;
+    }
 
     public bool ConsumeDodgeTicket()
     {

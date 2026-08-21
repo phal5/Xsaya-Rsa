@@ -40,7 +40,7 @@ public abstract class LedgeState : BaseCharacterState
     {
         _startedAt = Time.time;
         _holdFor = Grab.Seconds(clip);
-        _place = characterManager.Rigidbody.position;
+        _place = characterManager.Body.position;
 
         if (!clip.IsSet) return;
 

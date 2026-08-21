@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class CharacterManager : EntityManager
 {
-    [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
+    [Tooltip("캡슐과 피격 판정이 있는 몸. 바깥에서 '캐릭터가 어디 있나'를 묻는 곳은 여기다.")]
+    [field: SerializeField] public Rigidbody Body { get; private set; }
     [field:SerializeField] public Character_Movement Movement {  get; private set; }
     [field: SerializeField] public Character_Steering Steering { get; private set; }
     [Tooltip("상태들이 Enter에서 재생할 애니메이션 이름을 넘기는 곳.")]
@@ -70,12 +71,12 @@ public class CharacterManager : EntityManager
     {
         get
         {
-            if (CapsuleCollider == null || Rigidbody == null) return 0f;
+            if (CapsuleCollider == null || Body == null) return 0f;
 
             Transform capsule = CapsuleCollider.transform;
             float half = CapsuleCollider.height * 0.5f * capsule.lossyScale.y;
 
-            return Rigidbody.transform.position.y - (capsule.TransformPoint(CapsuleCollider.center).y - half);
+            return Body.transform.position.y - (capsule.TransformPoint(CapsuleCollider.center).y - half);
         }
     }
 
@@ -92,7 +93,7 @@ public class CharacterManager : EntityManager
     /// </summary>
     public Vector3 FacingAsInput()
     {
-        Vector3 forward = CustomMath.RemoveY(Rigidbody.transform.forward);
+        Vector3 forward = CustomMath.RemoveY(Body.transform.forward);
         if (forward.sqrMagnitude < 0.0001f) return Vector3.forward;
 
         forward.Normalize();
@@ -159,12 +160,12 @@ public class CharacterManager : EntityManager
 
     void OnDrawGizmos()
     {
-        if (!_drawLedgeProbe || Ledge == null || Rigidbody == null) return;
+        if (!_drawLedgeProbe || Ledge == null || Body == null) return;
 
         // 에디터에서 몸을 끌어 옮기면 물리 쪽 좌표가 아직 따라오지 않았을 수 있다.
         if (!Application.isPlaying) Physics.SyncTransforms();
 
-        Transform body = Rigidbody.transform;
+        Transform body = Body.transform;
         float foot = FootOffset;
 
         DrawScanBand(body, foot);
@@ -190,19 +191,15 @@ public class CharacterManager : EntityManager
 
         Gizmos.color = GizmoBand;
 
-        Vector3 first = Ledge.ScanOrigin(feet, forward, 0);
-        Vector3 last = Ledge.ScanOrigin(feet, forward, Mathf.Max(0, Ledge.edgeSamples - 1));
+        Vector3 origin = Ledge.ScanOrigin(feet, forward);
         Vector3 down = Vector3.down * Ledge.ScanLength;
 
-        // 훑는 구간의 테두리
-        Gizmos.DrawLine(first, last);
-        Gizmos.DrawLine(first + down, last + down);
-        Gizmos.DrawLine(first, first + down);
-        Gizmos.DrawLine(last, last + down);
+        // 짚는 자리와 그 깊이
+        Gizmos.DrawLine(origin, origin + down);
 
-        // 발끝에서 어디까지가 손이 닿는 높이인지
+        // 발끝에서 어디까지가 손이 닿는 높이인지, 그리고 그 아래 끝이 어디인지
         Gizmos.DrawLine(feet, feet + Vector3.up * Ledge.reachHigh);
-        Gizmos.DrawLine(feet + Vector3.up * Ledge.reachLow, first + down);
+        Gizmos.DrawLine(feet + Vector3.up * Ledge.reachLow, origin + down);
     }
 
     void DrawLedgeTrace(LedgeGrab.Trace trace, float foot)
@@ -445,11 +442,8 @@ public class LedgeGrab
     [Tooltip("발끝에서 이 높이까지 내려간 턱도 잡는다. 키보다 낮게 두면 매달리는 순간 몸이 아래로 끌려간다.")]
     [Min(0f)] public float reachLow = 1.5f;
 
-    [Tooltip("앞으로 이만큼까지의 턱을 잡는다.")]
-    [Min(0f)] public float reach = 0.7f;
-
-    [Tooltip("앞을 몇 지점에서 훑을지. 가까운 쪽부터 보고 처음 걸리는 모서리를 쓴다.")]
-    [Min(1)] public int edgeSamples = 5;
+    [Tooltip("몸 앞 이 거리에서 위에서 아래로 짚는다. 크게 잡으면 절벽에서 그만큼 떨어진 채 매달리게 된다.")]
+    [Min(0f)] public float reach = 0.4f;
 
     [Tooltip("윗면 위에 이만큼의 여유가 있어야 올라설 수 있다고 본다.")]
     [Min(0.01f)] public float probeRadius = 0.2f;
@@ -458,8 +452,11 @@ public class LedgeGrab
     [Range(0f, 60f)] public float maxSlope = 40f;
 
     [Header("자세 - 무는 순간 몸을 둘 자리")]
-    [Tooltip("벽면에서 몸까지의 거리. 캡슐 반경보다 작으면 몸이 벽에 박혀 매 물리 프레임 밀려났다 끌려오며 떤다.")]
-    public float wallOffset = 0.25f;
+    [Tooltip("벽면에서 몸까지의 거리. 발을 디딘 자세 기준이며, 그 자세의 손이 몸보다 앞에 나온 만큼이다.")]
+    public float wallOffset = 0.19f;
+
+    [Tooltip("팔만으로 매달릴 때의 벽면 거리. 팔을 곧게 뻗어 손이 몸보다 뒤에 오므로 음수다.")]
+    public float freeWallOffset = -0.048f;
 
     [Tooltip("턱 윗면에서 몸까지의 낙차.")]
     [Min(0f)] public float hangDrop = 1.55f;
@@ -702,13 +699,9 @@ public class LedgeGrab
     /// 탐지와 기즈모가 <b>같은 자리</b>를 봐야 하므로 여기 둔다.
     /// 그리는 쪽이 자기 식으로 다시 계산하면 그림과 실제가 조용히 갈라진다.
     /// </summary>
-    public Vector3 ScanOrigin(Vector3 feet, Vector3 forward, int index)
+    public Vector3 ScanOrigin(Vector3 feet, Vector3 forward)
     {
-        float ahead = edgeSamples <= 1
-            ? reach
-            : Mathf.Lerp(probeRadius, reach, index / (float)(edgeSamples - 1));
-
-        Vector3 origin = feet + forward * ahead;
+        Vector3 origin = feet + forward * reach;
         origin.y = feet.y + reachHigh;
         return origin;
     }
@@ -720,46 +713,43 @@ public class LedgeGrab
         float span = ScanLength;
         if (span <= 0f) return false;
 
-        for (int i = 0; i < edgeSamples; i++)
+        Vector3 origin = ScanOrigin(feet, forward);
+
+        Trace.Step step = new Trace.Step
         {
-            Vector3 origin = ScanOrigin(feet, forward, i);
+            from = origin,
+            to = origin + Vector3.down * span,
+            verdict = Trace.Verdict.NoHit,
+        };
 
-            Trace.Step step = new Trace.Step
-            {
-                from = origin,
-                to = origin + Vector3.down * span,
-                verdict = Trace.Verdict.NoHit,
-            };
+        bool hitSomething = Physics.Raycast(origin, Vector3.down, out RaycastHit hit, span, mask, QueryTriggerInteraction.Ignore);
 
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, span, mask, QueryTriggerInteraction.Ignore))
-            {
-                step.point = hit.point;
-                step.normal = hit.normal;
+        if (hitSomething)
+        {
+            step.point = hit.point;
+            step.normal = hit.normal;
 
-                // 이 높이에서 이미 무언가의 속이라는 뜻이다. 벽이 손 닿는 높이보다 높으면 그렇게 된다.
-                if (hit.distance <= InsideEpsilon)
-                    step.verdict = Trace.Verdict.Inside;
+            // 이 높이에서 이미 무언가의 속이라는 뜻이다. 벽이 손 닿는 높이보다 높으면 그렇게 된다.
+            if (hit.distance <= InsideEpsilon)
+                step.verdict = Trace.Verdict.Inside;
 
-                else if (Vector3.Dot(hit.normal, Vector3.up) < Mathf.Cos(maxSlope * Mathf.Deg2Rad))
-                    step.verdict = Trace.Verdict.TooSteep;
+            else if (Vector3.Dot(hit.normal, Vector3.up) < Mathf.Cos(maxSlope * Mathf.Deg2Rad))
+                step.verdict = Trace.Verdict.TooSteep;
 
-                // 올라갈 수 없는 곳은 턱이 아니다. 처마 밑이나 벽에 붙은 장식 턱이 여기서 걸린다.
-                else if (Physics.CheckSphere(ClearanceCenter(hit.point), probeRadius, mask, QueryTriggerInteraction.Ignore))
-                    step.verdict = Trace.Verdict.NoClearance;
+            // 올라갈 수 없는 곳은 턱이 아니다. 처마 밑이나 벽에 붙은 장식 턱이 여기서 걸린다.
+            else if (Physics.CheckSphere(ClearanceCenter(hit.point), probeRadius, mask, QueryTriggerInteraction.Ignore))
+                step.verdict = Trace.Verdict.NoClearance;
 
-                else
-                    step.verdict = Trace.Verdict.Accepted;
-            }
-
-            trace?.scan.Add(step);
-
-            if (step.verdict != Trace.Verdict.Accepted) continue;
-
-            top = hit;
-            return true;
+            else
+                step.verdict = Trace.Verdict.Accepted;
         }
 
-        return false;
+        trace?.scan.Add(step);
+
+        if (step.verdict != Trace.Verdict.Accepted) return false;
+
+        top = hit;
+        return true;
     }
 
     /// <summary>
@@ -887,6 +877,24 @@ public class LedgeGrab
             hang = Place(current, normal, wallPlane + wallOffset, topHeight - hangDrop + footOffset),
             stand = Place(current, normal, wallPlane - standInset, topHeight + footOffset),
         };
+    }
+
+    /// <summary>
+    /// 자세가 정해진 뒤 매달릴 자리를 그 자세의 손 위치로 옮긴다.
+    ///
+    /// 두 자세는 손이 몸에 대해 놓이는 곳이 다르다 — 발을 디딘 쪽은 손이 0.19 앞,
+    /// 팔만으로 매달린 쪽은 0.05 뒤다. 한 값으로 두면 한쪽은 반드시 손이 벽에서 뜬다.
+    ///
+    /// <b>Compose가 준 것을 그대로 넘겨야 한다.</b> 이미 옮긴 것을 또 넘기면 두 번 옮겨진다.
+    /// </summary>
+    public Anchor Pose(Anchor anchor, bool braced)
+    {
+        if (braced) return anchor;
+
+        Vector3 normal = -(anchor.facing * Vector3.forward);
+        anchor.hang += normal * (freeWallOffset - wallOffset);
+
+        return anchor;
     }
 
     /// <summary>
