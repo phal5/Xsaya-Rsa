@@ -10,21 +10,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 806489433808c2a409d697ad98e3e0c3, type: 3}
-  m_Name: Trees
+  m_Name: Flowers
   m_EditorClassIdentifier: Assembly-CSharp::EnvironmentPlacerProfile
   _entries:
-  - Prefab: {fileID: 650419142081961303, guid: badf96df4d4a10e43893cdccc13c7e04, type: 3}
+  - Prefab: {fileID: 4653817993488874713, guid: 75162c642c7376d4586e1c812d7da31f, type: 3}
     Weight: 10
-    MinScale: 2
-    MaxScale: 1
+    MinScale: 1
+    MaxScale: 2
     RandomYRotation: 1
-  - Prefab: {fileID: 650419142081961303, guid: badf96df4d4a10e43893cdccc13c7e04, type: 3}
+    GpuInstancing: 0
+  - Prefab: {fileID: 4424447828755751194, guid: 6c4ce1e096a911740b7c8c5823028ca4, type: 3}
     Weight: 1
-    MinScale: 10
-    MaxScale: 20
+    MinScale: 1
+    MaxScale: 2
     RandomYRotation: 1
+    GpuInstancing: 0
   _minimumSpacing: 1
+  _isRandomPlacement: 1
   _samplesBeforeRejection: 15
   _yOffset: 0
+  _gpuInstancing: 0
   _useRandomSeed: 0
   _seed: 42

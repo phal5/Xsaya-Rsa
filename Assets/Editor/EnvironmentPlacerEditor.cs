@@ -110,20 +110,32 @@ public class EnvironmentPlacerWindow : EditorWindow
     {
         GUILayout.Label("선택된 오브젝트", EditorStyles.miniBoldLabel);
 
-        GameObject selected = Selection.activeGameObject;
+        List<GameObject> targets = ResolveTargets();
 
-        if (selected == null)
+        if (targets.Count == 0)
         {
-            EditorGUILayout.HelpBox("Hierarchy에서 블록 오브젝트를 선택해주세요.", MessageType.Warning);
+            EditorGUILayout.HelpBox("Hierarchy에서 블록 오브젝트를 선택해주세요. 여러 개 선택할 수 있습니다.", MessageType.Warning);
         }
         else
         {
+            EditorGUILayout.LabelField($"선택 {targets.Count}개", EditorStyles.miniBoldLabel);
+
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.ObjectField("대상", selected, typeof(GameObject), true);
+            int shown = targets.Count < 5 ? targets.Count : 5;
+            for (int i = 0; i < shown; i++)
+            {
+                EditorGUILayout.ObjectField(targets[i], typeof(GameObject), true);
+            }
             EditorGUI.EndDisabledGroup();
 
-            // 기존 레이어 컨테이너 정보
-            int existingCount = CountContainersOnTarget(selected);
+            if (targets.Count > shown)
+            {
+                EditorGUILayout.LabelField($"   … 외 {targets.Count - shown}개", EditorStyles.miniLabel);
+            }
+
+            int existingCount = 0;
+            foreach (GameObject t in targets) existingCount += CountContainersOnTarget(t);
+
             if (existingCount > 0)
             {
                 EditorGUILayout.LabelField($"   기존 레이어 컨테이너: {existingCount}개", EditorStyles.miniLabel);
@@ -271,8 +283,8 @@ public class EnvironmentPlacerWindow : EditorWindow
                             // 개별 레이어 Generate/Clear
                             EditorGUILayout.BeginHorizontal();
 
-                            GameObject sel = Selection.activeGameObject;
-                            bool canGen = layer.enabled && layer.profile != null && sel != null;
+                            List<GameObject> sel = ResolveTargets();
+                            bool canGen = layer.enabled && layer.profile != null && sel.Count > 0;
 
                             GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
                             EditorGUI.BeginDisabledGroup(!canGen);
@@ -282,12 +294,19 @@ public class EnvironmentPlacerWindow : EditorWindow
                             }
                             EditorGUI.EndDisabledGroup();
 
-                            bool hasCont = sel != null && sel.transform.Find(GetContainerName(globalIndex)) != null;
+                            bool hasCont = false;
+                            foreach (GameObject s in sel)
+                            {
+                                if (s != null && s.transform.Find(GetContainerName(globalIndex)) != null) { hasCont = true; break; }
+                            }
                             GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
                             EditorGUI.BeginDisabledGroup(!hasCont);
                             if (GUILayout.Button("Clear", EditorStyles.miniButton, GUILayout.Height(18)))
                             {
-                                ClearLayer(sel, globalIndex);
+                                RunCancelable("Environment Placer Clear Layer", () =>
+                                {
+                                    foreach (GameObject s in sel) ClearLayer(s, globalIndex);
+                                });
                             }
                             EditorGUI.EndDisabledGroup();
 
@@ -317,8 +336,8 @@ public class EnvironmentPlacerWindow : EditorWindow
 
     void DrawActions()
     {
-        GameObject selected = Selection.activeGameObject;
-        bool hasSelection = selected != null;
+        List<GameObject> selected = ResolveTargets();
+        bool hasSelection = selected.Count > 0;
         bool hasAnyProfile = false;
         foreach (var layer in _layers)
         {
@@ -340,19 +359,24 @@ public class EnvironmentPlacerWindow : EditorWindow
         // Generate All 버튼
         GUI.backgroundColor = new Color(0.3f, 0.7f, 0.3f);
         EditorGUI.BeginDisabledGroup(!canGenerate);
-        if (GUILayout.Button($"🌿 Generate All ({EnabledLayerCount()}개 레이어)", GUILayout.Height(32)))
+        if (GUILayout.Button($"🌿 Generate All ({EnabledLayerCount()}개 레이어 × {selected.Count}개 대상)", GUILayout.Height(32)))
         {
             GenerateAllLayersCommand(selected);
         }
         EditorGUI.EndDisabledGroup();
 
         // Clear (선택된 오브젝트)
-        bool hasDeco = hasSelection && CountContainersOnTarget(selected) > 0;
+        int decoCount = 0;
+        foreach (GameObject t in selected) decoCount += CountContainersOnTarget(t);
+
         GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
-        EditorGUI.BeginDisabledGroup(!hasDeco);
-        if (GUILayout.Button("🗑 Clear (선택된 오브젝트)", GUILayout.Height(26)))
+        EditorGUI.BeginDisabledGroup(decoCount == 0);
+        if (GUILayout.Button($"🗑 Clear (컨테이너 {decoCount}개)", GUILayout.Height(26)))
         {
-            ClearAllLayersOnTarget(selected);
+            RunCancelable("Environment Placer Clear", () =>
+            {
+                foreach (GameObject t in selected) ClearAllLayersOnTarget(t);
+            });
         }
         EditorGUI.EndDisabledGroup();
 
@@ -500,17 +524,70 @@ public class EnvironmentPlacerWindow : EditorWindow
         return _canceled;
     }
 
-    void GenerateAllLayersCommand(GameObject target)
+    /// <summary>선택에서 배치 대상만 골라낸다. 서로의 자식인 것은 부모만 남겨 두 번 뿌리는 걸 막는다.</summary>
+    static List<GameObject> ResolveTargets()
     {
-        RunCancelable("Environment Placer Generate All", () => GenerateAllLayers(target));
+        List<GameObject> targets = new List<GameObject>();
+
+        GameObject[] selection = Selection.gameObjects;
+        if (selection == null) return targets;
+
+        foreach (GameObject go in selection)
+        {
+            if (go == null) continue;
+
+            bool nested = false;
+            foreach (GameObject other in selection)
+            {
+                if (other == null || other == go) continue;
+                if (go.transform.IsChildOf(other.transform)) { nested = true; break; }
+            }
+
+            if (!nested) targets.Add(go);
+        }
+
+        return targets;
     }
 
-    void GenerateLayerCommand(GameObject target, PlacementLayer layer, int layerIndex)
+    void GenerateAllLayersCommand(List<GameObject> targets)
     {
-        RunCancelable("Environment Placer Generate", () => GenerateLayer(target, layer, layerIndex));
+        RunCancelable("Environment Placer Generate All", () =>
+        {
+            int total = 0;
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] == null) continue;
+                if (PollCancel("Environment Placer", $"대상 {i + 1}/{targets.Count}: {targets[i].name}", (float)i / targets.Count)) return;
+
+                total += GenerateAllLayers(targets[i], i);
+                if (_canceled) return;
+            }
+
+            if (targets.Count > 1)
+            {
+                _lastGeneratedCount = total;
+                _lastTargetName = $"{targets.Count}개 대상";
+            }
+        });
     }
 
-    void GenerateAllLayers(GameObject target)
+    void GenerateLayerCommand(List<GameObject> targets, PlacementLayer layer, int layerIndex)
+    {
+        RunCancelable("Environment Placer Generate", () =>
+        {
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] == null) continue;
+                if (PollCancel("Environment Placer", $"대상 {i + 1}/{targets.Count}: {targets[i].name}", (float)i / targets.Count)) return;
+
+                GenerateLayer(targets[i], layer, layerIndex, true, i);
+                if (_canceled) return;
+            }
+        });
+    }
+
+    int GenerateAllLayers(GameObject target, int targetIndex)
     {
         ClearAllLayersOnTarget(target);
 
@@ -523,10 +600,10 @@ public class EnvironmentPlacerWindow : EditorWindow
             PlacementLayer layer = _layers[i];
             if (!layer.enabled || layer.profile == null) continue;
 
-            if (PollCancel("Environment Placer", $"레이어 {done + 1}/{enabled}: {layer.name}", (float)done / enabled)) return;
+            if (PollCancel("Environment Placer", $"\"{target.name}\" 레이어 {done + 1}/{enabled}: {layer.name}", (float)done / enabled)) return totalCount;
 
-            int count = GenerateLayer(target, layer, i, false);
-            if (_canceled) return;
+            int count = GenerateLayer(target, layer, i, false, targetIndex);
+            if (_canceled) return totalCount;
 
             totalCount += count;
             done++;
@@ -541,9 +618,11 @@ public class EnvironmentPlacerWindow : EditorWindow
         _lastTargetName = target.name;
 
         Debug.Log($"[EnvironmentPlacer] \"{target.name}\": 전체 {EnabledLayerCount()}개 레이어, 총 {totalCount}개 오브젝트 배치 완료.");
+
+        return totalCount;
     }
 
-    int GenerateLayer(GameObject target, PlacementLayer layer, int layerIndex, bool autoFitScale = true)
+    int GenerateLayer(GameObject target, PlacementLayer layer, int layerIndex, bool autoFitScale = true, int targetIndex = 0)
     {
         // 기존 해당 레이어 컨테이너 정리
         ClearLayer(target, layerIndex);
@@ -573,9 +652,10 @@ public class EnvironmentPlacerWindow : EditorWindow
         // 파라미터 결정
         float spacing = layer.profile.MinimumSpacing / layer.density;
 
-        int seed = layer.profile.UseRandomSeed
+        // 대상마다 시드를 흩어야 한다. 크기가 같은 플랫폼이 여럿이면 배치가 통째로 똑같아진다.
+        int seed = (layer.profile.UseRandomSeed
             ? System.Environment.TickCount + layerIndex
-            : layer.profile.Seed + layerIndex;
+            : layer.profile.Seed + layerIndex) + targetIndex * 7919;
 
         System.Random rng = new System.Random(seed);
 

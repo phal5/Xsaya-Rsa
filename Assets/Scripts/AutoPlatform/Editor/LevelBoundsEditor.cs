@@ -13,6 +13,9 @@ public class LevelBoundsEditor : Editor
 
     public override void OnInspectorGUI()
     {
+        DrawFolder();
+
+        EditorGUILayout.Space();
         DrawDefaultInspector();
 
         EditorGUILayout.Space();
@@ -22,6 +25,64 @@ public class LevelBoundsEditor : Editor
         DrawBuild();
 
         if (_report.ran) DrawReport();
+    }
+
+    /// <summary>
+    /// 발판 폴더를 끌어다 놓게 한다.
+    ///
+    /// 경로를 문자열로 두면 오타 한 글자에 아무것도 안 나오고 이유도 안 보인다.
+    /// 폴더 애셋을 직접 받아 경로로 바꿔 넣으면 그럴 수 없다.
+    /// </summary>
+    void DrawFolder()
+    {
+        EditorGUILayout.LabelField("발판 프리팹 폴더", EditorStyles.boldLabel);
+
+        DefaultAsset current = AssetDatabase.LoadAssetAtPath<DefaultAsset>(Bounds.moduleFolder);
+        DefaultAsset picked = (DefaultAsset)EditorGUILayout.ObjectField(
+            "폴더", current, typeof(DefaultAsset), false);
+
+        if (picked != current)
+        {
+            string path = AssetDatabase.GetAssetPath(picked);
+
+            if (picked != null && !AssetDatabase.IsValidFolder(path))
+                Debug.LogWarning("[LevelBounds] 폴더만 놓을 수 있다.", Bounds);
+            else
+            {
+                Undo.RecordObject(Bounds, "Set Module Folder");
+                Bounds.moduleFolder = path;
+                EditorUtility.SetDirty(Bounds);
+            }
+        }
+
+        if (!AssetDatabase.IsValidFolder(Bounds.moduleFolder))
+        {
+            EditorGUILayout.HelpBox("폴더를 지정해야 한다. 발판으로 쓸 프리팹만 모아 둘 것.", MessageType.Warning);
+            return;
+        }
+
+        LevelRoute route = Object.FindFirstObjectByType<LevelRoute>(FindObjectsInactive.Include);
+        if (route == null || route.pads == null || route.pads.Length == 0)
+        {
+            EditorGUILayout.HelpBox("아직 재지 않았다. [레벨 만들기]를 누르면 폴더를 훑어 실측한다.", MessageType.None);
+            return;
+        }
+
+        // 무엇을 쓰게 되는지 보여준다. 이름이 아니라 실측으로 역할이 정해지므로,
+        // 어느 것이 디딤돌이고 어느 것이 벽이 될지는 눈으로 확인할 수 있어야 한다.
+        for (int i = 0; i < route.pads.Length; i++)
+        {
+            LevelRoute.PadSpec pad = route.pads[i];
+
+            string role = i == route.NarrowPad ? " ← 디딤돌"
+                : i == route.ThickPad ? " ← 벽 · 고원"
+                : i == route.WidePad ? " ← 가장 넓음"
+                : "";
+
+            EditorGUILayout.LabelField(
+                $"   {pad.name} — 폭 {pad.width:0.00} m · 아래로 {pad.drop:0.00} m{role}",
+                EditorStyles.miniLabel);
+        }
     }
 
     /// <summary>

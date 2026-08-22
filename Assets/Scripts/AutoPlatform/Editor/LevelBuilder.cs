@@ -64,6 +64,12 @@ public static class LevelBuilder
             return report;
         }
 
+        if (!AssetDatabase.IsValidFolder(bounds.moduleFolder))
+        {
+            Debug.LogError($"[LevelBuilder] 발판 폴더 '{bounds.moduleFolder}'를 찾을 수 없다.", bounds);
+            return report;
+        }
+
         LevelRoute route = FindOrCreateRoute(bounds);
         if (!PullProfile(route)) return report;
 
@@ -71,7 +77,7 @@ public static class LevelBuilder
         bounds.seed = report.seed;
 
         RouteFromBounds.Generate(route, bounds);
-        PlatformBuilder.Build(route);
+        PlatformBuilder.Build(route, bounds.moduleFolder);
         Physics.SyncTransforms();
 
         report = Verify(route, bounds, report);
@@ -258,12 +264,15 @@ public static class LevelBuilder
         report.width = maxX - minX;
         report.height = maxY - minY;
 
-        Transform container = PlatformBuilder.ContainerOf(route);
-        if (container == null) return report;
+        // 덧붙여 짓는 이상, 이번 것뿐 아니라 예전에 지은 것까지 함께 봐야 한다 —
+        // 새 발판이 예전 발판을 뚫는 것도 관통이고, 콘솔은 이미 그렇게 세고 있다.
+        List<Transform> tiles = new List<Transform>();
+        foreach (Transform container in PlatformBuilder.ContainersOf(route))
+            foreach (Transform tile in container) tiles.Add(tile);
 
         List<Bounds> volumes = new List<Bounds>();
 
-        foreach (Transform tile in container)
+        foreach (Transform tile in tiles)
         {
             bool any = false;
             Bounds art = default;

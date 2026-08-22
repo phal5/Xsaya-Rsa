@@ -207,7 +207,7 @@ Transform:
   m_GameObject: {fileID: 499199916}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 1.5, z: -10}
+  m_LocalPosition: {x: 3.2659526, y: 1.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -404,9 +404,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: Protagonist
       objectReference: {fileID: 0}
+    - target: {fileID: 2157272325835889897, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.00006484728
+      objectReference: {fileID: 0}
+    - target: {fileID: 2157272325835889897, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.0011300445
+      objectReference: {fileID: 0}
     - target: {fileID: 3194146052685183880, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: _radius
       value: 0.24999
+      objectReference: {fileID: 0}
+    - target: {fileID: 4379228598764830530, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.001922443
+      objectReference: {fileID: 0}
+    - target: {fileID: 4379228598764830530, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.000959754
       objectReference: {fileID: 0}
     - target: {fileID: 5689676112456754952, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: m_LocalPosition.x
@@ -447,6 +463,14 @@ PrefabInstance:
     - target: {fileID: 5689676112456754952, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6510321842153810209, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: _distance
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6510321842153810209, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: _shrinkCoefficient
+      value: 0.01
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

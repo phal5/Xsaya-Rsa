@@ -12,25 +12,6 @@ using UnityEngine;
 /// </summary>
 public class LevelRoute : MonoBehaviour
 {
-    /// <summary>발판을 무엇으로 지을지. 폭과 두께의 선택이다.</summary>
-    public enum PadModule
-    {
-        /// <summary>온폭 데크(슬래브 7).</summary>
-        Deck,
-
-        /// <summary>슬래브 5장짜리.</summary>
-        Deck5,
-
-        /// <summary>슬래브 3장짜리. 가장 좁다 — 아슬아슬한 디딤돌에 쓴다.</summary>
-        Deck3,
-
-        /// <summary>아래로 몸통이 있는 두꺼운 발판. 지면과 큰 단(段)에 쓴다.</summary>
-        ThickerDeck,
-
-        /// <summary>발판을 두지 않는다. 이미 다른 것이 받쳐주는 지점.</summary>
-        None,
-    }
-
     /// <summary>
     /// 모듈 한 장의 실측 치수. 발판을 지을 때 프리팹에서 재서 갱신된다.
     ///
@@ -40,6 +21,11 @@ public class LevelRoute : MonoBehaviour
     [System.Serializable]
     public struct PadSpec
     {
+        [Tooltip("프리팹의 GUID. 목록의 순서가 바뀌어도 이것으로 다시 찾는다.")]
+        public string guid;
+
+        public string name;
+
         public float width;
 
         [Tooltip("윗면에서 아래로 뻗은 아트 길이.")]
@@ -47,6 +33,8 @@ public class LevelRoute : MonoBehaviour
 
         [Tooltip("윗면 위로 솟은 아트 길이.")]
         public float rise;
+
+        public bool Valid => width > 0.01f;
     }
 
     [System.Serializable]
@@ -60,7 +48,8 @@ public class LevelRoute : MonoBehaviour
         /// <summary>앞 노드에서 여기로 오는 수단. Auto면 풀어서 가장 싼 것을 찾는다.</summary>
         public MoveKind entry = MoveKind.Auto;
 
-        public PadModule module = PadModule.Deck;
+        /// <summary>발판 목록에서 몇 번째를 쓸지. <see cref="NoPad"/>이면 발판을 두지 않는다.</summary>
+        public int module;
 
         /// <summary>발판 폭(m). 0이면 모듈 하나 크기 그대로.</summary>
         public float padWidth = 0f;
@@ -102,8 +91,27 @@ public class LevelRoute : MonoBehaviour
     /// </summary>
     public List<Node> obstacles = new List<Node>();
 
-    [Tooltip("모듈별 실측 치수. PadModule 순서와 같다. 발판을 지을 때 갱신된다.")]
-    public PadSpec[] pads = new PadSpec[System.Enum.GetValues(typeof(PadModule)).Length];
+    [Header("배치")]
+    /// <summary>
+    /// 발판을 지어 넣을 부모.
+    ///
+    /// 이름으로 찾지 않는다. "Physics"라는 이름에 기대고 있었더니, 그 오브젝트를 다른 것 밑으로
+    /// 옮기거나 이름을 바꾸는 순간 지은 것을 <b>다시 찾지 못해 지우기가 조용히 아무것도 안 했다</b>.
+    /// 참조로 들고 있으면 어디로 옮기든 따라간다.
+    /// </summary>
+    [Tooltip("발판을 지어 넣을 부모. 비워두면 처음 지을 때 찾거나 만들어 여기에 적어 둔다.")]
+    public Transform buildRoot;
+
+    /// <summary>이 루트가 지은 컨테이너들. 지우기는 정확히 이것만 없앤다.</summary>
+    public List<Transform> builtContainers = new List<Transform>();
+
+    /// <summary>
+    /// 쓸 수 있는 발판 목록. 지정한 폴더를 훑어 실측한 것이며, 폭이 좁은 것부터 늘어선다.
+    ///
+    /// 프리팹의 정체를 이름이나 열거형으로 알지 않는다 — 폭과 두께를 재서 역할을 정한다.
+    /// 그래야 폴더에 다른 애셋을 넣어도 코드를 고치지 않는다.
+    /// </summary>
+    public PadSpec[] pads = new PadSpec[0];
 
     [Header("기즈모")]
     public bool drawEnvelopes = true;
@@ -127,7 +135,7 @@ public class LevelRoute : MonoBehaviour
     /// </summary>
     public float HalfWidthOf(Node node)
     {
-        if (node.module == PadModule.None) return 0f;
+        if (!SpecOf(node).Valid) return 0f;
 
         float module = SpecOf(node).width;
         if (module <= 0.01f) return 0f;
@@ -291,13 +299,45 @@ public class LevelRoute : MonoBehaviour
     public Node NodeAt(int index)
         => index >= 0 && index < main.Count ? main[index] : null;
 
-    /// <summary>노드가 세우는 모듈의 실측 치수.</summary>
-    public PadSpec SpecOf(Node node)
-    {
-        if (node.module == PadModule.None) return default;
+    /// <summary>발판을 두지 않는다는 표시.</summary>
+    public const int NoPad = -1;
 
-        int index = (int)node.module;
-        return pads != null && index < pads.Length ? pads[index] : default;
+    public PadSpec SpecOf(int module)
+        => pads != null && module >= 0 && module < pads.Length ? pads[module] : default;
+
+    /// <summary>노드가 세우는 모듈의 실측 치수.</summary>
+    public PadSpec SpecOf(Node node) => SpecOf(node.module);
+
+    /// <summary>목록에서 가장 좁은 것. 아슬아슬한 디딤돌에 쓴다.</summary>
+    public int NarrowPad => pads == null || pads.Length == 0 ? NoPad : 0;
+
+    /// <summary>가장 넓은 것.</summary>
+    public int WidePad => pads == null || pads.Length == 0 ? NoPad : pads.Length - 1;
+
+    /// <summary>
+    /// 딛는 면 아래로 아트가 가장 많이 매달린 것. 벽이나 고원처럼 부피로 존재감을 내는 자리에 쓴다.
+    /// 이름이 아니라 실측으로 고르므로, 폴더에 무엇이 들어오든 알아서 짚는다.
+    /// </summary>
+    public int ThickPad
+    {
+        get
+        {
+            if (pads == null || pads.Length == 0) return NoPad;
+
+            int best = 0;
+            for (int i = 1; i < pads.Length; i++)
+                if (pads[i].drop > pads[best].drop) best = i;
+
+            return best;
+        }
+    }
+
+    /// <summary>좁은 쪽 0, 넓은 쪽 1로 놓고 그 사이를 고른다.</summary>
+    public int PadByRank(float t)
+    {
+        if (pads == null || pads.Length == 0) return NoPad;
+
+        return Mathf.Clamp(Mathf.RoundToInt(t * (pads.Length - 1)), 0, pads.Length - 1);
     }
 
     /// <summary>메인 · 곁길 · 장애물의 모든 발판을 한 줄로. 자리를 차지하는 것은 전부 여기 들어온다.</summary>
@@ -340,7 +380,7 @@ public class LevelRoute : MonoBehaviour
     /// <summary>두 발판의 X가 겹치는가. 겹치지 않으면 높이는 볼 것도 없다.</summary>
     public bool Shadows(Node a, Node b)
     {
-        if (a.module == PadModule.None || b.module == PadModule.None) return false;
+        if (!SpecOf(a).Valid || !SpecOf(b).Valid) return false;
 
         return Mathf.Abs(a.position.x - b.position.x) < HalfWidthOf(a) + HalfWidthOf(b) + PadGap;
     }
@@ -378,7 +418,7 @@ public class LevelRoute : MonoBehaviour
 
                 Node below = nodes[i];
                 Node above = nodes[j];
-                if (below.module == PadModule.None || above.module == PadModule.None) continue;
+                if (!SpecOf(below).Valid || !SpecOf(above).Valid) continue;
                 if (above.position.y <= below.position.y) continue;
 
                 if (!Shadows(below, above)) continue;

@@ -104,28 +104,32 @@ public class SurfaceScatterWindow : EditorWindow
     {
         GUILayout.Label("대상", EditorStyles.miniBoldLabel);
 
-        GameObject selected = Selection.activeGameObject;
+        List<GameObject> targets = ResolveTargets();
 
-        if (selected == null)
+        if (targets.Count == 0)
         {
-            EditorGUILayout.HelpBox("Hierarchy에서 심을 대상을 선택해주세요.", MessageType.Warning);
+            EditorGUILayout.HelpBox("Hierarchy에서 심을 대상을 선택해주세요. 여러 개 선택할 수 있습니다.", MessageType.Warning);
         }
         else
         {
+            EditorGUILayout.LabelField($"선택 {targets.Count}개", EditorStyles.miniBoldLabel);
+
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.ObjectField("선택됨", selected, typeof(GameObject), true);
+            int shown = targets.Count < 5 ? targets.Count : 5;
+            for (int i = 0; i < shown; i++)
+            {
+                EditorGUILayout.ObjectField(targets[i], typeof(GameObject), true);
+            }
             EditorGUI.EndDisabledGroup();
 
-            if (!TryGetWorldBounds(selected, out Bounds bounds))
+            if (targets.Count > shown)
             {
-                EditorGUILayout.HelpBox("이 오브젝트에서 Renderer나 Collider를 찾지 못했습니다.", MessageType.Warning);
-            }
-            else
-            {
-                EditorGUILayout.LabelField($"   경계 (월드): {bounds.size.x:F2} × {bounds.size.y:F2} × {bounds.size.z:F2}", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField($"   … 외 {targets.Count - shown}개", EditorStyles.miniLabel);
             }
 
-            int existing = CountContainers(selected);
+            int existing = 0;
+            foreach (GameObject t in targets) existing += CountContainers(t);
+
             if (existing > 0)
             {
                 EditorGUILayout.LabelField($"   기존 컨테이너: {existing}개", EditorStyles.miniLabel);
@@ -235,9 +239,9 @@ public class SurfaceScatterWindow : EditorWindow
 
     void DrawActions()
     {
-        GameObject target = Selection.activeGameObject;
+        List<GameObject> targets = ResolveTargets();
 
-        bool hasTarget = target != null && TryGetWorldBounds(target, out _);
+        bool hasTarget = targets.Count > 0;
         bool hasProfile = _profile != null && _profile.Entries != null && _profile.Entries.Length > 0;
 
         GUILayout.Label("실행", EditorStyles.miniBoldLabel);
@@ -249,18 +253,23 @@ public class SurfaceScatterWindow : EditorWindow
 
         GUI.backgroundColor = new Color(0.3f, 0.7f, 0.3f);
         EditorGUI.BeginDisabledGroup(!hasTarget || !hasProfile);
-        if (GUILayout.Button("🌿 Scatter", GUILayout.Height(32)))
+        if (GUILayout.Button($"🌿 Scatter ({targets.Count}개 대상)", GUILayout.Height(32)))
         {
-            RunCancelable("Surface Scatter", () => Scatter(target));
+            RunCancelable("Surface Scatter", () => ScatterAll(targets));
         }
         EditorGUI.EndDisabledGroup();
 
-        bool hasContainer = target != null && CountContainers(target) > 0;
+        int containerCount = 0;
+        foreach (GameObject t in targets) containerCount += CountContainers(t);
+
         GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
-        EditorGUI.BeginDisabledGroup(!hasContainer);
-        if (GUILayout.Button("🗑 Clear (선택된 오브젝트)", GUILayout.Height(26)))
+        EditorGUI.BeginDisabledGroup(containerCount == 0);
+        if (GUILayout.Button($"🗑 Clear (컨테이너 {containerCount}개)", GUILayout.Height(26)))
         {
-            RunCancelable("Surface Scatter Clear", () => ClearContainers(target));
+            RunCancelable("Surface Scatter Clear", () =>
+            {
+                foreach (GameObject t in targets) ClearContainers(t);
+            });
         }
         EditorGUI.EndDisabledGroup();
 
@@ -323,15 +332,63 @@ public class SurfaceScatterWindow : EditorWindow
         return _canceled;
     }
 
-    void Scatter(GameObject target)
+    /// <summary>선택에서 배치 가능한 대상만 골라낸다. 서로의 자식인 것은 부모만 남긴다.</summary>
+    static List<GameObject> ResolveTargets()
     {
-        if (!TryGetWorldBounds(target, out Bounds bounds)) return;
+        List<GameObject> targets = new List<GameObject>();
+
+        GameObject[] selection = Selection.gameObjects;
+        if (selection == null) return targets;
+
+        foreach (GameObject go in selection)
+        {
+            if (go == null) continue;
+            if (!TryGetWorldBounds(go, out _)) continue;
+
+            // 이미 선택된 다른 오브젝트의 자식이면 건너뛴다. 두 번 심는 걸 막는다.
+            bool nested = false;
+            foreach (GameObject other in selection)
+            {
+                if (other == null || other == go) continue;
+                if (go.transform.IsChildOf(other.transform)) { nested = true; break; }
+            }
+
+            if (!nested) targets.Add(go);
+        }
+
+        return targets;
+    }
+
+    void ScatterAll(List<GameObject> targets)
+    {
+        int total = 0;
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            if (targets[i] == null) continue;
+
+            if (PollCancel($"대상 {i + 1}/{targets.Count}: {targets[i].name}", (float)i / targets.Count)) return;
+
+            total += Scatter(targets[i], i);
+            if (_canceled) return;
+        }
+
+        if (targets.Count > 1)
+        {
+            _lastTargetName = $"{targets.Count}개 대상";
+            _lastCount = total;
+        }
+    }
+
+    int Scatter(GameObject target, int targetIndex)
+    {
+        if (!TryGetWorldBounds(target, out Bounds bounds)) return 0;
 
         Vector3 dir = ResolveDirection();
         if (dir.sqrMagnitude < 1e-6f)
         {
             Debug.LogWarning("[SurfaceScatter] 광선 방향이 영벡터입니다.");
-            return;
+            return 0;
         }
         dir.Normalize();
 
@@ -344,7 +401,8 @@ public class SurfaceScatterWindow : EditorWindow
 
         float spacing = _profile.MinimumSpacing / Mathf.Max(_density, 0.01f);
 
-        int seed = _profile.UseRandomSeed ? System.Environment.TickCount : _profile.Seed;
+        // 대상마다 시드를 흩어야 한다. 같은 크기 플랫폼이 여럿이면 배치가 통째로 똑같아진다.
+        int seed = (_profile.UseRandomSeed ? System.Environment.TickCount : _profile.Seed) + targetIndex * 7919;
         System.Random rng = new System.Random(seed);
 
         List<Vector2> plane = PoissonDisk.Sample(
@@ -356,18 +414,18 @@ public class SurfaceScatterWindow : EditorWindow
             found => PollCancel($"배치 지점 계산 중… {found}개", -1f)
         );
 
-        if (_canceled) return;
+        if (_canceled) return 0;
 
         if (plane.Count == 0)
         {
-            Debug.LogWarning("[SurfaceScatter] 배치 지점이 나오지 않았습니다. 간격이 경계보다 큰지 확인하세요.");
-            return;
+            Debug.LogWarning($"[SurfaceScatter] \"{target.name}\": 배치 지점이 나오지 않았습니다. 간격이 경계보다 큰지 확인하세요.");
+            return 0;
         }
 
         if (plane.Count > HARD_LIMIT)
         {
-            Debug.LogError($"[SurfaceScatter] 지점이 {plane.Count}개로 상한({HARD_LIMIT})을 넘습니다. 밀도를 낮추세요.");
-            return;
+            Debug.LogError($"[SurfaceScatter] \"{target.name}\": 지점이 {plane.Count}개로 상한({HARD_LIMIT})을 넘습니다. 밀도를 낮추세요.");
+            return 0;
         }
 
         ClearContainers(target);
@@ -399,7 +457,7 @@ public class SurfaceScatterWindow : EditorWindow
 
         for (int i = 0; i < plane.Count; i++)
         {
-            if ((i & 0x3F) == 0 && PollCancel($"광선 {i}/{plane.Count}", (float)i / plane.Count)) return;
+            if ((i & 0x3F) == 0 && PollCancel($"\"{target.name}\" 광선 {i}/{plane.Count}", (float)i / plane.Count)) return count;
 
             Vector3 origin = originBase + u * plane[i].x + v * plane[i].y;
 
@@ -473,6 +531,8 @@ public class SurfaceScatterWindow : EditorWindow
         _lastTargetName = target.name;
 
         Debug.Log($"[SurfaceScatter] \"{target.name}\": {count}개 심음. (지점 {plane.Count}개, 빗나감 {missed}, 경사 제외 {filtered}, Seed: {seed})");
+
+        return count;
     }
 
     static void ApplyInstancing(GameObject instance, bool gpuInstancing)

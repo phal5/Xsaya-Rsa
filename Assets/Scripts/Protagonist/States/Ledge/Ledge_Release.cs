@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 놓기. 중력에 넘기고, <b>코요테 시간만큼 붙들었다가</b> 공중 축으로 보낸다.

@@ -49,7 +49,7 @@ public static class RouteShapes
     public const float DEFAULT_TIGHTNESS = 0.12f;
 
     public static void Append(LevelRoute route, Shape shape, int steps,
-        LevelRoute.PadModule module = LevelRoute.PadModule.Deck3,
+        int module = -1,
         float rise = DEFAULT_RISE, float tightness = DEFAULT_TIGHTNESS, int legs = 3)
     {
         if (route == null || route.main.Count == 0)
@@ -100,7 +100,7 @@ public static class RouteShapes
     /// 수직성은 여기서 나온다 — 가로로 쓴 거리를 되돌아오며 <b>다시 쓰기</b> 때문에,
     /// 층을 더 올려도 레벨의 가로 폭은 거의 늘지 않는다.
     /// </summary>
-    static void Zigzag(LevelRoute route, LevelRoute.PadModule module, int legs, int perLeg,
+    static void Zigzag(LevelRoute route, int module, int legs, int perLeg,
         float direction, float rise, float tightness)
     {
         for (int leg = 0; leg < Mathf.Max(1, legs); leg++)
@@ -118,7 +118,7 @@ public static class RouteShapes
     #region 걸음
 
     /// <summary>한 방향으로 <paramref name="steps"/>걸음. 걸음마다 높이가 <paramref name="rise"/>씩 변한다.</summary>
-    static void Run(LevelRoute route, LevelRoute.PadModule module, int steps,
+    static void Run(LevelRoute route, int module, int steps,
         float direction, float rise, float tightness, string label)
     {
         for (int i = 0; i < steps; i++)
@@ -131,11 +131,11 @@ public static class RouteShapes
     /// 꼭짓점 한 걸음. 방향을 뒤집으면서 크게 오른다 —
     /// 여기서만 2단 점프를 쓰고, 여기서만 손이 방향 키를 옮긴다.
     /// </summary>
-    static void Turn(LevelRoute route, LevelRoute.PadModule module,
+    static void Turn(LevelRoute route, int module,
         float direction, float tightness, string label)
         => Step(route, module, direction, DEFAULT_TURN_RISE, tightness, label);
 
-    static bool Step(LevelRoute route, LevelRoute.PadModule module,
+    static bool Step(LevelRoute route, int module,
         float direction, float rise, float tightness, string label)
     {
         LevelRoute.Node previous = route.main[route.main.Count - 1];

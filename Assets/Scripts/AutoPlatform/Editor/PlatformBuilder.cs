@@ -13,16 +13,6 @@ using UnityEngine;
 /// </summary>
 public static class PlatformBuilder
 {
-    /// <summary><see cref="LevelRoute.PadModule"/>과 같은 순서. None은 프리팹이 없다.</summary>
-    static readonly string[] ModuleGuids =
-    {
-        "871aede768aa4754e94c585030a98742", // Deck
-        "7fa25047730505f4999e62f14bff1df4", // Deck(5 slabs)
-        "5426ad51f75b168498c391f46c9c03e2", // Deck(3 slabs)
-        "7fb84d039373eb44aa497c1e01c5b36b", // ThickerDeck
-        null,                               // None
-    };
-
     /// <summary>씬의 물리 지오메트리가 모이는 루트. 기존 배경 씬과 같은 이름을 쓴다.</summary>
     const string PHYSICS_ROOT = "Physics";
 
@@ -41,6 +31,8 @@ public static class PlatformBuilder
 
         /// <summary>Z 중심 어긋남. 발판을 Z=0에 맞추기 위해 상쇄한다.</summary>
         public float centerZ;
+
+        public string guid;
 
         /// <summary>폭과 아트의 세로 부피. 루트가 판정에 그대로 쓴다.</summary>
         public LevelRoute.PadSpec spec;
@@ -67,35 +59,47 @@ public static class PlatformBuilder
     /// 발판 폭과 아트 두께가 필요하기 때문이다. 갓 만든 루트는 이 표가 비어 있어서,
     /// 채우지 않고 배치하면 모든 발판을 폭 0으로 보고 겹침 검사가 통째로 무력해진다.
     /// </summary>
-    public static Module[] MeasureInto(LevelRoute route)
+    public static Module[] MeasureInto(LevelRoute route, string folder)
     {
-        Module[] modules = new Module[ModuleGuids.Length];
-        for (int i = 0; i < ModuleGuids.Length; i++)
-            modules[i] = ModuleGuids[i] == null ? default : Measure(ModuleGuids[i]);
+        List<Module> found = new List<Module>();
 
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { folder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+
+            // 하위 폴더는 뒤지지 않는다. 지정한 폴더에 발판만 모아 두는 것이 규약이다.
+            string directory = System.IO.Path.GetDirectoryName(path).Replace("\\", "/");
+            if (directory != folder.TrimEnd('/')) continue;
+
+            Module module = Measure(guid);
+            if (module.Valid) found.Add(module);
+        }
+
+        // 좁은 것부터 늘어세운다. 역할을 이름이 아니라 순위로 고르기 위한 것이다.
+        found.Sort((a, b) => a.spec.width.CompareTo(b.spec.width));
+
+        Module[] modules = found.ToArray();
         if (route == null) return modules;
 
         Undo.RecordObject(route, "Measure Pads");
 
-        if (route.pads == null || route.pads.Length != ModuleGuids.Length)
-            route.pads = new LevelRoute.PadSpec[ModuleGuids.Length];
-
-        for (int i = 0; i < modules.Length; i++)
-            if (modules[i].Valid) route.pads[i] = modules[i].spec;
+        route.pads = new LevelRoute.PadSpec[modules.Length];
+        for (int i = 0; i < modules.Length; i++) route.pads[i] = modules[i].spec;
 
         return modules;
     }
 
-    public static void Build(LevelRoute route)
+    public static void Build(LevelRoute route, string folder)
     {
         if (route == null) return;
 
         // 판정과 배치가 같은 치수를 보게 한다. 아트를 갈아끼우면 여기서 따라 바뀐다.
-        Module[] modules = MeasureInto(route);
+        Module[] modules = MeasureInto(route, folder);
 
-        if (!modules[(int)LevelRoute.PadModule.Deck].Valid)
+        if (modules.Length == 0)
         {
-            Debug.LogError("[PlatformBuilder] Deck 프리팹을 찾지 못했다. GUID가 바뀌었는지 확인할 것.");
+            Debug.LogError($"[PlatformBuilder] '{folder}'에서 쓸 수 있는 발판 프리팹을 찾지 못했다. "
+                + "콜라이더가 있는 프리팹이 하나는 있어야 한다.");
             return;
         }
 
@@ -104,7 +108,9 @@ public static class PlatformBuilder
         int built = 0;
         foreach (Run run in Runs(route))
         {
-            Module module = modules[(int)run.module];
+            if (run.module < 0 || run.module >= modules.Length) continue;
+
+            Module module = modules[run.module];
             if (!module.Valid) continue;
 
             built += Place(container, run, module);
@@ -116,25 +122,49 @@ public static class PlatformBuilder
         EditorUtility.SetDirty(route.gameObject);
     }
 
-    /// <summary>이 루트가 지어 놓은 발판들이 담긴 컨테이너. 아직 짓지 않았으면 null.</summary>
+    /// <summary>가장 최근에 지은 컨테이너. 아직 짓지 않았으면 null.</summary>
     public static Transform ContainerOf(LevelRoute route)
     {
-        if (route == null) return null;
-
-        Transform physics = FindPhysicsRoot(route);
-        return physics == null ? null : physics.Find(CONTAINER_PREFIX + route.name);
+        List<Transform> all = ContainersOf(route);
+        return all.Count == 0 ? null : all[all.Count - 1];
     }
 
+    /// <summary>
+    /// 이 루트가 지어 놓은 컨테이너 전부.
+    ///
+    /// 적어 둔 목록이 먼저다. 비어 있으면 부모 밑에서 이름으로 한 번 주워 담는다 —
+    /// 목록이 생기기 전에 지어 놓은 것을 잃지 않기 위한 것이다.
+    /// </summary>
+    public static List<Transform> ContainersOf(LevelRoute route)
+    {
+        if (route == null) return new List<Transform>();
+
+        route.builtContainers.RemoveAll(c => c == null);
+        if (route.builtContainers.Count > 0) return new List<Transform>(route.builtContainers);
+
+        if (route.buildRoot == null) return new List<Transform>();
+
+        foreach (Transform child in route.buildRoot)
+            if (child.name.StartsWith(CONTAINER_PREFIX)) route.builtContainers.Add(child);
+
+        return new List<Transform>(route.builtContainers);
+    }
+
+    /// <summary>지어 놓은 것을 전부 걷어낸다. 손으로 고친 것도 함께 사라지므로 부를 때 각오할 것.</summary>
     public static void Clear(LevelRoute route)
     {
-        if (route == null) return;
+        List<Transform> containers = ContainersOf(route);
 
-        Transform physics = FindPhysicsRoot(route);
-        if (physics == null) return;
+        Undo.RecordObject(route, "Clear Platforms");
+        route.builtContainers.Clear();
 
-        Transform existing = physics.Find(CONTAINER_PREFIX + route.name);
-        if (existing != null) Undo.DestroyObjectImmediate(existing.gameObject);
+        foreach (Transform container in containers)
+            if (container != null) Undo.DestroyObjectImmediate(container.gameObject);
+
+        Debug.Log($"[PlatformBuilder] 컨테이너 {containers.Count}개를 걷어냈다.", route);
     }
+
+    static string Prefix(LevelRoute route) => CONTAINER_PREFIX + route.name;
 
     #region 발판 묶기
 
@@ -144,7 +174,7 @@ public static class PlatformBuilder
         public float minX;
         public float maxX;
         public float y;
-        public LevelRoute.PadModule module;
+        public int module;
     }
 
     static IEnumerable<Run> Runs(LevelRoute route)
@@ -165,7 +195,7 @@ public static class PlatformBuilder
         for (int i = 0; i < nodes.Count; i++)
         {
             LevelRoute.Node node = nodes[i];
-            if (node.module == LevelRoute.PadModule.None)
+            if (!route.SpecOf(node).Valid)
             {
                 if (open.HasValue) { yield return open.Value; open = null; }
                 continue;
@@ -248,7 +278,13 @@ public static class PlatformBuilder
         List<Bounds> volumes = new List<Bounds>();
         List<Transform> owners = new List<Transform>();
 
-        foreach (Transform tile in container)
+        // 이번에 지은 것뿐 아니라 형제 컨테이너의 발판까지 함께 본다 —
+        // 덧붙여 짓는 이상, 새 발판이 예전 발판을 뚫는 것도 관통이다.
+        List<Transform> tiles = new List<Transform>();
+        foreach (Transform sibling in container.parent)
+            foreach (Transform tile in sibling) tiles.Add(tile);
+
+        foreach (Transform tile in tiles)
         {
             bool any = false;
             Bounds bounds = default;
@@ -322,6 +358,9 @@ public static class PlatformBuilder
         if (any)
         {
             module.prefab = prefab;
+            module.guid = guid;
+            module.spec.guid = guid;
+            module.spec.name = prefab.name;
             module.spec.width = bounds.size.x;
             module.topOffset = bounds.max.y;
             module.centerZ = bounds.center.z;
@@ -359,31 +398,59 @@ public static class PlatformBuilder
     }
 
     /// <summary>
-    /// 루트가 속한 씬에서만 찾는다. Character 씬이 함께 열려 있을 때 남의 Physics 루트에
-    /// 발판을 쌓지 않도록.
+    /// 발판을 지어 넣을 부모를 정한다.
+    ///
+    /// 루트에 적어 둔 참조가 먼저다. 없으면 씬을 뒤져 이름이 맞는 것을 찾고, 그것도 없으면 만든다.
+    /// 어느 쪽이든 찾은 것을 루트에 적어 두므로, 그 뒤로는 이름을 바꾸든 다른 것 밑으로 옮기든 따라간다.
     /// </summary>
-    static Transform FindPhysicsRoot(LevelRoute route)
+    static Transform ResolveBuildRoot(LevelRoute route)
     {
+        if (route.buildRoot != null) return route.buildRoot;
+
+        Undo.RecordObject(route, "Resolve Build Root");
+
+        // 씬 루트가 아니어도 찾는다 — 정리하다 다른 것 밑으로 들어가 있는 경우가 흔하다.
         foreach (GameObject root in route.gameObject.scene.GetRootGameObjects())
-            if (root.name == PHYSICS_ROOT) return root.transform;
+        {
+            Transform found = root.name == PHYSICS_ROOT
+                ? root.transform
+                : FindByName(root.transform, PHYSICS_ROOT);
+
+            if (found == null) continue;
+
+            route.buildRoot = found;
+            return found;
+        }
+
+        GameObject created = new GameObject(PHYSICS_ROOT);
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(created, route.gameObject.scene);
+        Undo.RegisterCreatedObjectUndo(created, "Build Platforms");
+
+        route.buildRoot = created.transform;
+        return created.transform;
+    }
+
+    static Transform FindByName(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name) return child;
+
+            Transform deeper = FindByName(child, name);
+            if (deeper != null) return deeper;
+        }
 
         return null;
     }
 
     static Transform PrepareContainer(LevelRoute route)
     {
-        Transform physics = FindPhysicsRoot(route);
-        if (physics == null)
-        {
-            GameObject created = new GameObject(PHYSICS_ROOT);
-            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(created, route.gameObject.scene);
-            Undo.RegisterCreatedObjectUndo(created, "Build Platforms");
-            physics = created.transform;
-        }
+        Transform physics = ResolveBuildRoot(route);
 
-        string name = CONTAINER_PREFIX + route.name;
-        Transform existing = physics.Find(name);
-        if (existing != null) Undo.DestroyObjectImmediate(existing.gameObject);
+        // 이미 있는 것은 건드리지 않는다. 지난번에 지은 발판에는 손으로 고친 것이 섞여 있을 수 있고,
+        // 그것을 말없이 지우면 잃은 줄도 모른 채 잃는다. 치우려면 [지우기]를 따로 눌러야 한다.
+        int serial = ContainersOf(route).Count + 1;
+        string name = $"{Prefix(route)} {serial}";
 
         GameObject container = new GameObject(name);
         Undo.RegisterCreatedObjectUndo(container, "Build Platforms");
@@ -392,6 +459,9 @@ public static class PlatformBuilder
         container.transform.SetParent(physics, true);
         container.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
         container.transform.localScale = Vector3.one;
+
+        Undo.RecordObject(route, "Build Platforms");
+        route.builtContainers.Add(container.transform);
 
         return container.transform;
     }

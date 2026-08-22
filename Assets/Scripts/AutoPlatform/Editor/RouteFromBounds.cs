@@ -42,7 +42,7 @@ public static class RouteFromBounds
 
         // 치수를 먼저 채운다. 동선을 만드는 동안 이미 발판 폭과 아트 두께가 필요하다 —
         // 비어 있으면 모든 발판을 폭 0으로 보고 겹침 검사가 통째로 무력해진다.
-        PlatformBuilder.MeasureInto(route);
+        PlatformBuilder.MeasureInto(route, bounds.moduleFolder);
 
         Vector2 start = LevelBounds.FootOf(bounds.startTrigger);
         Vector2 end = LevelBounds.FootOf(bounds.endTrigger);
@@ -61,11 +61,11 @@ public static class RouteFromBounds
         route.branches.Clear();
 
         // 출발·도착 발판은 트리거의 폭을 그대로 쓴다. 트리거를 옮기거나 키운 것이 레벨에 나타나야 한다.
-        route.main.Add(Wide("출발", start, bounds.startModule, LevelBounds.WidthOf(bounds.startTrigger)));
+        route.main.Add(Wide("출발", start, Module(route, bounds.startModule, route.ThickPad), LevelBounds.WidthOf(bounds.startTrigger)));
 
         // 도착을 <b>먼저</b> 놓는다. 그래야 그 뒤로 놓는 모든 발판이 도착 발판을 장애물로 보고 피한다 —
         // 마지막에 얹으면 이미 자리를 차지한 것들과 부딪혀도 물러설 곳이 없다.
-        route.main.Add(Wide("도착", end, bounds.endModule, LevelBounds.WidthOf(bounds.endTrigger)));
+        route.main.Add(Wide("도착", end, Module(route, bounds.endModule, route.PadByRank(0.5f)), LevelBounds.WidthOf(bounds.endTrigger)));
 
         Plan plan = Solve(route, bounds, start, end, region);
         if (plan.rise > route.profile.MaxClimb)
@@ -84,6 +84,10 @@ public static class RouteFromBounds
         EditorUtility.SetDirty(route);
     }
 
+    /// <summary>인스펙터에서 -1로 두면 그 자리에 어울리는 역할을 알아서 고른다.</summary>
+    static int Module(LevelRoute route, int chosen, int fallback)
+        => chosen >= 0 && chosen < (route.pads?.Length ?? 0) ? chosen : fallback;
+
     #region 노드 다루기
 
     /// <summary>마지막으로 놓은 발판. 도착 발판은 언제나 목록 끝에 있으므로 그 앞이다.</summary>
@@ -93,7 +97,7 @@ public static class RouteFromBounds
     static void Append(LevelRoute route, LevelRoute.Node node)
         => route.main.Insert(route.main.Count - 1, node);
 
-    static LevelRoute.Node Node(string label, Vector2 position, LevelRoute.PadModule module)
+    static LevelRoute.Node Node(string label, Vector2 position, int module)
         => new LevelRoute.Node
         {
             label = label,
@@ -103,7 +107,7 @@ public static class RouteFromBounds
             padWidth = 0f,
         };
 
-    static LevelRoute.Node Wide(string label, Vector2 position, LevelRoute.PadModule module, float width)
+    static LevelRoute.Node Wide(string label, Vector2 position, int module, float width)
     {
         LevelRoute.Node node = Node(label, position, module);
         node.padWidth = width;
@@ -129,7 +133,7 @@ public static class RouteFromBounds
         MotionProfile p = route.profile;
         int legs = Mathf.Max(1, bounds.zigzags);
 
-        float padWidth = route.pads[(int)bounds.module].width;
+        float padWidth = route.SpecOf(Module(route, bounds.module, route.NarrowPad)).width;
         float span = Mathf.Max(1f, region.size.x - bounds.margin * 2f - padWidth);
 
         float turnRise = Mathf.Min(TURN_RISE, p.MaxClimb);
@@ -187,7 +191,9 @@ public static class RouteFromBounds
     {
         public Kind kind;
         public int steps;
-        public LevelRoute.PadModule module;
+
+        /// <summary>어느 폭의 발판을 쓸지. 0이 가장 좁고 1이 가장 넓다 — 실측 순위로 고른다.</summary>
+        public float rank;
     }
 
     /// <summary>
@@ -201,13 +207,6 @@ public static class RouteFromBounds
         System.Random random = new System.Random(bounds.seed);
         var list = new List<Section>();
 
-        LevelRoute.PadModule[] modules =
-        {
-            LevelRoute.PadModule.Deck3,
-            LevelRoute.PadModule.Deck5,
-            LevelRoute.PadModule.Deck3,
-            LevelRoute.PadModule.Deck,
-        };
 
         List<Kind> pool = new List<Kind>
         {
@@ -225,7 +224,7 @@ public static class RouteFromBounds
             {
                 kind = Kind.Leg,
                 steps = 2 + random.Next(3),
-                module = modules[random.Next(modules.Length)],
+                rank = (float)random.NextDouble(),
             });
 
             if (i == legs - 1) break;
@@ -239,7 +238,7 @@ public static class RouteFromBounds
                     || kind == Kind.Plateau || kind == Kind.Wall
                     ? 1
                     : 2 + random.Next(2),
-                module = modules[random.Next(modules.Length)],
+                rank = (float)random.NextDouble(),
             });
         }
 
@@ -263,7 +262,7 @@ public static class RouteFromBounds
                 case Kind.Leg:
                     Run(route, bounds, plan, section, ref direction, plan.rise, region);
                     direction = -direction;
-                    Step(route, bounds, section.module, ref direction, plan.turnRise, region, "꺾임");
+                    Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.turnRise, region, "꺾임");
                     break;
 
                 case Kind.Terrace:
@@ -272,11 +271,11 @@ public static class RouteFromBounds
 
                 case Kind.Tower:
                     for (int i = 0; i < section.steps; i++)
-                        Step(route, bounds, section.module, ref direction, plan.turnRise, region, "탑");
+                        Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.turnRise, region, "탑");
                     break;
 
                 case Kind.Dip:
-                    Step(route, bounds, section.module, ref direction, -plan.turnRise, region, "낙하");
+                    Step(route, bounds, route.PadByRank(section.rank), ref direction, -plan.turnRise, region, "낙하");
                     Run(route, bounds, plan, section, ref direction, plan.rise, region);
                     break;
 
@@ -306,13 +305,13 @@ public static class RouteFromBounds
 
         for (int i = 0; i < section.steps; i++)
         {
-            if (Step(route, bounds, section.module, ref direction, rise, region, "층")) continue;
+            if (Step(route, bounds, route.PadByRank(section.rank), ref direction, rise, region, "층")) continue;
 
             // 벽에 닿았거나 자리가 없다. 꼭짓점을 하나 세우고 반대쪽으로 남은 걸음을 잇는다.
             if (++bounces > 1) return;
 
             direction = -direction;
-            if (!Step(route, bounds, section.module, ref direction, plan.turnRise, region, "꺾임")) return;
+            if (!Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.turnRise, region, "꺾임")) return;
 
             i--;
         }
@@ -333,10 +332,10 @@ public static class RouteFromBounds
         // Place는 목표 발판의 <b>한가운데</b>까지를 재고, 도달 판정은 <b>가장자리</b>부터 잰다.
         // 그 차이를 더해 주지 않으면 실제 틈이 반 폭만큼 좁아져 2단 점프로 넘어가 버린다.
         float gap = Mathf.Lerp(withoutDash, withDash, 0.45f)
-            + route.pads[(int)section.module].width * 0.5f;
+            + route.SpecOf(route.PadByRank(section.rank)).width * 0.5f;
 
-        if (!Place(route, bounds, section.module, ref direction, 0f, gap, region, "대시"))
-            Place(route, bounds, section.module, ref direction, 0f, gap * 0.8f, region, "대시");
+        if (!Place(route, bounds, route.PadByRank(section.rank), ref direction, 0f, gap, region, "대시"))
+            Place(route, bounds, route.PadByRank(section.rank), ref direction, 0f, gap * 0.8f, region, "대시");
     }
 
     /// <summary>
@@ -348,7 +347,7 @@ public static class RouteFromBounds
         float rise = Mathf.Lerp(p.MaxClimb, p.LedgeCeiling, 0.4f);
 
         float distance = RouteShapes.StepDistance(p, p.MaxClimb * 0.9f, bounds.spacing);
-        Place(route, bounds, section.module, ref direction, rise, distance, region, "턱");
+        Place(route, bounds, route.PadByRank(section.rank), ref direction, rise, distance, region, "턱");
     }
 
     /// <summary>
@@ -359,18 +358,14 @@ public static class RouteFromBounds
     /// </summary>
     static void Plateau(LevelRoute route, LevelBounds bounds, Plan plan, ref float direction, Bounds region)
     {
-        LevelRoute.PadModule[] preference =
-        {
-            LevelRoute.PadModule.ThickerDeck,
-            LevelRoute.PadModule.Deck,
-            LevelRoute.PadModule.Deck5,
-        };
+        // 아트가 두꺼운 것부터 시도한다 — 아래가 비어 있으면 기둥째 서서 이정표가 된다.
+        int[] preference = { route.ThickPad, route.WidePad, route.PadByRank(0.5f) };
 
         float width = LevelBounds.WidthOf(bounds.startTrigger);
         float rise = plan.rise;
         float distance = RouteShapes.StepDistance(route.profile, rise, bounds.spacing);
 
-        foreach (LevelRoute.PadModule module in preference)
+        foreach (int module in preference)
         {
             // 넓은 발판은 목표 지점이 한가운데다. 반 폭만큼 더 나아가야 가장자리가 닿는다.
             if (Place(route, bounds, module, ref direction, rise, distance + width * 0.5f, region, "고원", width))
@@ -412,7 +407,7 @@ public static class RouteFromBounds
             float top = anchor.position.y + p.LedgeCeiling * scale;
             if (top > ceiling) continue;
 
-            LevelRoute.Node candidate = Wide("벽", new Vector2(x, top), LevelRoute.PadModule.ThickerDeck, width);
+            LevelRoute.Node candidate = Wide("벽", new Vector2(x, top), route.ThickPad, width);
             if (!route.Fits(candidate)) continue;
 
             Raise(route, bounds, plan, ref direction, region, candidate, top);
@@ -435,19 +430,19 @@ public static class RouteFromBounds
         while (Last(route).position.y < top + p.characterHeight && guard++ < 8)
         {
             float climb = direction;
-            if (Step(route, bounds, LevelRoute.PadModule.Deck3, ref climb, plan.turnRise, region, "벽타기")) continue;
+            if (Step(route, bounds, route.NarrowPad, ref climb, plan.turnRise, region, "벽타기")) continue;
 
             climb = -direction;
-            if (!Step(route, bounds, LevelRoute.PadModule.Deck3, ref climb, plan.turnRise, region, "벽타기")) break;
+            if (!Step(route, bounds, route.NarrowPad, ref climb, plan.turnRise, region, "벽타기")) break;
         }
 
         // 다 올랐으면 벽 너머로 건너간다.
-        Place(route, bounds, LevelRoute.PadModule.Deck3, ref direction, 0f,
+        Place(route, bounds, route.NarrowPad, ref direction, 0f,
             width + lane, region, "벽넘기");
     }
 
     /// <summary>기본 걸음. 이 높이에 맞는 거리를 도달 구간에서 뽑아 놓는다.</summary>
-    static bool Step(LevelRoute route, LevelBounds bounds, LevelRoute.PadModule module,
+    static bool Step(LevelRoute route, LevelBounds bounds, int module,
         ref float direction, float rise, Bounds region, string label)
     {
         float distance = RouteShapes.StepDistance(route.profile, rise, bounds.spacing);
@@ -462,7 +457,7 @@ public static class RouteFromBounds
     /// 기본 거리에서 조금씩 옮겨 가며 <b>빈자리이면서 닿는</b> 첫 자리를 고른다.
     /// 곁길만 이렇게 하고 주 경로는 그냥 놓았더니, 되돌아오는 걸음들이 서로 위를 덮었다.
     /// </summary>
-    static bool Place(LevelRoute route, LevelBounds bounds, LevelRoute.PadModule module,
+    static bool Place(LevelRoute route, LevelBounds bounds, int module,
         ref float direction, float rise, float distance, Bounds region, string label, float width = 0f)
     {
         LevelRoute.Node previous = Last(route);
@@ -522,10 +517,10 @@ public static class RouteFromBounds
             foreach (float rise in rises)
             {
                 float direction = toward;
-                if (Step(route, bounds, bounds.module, ref direction, rise, region, "이음")) { placed = true; break; }
+                if (Step(route, bounds, Module(route, bounds.module, route.NarrowPad), ref direction, rise, region, "이음")) { placed = true; break; }
 
                 direction = -toward;
-                if (Step(route, bounds, bounds.module, ref direction, rise, region, "꺾임")) { placed = true; break; }
+                if (Step(route, bounds, Module(route, bounds.module, route.NarrowPad), ref direction, rise, region, "꺾임")) { placed = true; break; }
             }
 
             if (!placed) break;
@@ -628,7 +623,7 @@ public static class RouteFromBounds
                 {
                     float half = route.HalfWidthOf(previous);
                     LevelRoute.Node candidate = Node($"지름길 {k}",
-                        new Vector2(Mathf.Clamp(baseX + offset, left + half, right - half), y), bounds.module);
+                        new Vector2(Mathf.Clamp(baseX + offset, left + half, right - half), y), Module(route, bounds.module, route.NarrowPad));
 
                     if (!route.Fits(candidate)) continue;
                     if (!route.HoldReach(previous, candidate, out _, out _, out _, out _, out _)) continue;

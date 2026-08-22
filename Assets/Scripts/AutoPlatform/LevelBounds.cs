@@ -9,6 +9,10 @@ using UnityEngine;
 /// </summary>
 public class LevelBounds : MonoBehaviour
 {
+    [Header("발판 프리팹")]
+    [Tooltip("발판만 모아 둔 폴더. 여기 있는 프리팹만 쓰며 하위 폴더는 뒤지지 않는다. 인스펙터에서 끌어다 놓을 수 있다.")]
+    public string moduleFolder = "Assets/Art/Buildings/Assembly/1. Prefabs";
+
     [Header("정육면체 트리거")]
     [Tooltip("주인공이 서서 시작하는 자리. 바닥면 한가운데가 첫 발판이 된다.")]
     public BoxCollider startTrigger;
@@ -53,11 +57,11 @@ public class LevelBounds : MonoBehaviour
     [Min(0)] public int seedSearch = 40;
 
     [Header("시작 · 도착 발판")]
-    [Tooltip("출발 발판의 모듈. 아래로 열주가 뻗은 것을 쓰면 지면에 선 것처럼 읽힌다.")]
-    public LevelRoute.PadModule startModule = LevelRoute.PadModule.ThickerDeck;
+    [Tooltip("출발 발판. -1이면 아트가 가장 두꺼운 것을 골라 지면에 선 것처럼 보이게 한다.")]
+    public int startModule = -1;
 
-    [Tooltip("도착 발판의 모듈. 공중에 있으므로 아래가 얇은 것을 쓴다.")]
-    public LevelRoute.PadModule endModule = LevelRoute.PadModule.Deck5;
+    [Tooltip("도착 발판. -1이면 중간 폭을 쓴다.")]
+    public int endModule = -1;
 
     [Tooltip("발판 가장자리와 영역 벽 사이에 남길 여백.")]
     [Min(0f)] public float margin = 1f;
@@ -68,7 +72,8 @@ public class LevelBounds : MonoBehaviour
     [Tooltip("곁길 하나가 건너뛸 주 경로 노드의 최소 개수. 작으면 지름길 티가 나지 않는다.")]
     [Min(2)] public int branchSkip = 4;
 
-    public LevelRoute.PadModule module = LevelRoute.PadModule.Deck3;
+    [Tooltip("일반 발판. 목록에서 몇 번째를 쓸지. -1이면 가장 좁은 것을 쓴다.")]
+    public int module = -1;
 
     public bool Ready => startTrigger != null && endTrigger != null && region != null;
 

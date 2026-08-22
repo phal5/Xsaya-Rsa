@@ -171,7 +171,7 @@ public class LevelRouteEditor : Editor
     int _shapeLegs = 3;
     float _shapeRise = RouteShapes.DEFAULT_RISE;
     float _shapeTightness = RouteShapes.DEFAULT_TIGHTNESS;
-    LevelRoute.PadModule _shapeModule = LevelRoute.PadModule.Deck3;
+    int _shapeModule = -1;
 
     void DrawShapes()
     {
@@ -181,7 +181,7 @@ public class LevelRouteEditor : Editor
         _shapeLegs = EditorGUILayout.IntSlider("지그재그 층 수", _shapeLegs, 2, 10);
         _shapeRise = EditorGUILayout.Slider("걸음당 높이", _shapeRise, 0.2f, Route.profile.MaxClimb);
         _shapeTightness = EditorGUILayout.Slider("여유", _shapeTightness, 0f, 1f);
-        _shapeModule = (LevelRoute.PadModule)EditorGUILayout.EnumPopup("발판", _shapeModule);
+        _shapeModule = PadPopup("발판", _shapeModule, Route);
 
         float step = RouteShapes.StepDistance(Route.profile, _shapeRise, _shapeTightness);
         EditorGUILayout.LabelField(
@@ -198,6 +198,20 @@ public class LevelRouteEditor : Editor
             Shape(">", RouteShapes.Shape.TurnRight);
             Shape("지그재그", RouteShapes.Shape.Zigzag);
         }
+    }
+
+    /// <summary>실측한 발판 목록을 이름과 폭으로 보여주는 드롭다운. -1은 "알아서".</summary>
+    public static int PadPopup(string label, int module, LevelRoute route)
+    {
+        int count = route.pads == null ? 0 : route.pads.Length;
+        string[] names = new string[count + 1];
+        names[0] = "알아서 고름";
+
+        for (int i = 0; i < count; i++)
+            names[i + 1] = $"{route.pads[i].name} ({route.pads[i].width:0.0} m)";
+
+        int picked = EditorGUILayout.Popup(label, Mathf.Clamp(module + 1, 0, count), names);
+        return picked - 1;
     }
 
     void Shape(string label, RouteShapes.Shape shape)
@@ -233,7 +247,7 @@ public class LevelRouteEditor : Editor
         {
             if (GUILayout.Button("발판 짓기", GUILayout.Height(26)))
             {
-                PlatformBuilder.Build(Route);
+                PlatformBuilder.Build(Route, bounds != null ? bounds.moduleFolder : string.Empty);
                 GUIUtility.ExitGUI();
             }
 

@@ -24,13 +24,15 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 933798d556931eb418840c642c945f49, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _SPECULAR_SETUP
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
+  stringTagMap:
+    RenderType: Opaque
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -111,11 +113,18 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
     - _AtmosphereThickness: 1.92
+    - _Blend: 0
+    - _BlendModePreserveSpecular: 1
     - _BumpScale: 1
+    - _CastShadows: 1
+    - _Cull: 2
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 0.5
     - _DstBlend: 0
+    - _DstBlendAlpha: 0
     - _Exposure: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.592
@@ -126,17 +135,25 @@ Material:
     - _Parallax: 0.02
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _ReceiveShadows: 1
     - _Rotation: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _SrcBlendAlpha: 1
     - _SunDisk: 2
     - _SunSize: 0.368
+    - _Surface: 0
     - _UVSec: 0
+    - _WorkflowMode: 0
+    - _ZTest: 4
     - _ZWrite: 1
+    - _ZWriteControl: 0
     - _lightThreshold: 0.92
     - _threshold: 0.79
     m_Colors:
+    - _Albedo_Clamp: {r: 0, g: 0, b: 0, a: 0}
+    - _Albedo_Remap: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 0.65882355, g: 0.6392157, b: 0.45882356, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GroundColor: {r: 0.36899996, g: 0.34899998, b: 0.34099993, a: 1}
