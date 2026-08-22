@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -60,7 +60,7 @@ public class Character_Movement : MonoBehaviour, IMovement
             _aerialAcceleration * Mathf.Clamp(alignment, 0, 1) * Time.fixedDeltaTime,
             rawAccel.magnitude);
 
-        _external.linearVelocity += magnitude * accel;
+        SetSampler(_external.linearVelocity + magnitude * accel);
 
         // integrate velocity spaces
         _own.position = _external.position;
@@ -74,11 +74,16 @@ public class Character_Movement : MonoBehaviour, IMovement
     /// 여기는 매 FixedUpdate 도는 자리라 그 경고가 프레임마다 쌓인다.
     /// 위치 대입은 키네마틱에서도 그대로 먹으므로 몸을 옮기는 데는 지장이 없다.
     /// </summary>
-    private void SetBodyVelocity(Vector3 velocity)
-    {
-        if (_own.isKinematic) return;
+    private void SetBodyVelocity(Vector3 velocity) => SetVelocity(_own, velocity);
 
-        _own.linearVelocity = velocity;
+    /// <summary>외력 몸도 같은 이유로 거쳐 간다. 붙어 있는 동안은 이쪽도 키네마틱이다.</summary>
+    private void SetSampler(Vector3 velocity) => SetVelocity(_external, velocity);
+
+    private static void SetVelocity(Rigidbody body, Vector3 velocity)
+    {
+        if (body.isKinematic) return;
+
+        body.linearVelocity = velocity;
     }
 
     private void Mutual()
@@ -161,7 +166,7 @@ public class Character_Movement : MonoBehaviour, IMovement
     {
         Vector3 v = _external.linearVelocity;
         v.y = -CustomMath.ReLU(-v.y);
-        _external.linearVelocity = v;
+        SetSampler(v);
     }
 
     /// <summary>
@@ -182,13 +187,29 @@ public class Character_Movement : MonoBehaviour, IMovement
     /// 두 몸에 모두 적는다. Singular이 매 FixedUpdate마다 sampler를 rigidbody로 옮기지만,
     /// 그 순서에 기대면 부르는 시점에 따라 한 프레임 어긋난다.
     /// </summary>
+    /// <summary>
+    /// 두 몸을 물리에서 떼어낸다. <b>자리의 주인이 하나여야 하는 구간</b>이 쓴다.
+    ///
+    /// 한쪽만 떼면 주인이 둘이 된다. 몸만 키네마틱으로 두면 외력 몸은 여전히 물리 바디라
+    /// 지오메트리에 겹칠 때 솔버가 밀어내는데, 다음 프레임 Singular이 그 밀려난 자리를
+    /// 몸에 그대로 복사한다 — 우리가 정한 자리가 조용히 덮인다. 겹치는 정도에 따라
+    /// 일어나거나 말거나 하므로 재현도 잘 되지 않는다.
+    ///
+    /// 떼어낸 동안에는 속도를 실을 수 없다. 다시 붙인 <b>뒤에</b> 실어야 한다.
+    /// </summary>
+    public void Detach(bool detached)
+    {
+        _own.isKinematic = detached;
+        _external.isKinematic = detached;
+    }
+
     public void Pin(Vector3 position)
     {
         _targetVelocity = Vector3.zero;
         _localVelocity = Vector3.zero;
 
         _external.position = position;
-        _external.linearVelocity = Vector3.zero;
+        SetSampler(Vector3.zero);
 
         _own.position = position;
         SetBodyVelocity(Vector3.zero);
@@ -198,17 +219,17 @@ public class Character_Movement : MonoBehaviour, IMovement
     {
         Vector3 v = _external.linearVelocity;
         v.y = velocity;
-        _external.linearVelocity = v;
+        SetSampler(v);
     }
 
     public void IncrementSamplerVelocity(Vector3 incrementation)
     {
-        _external.linearVelocity += incrementation;
+        SetSampler(_external.linearVelocity + incrementation);
     }
 
     public void SetSamplerVelocity(Vector3 velocity)
     {
-        _external.linearVelocity = velocity;
+        SetSampler(velocity);
     }
 
     public void SetLocalVelocity(Vector3 velocity)
@@ -223,7 +244,7 @@ public class Character_Movement : MonoBehaviour, IMovement
     private void IntegrateMutualToSingular()
     {
         _external.position = _own.position;
-        _external.linearVelocity = _own.linearVelocity;
+        SetSampler(_own.linearVelocity);
         _targetVelocity = Vector3.zero;
         _localVelocity = Vector3.zero;
     }
@@ -233,7 +254,7 @@ public class Character_Movement : MonoBehaviour, IMovement
         _targetVelocity = _external.linearVelocity;
         _localVelocity = _external.linearVelocity;
         _external.position = _own.position;
-        _external.linearVelocity = Vector3.zero;
+        SetSampler(Vector3.zero);
     }
 
     #endregion

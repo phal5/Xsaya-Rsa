@@ -49,12 +49,16 @@ public class Character_Airborne : FiniteStateMachine
 
     public override void Exit()
     {
+        _turnTo = null;
+
         Unsubscribe();
         base.Exit();
     }
 
     public override void Transitions()
     {
+        Turn();
+
         DriveJumpAnimation();
 
         // 입력 콜백은 표시만 남긴다. 티켓 판정과 처리는 여기서 한다.
@@ -175,13 +179,62 @@ public class Character_Airborne : FiniteStateMachine
 
     #endregion
 
+    #region Wall Turn
+
+    /// <summary>벽을 차고 넘어온 참이면 향해야 할 방향. 다 돌면 비운다.</summary>
+    Quaternion? _turnTo;
+
+    /// <summary>
+    /// 벽을 찬 방향으로 돌기 시작한다. 턱 축이 넘겨주면서 한 번 부른다.
+    ///
+    /// <b>얼마나 도는지가 아니라 어디를 보고 끝나는지가 중요하다.</b> 벽을 차 놓고 벽을 마주 본 채
+    /// 날아가면 어색한데, 각도를 더하는 방식이면 어디서 시작했느냐에 따라 끝이 매번 달라진다.
+    /// 목표를 향해 돌다 닿으면 멈추므로 끝은 언제나 벽 반대쪽이다.
+    ///
+    /// 축이 아니라 여기 있는 이유는 턱 축이 한 프레임 만에 넘기기 때문이다 — 붙들고 돌면
+    /// 그동안 공중 조종과 도약을 잃는다. 도는 것은 날아가는 내내 이어져야 한다.
+    /// </summary>
+    public void TurnAwayFrom(Vector3 outward)
+    {
+        outward = CustomMath.RemoveY(outward);
+        if (outward.sqrMagnitude < 0.0001f) return;
+
+        _turnTo = Quaternion.LookRotation(outward.normalized, Vector3.up);
+    }
+
+    /// <summary>
+    /// 목표를 향해 조금 돌린다. 방향키가 들어오면 그만둔다 — 플레이어가 고른 방향이 이긴다.
+    /// </summary>
+    void Turn()
+    {
+        if (_turnTo == null) return;
+
+        if (InputManager.CharacterMove.sqrMagnitude > 0.01f) { _turnTo = null; return; }
+
+        Rigidbody body = Character.Body;
+        Quaternion next = Quaternion.RotateTowards(body.rotation, _turnTo.Value, Character.WallTurnSpeed * Time.deltaTime);
+
+        body.MoveRotation(next);
+
+        if (Quaternion.Angle(next, _turnTo.Value) < 0.5f) _turnTo = null;
+    }
+
+    #endregion
+
     #region Landing
 
     /// <returns>착지해서 축을 넘겼는지.</returns>
     bool ToGround()
     {
-        // 지면 캐스트만 본다. 지상 점프가 축을 강제로 바꾸지 않으므로
-        // "떴는데 아직 캐스트에 걸려 있는" 구간 자체가 생기지 않는다.
+        // <b>솟는 중에는 착지하지 않는다.</b> 올라가면서 땅에 닿는다는 것은 말이 되지 않는다.
+        //
+        // 지면 캐스트는 시작할 때 이미 콜라이더와 겹쳐 있으면 거리 0으로 즉시 히트를 돌려준다.
+        // 벽을 차고 나온 참이면 몸이 벽면에서 0.19밖에 안 떨어져 있어 탐지 구가 벽에 박혀 있고,
+        // 그것이 착지로 읽혀 지상 축으로 넘어간다 — Mutual이 실어둔 도약 속도를 그 자리에서 지운다.
+        // 실측으로 (밖 4, 위 6)이 한 프레임 만에 (0, -0.2)가 되어 벽점프가 통째로 사라졌다.
+        if (Rising) return false;
+
+        // 지상 점프가 축을 강제로 바꾸지 않으므로 "떴는데 아직 캐스트에 걸려 있는" 구간은 생기지 않는다.
         if (!Character.GroundCaster.Cast(out _)) return false;
 
         bool buffered = Time.time <= _jumpBufferedUntil;

@@ -183,6 +183,21 @@ public class Character_Controlled : FiniteStateMachine
         TransitTo<Character_Swap>();
     }
 
+    /// <summary>
+    /// 벽을 찬 방향으로 돌라고 공중 축에 이른다.
+    ///
+    /// 축들은 저마다 다른 오브젝트에 붙어 있어 GetComponent로는 잡히지 않는다.
+    /// 등록된 컴포넌트 상태에서 찾는다.
+    /// </summary>
+    public void TurnAwayFromWall(Vector3 outward)
+    {
+        Character_Airborne airborne = Find(ref _airborne);
+
+        if (airborne != null) airborne.TurnAwayFrom(outward);
+    }
+
+    Character_Airborne _airborne;
+
     /// <summary>스킬이 끝난 뒤 접지 여부에 맞는 이동 축으로 돌려준다.</summary>
     public void ToLocomotion()
     {

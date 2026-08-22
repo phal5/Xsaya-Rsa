@@ -134,7 +134,7 @@ public class Character_Ledge : FiniteStateMachine
         // 매달린 자세는 손이 벽면에 닿아야 해서 몸이 벽보다 안쪽에 오기도 한다.
         // 그대로 두면 솔버가 매 프레임 밀어내고 우리가 도로 끌어와 눈에 보이는 떨림이 된다.
         // 콜라이더는 그대로 남으므로 피격 판정은 잃지 않는다.
-        Character.Body.isKinematic = true;
+        Character.Movement.Detach(true);
 
         // 자리는 옮기지 않는다. 문 자리에서 매달릴 자리로 하위 상태가 모아 간다 —
         // 여기서 한 번에 옮기면 무는 순간 몸이 튄다.
@@ -179,7 +179,7 @@ public class Character_Ledge : FiniteStateMachine
 
         Character.Animation.CaptureRootMotion(false);
 
-        Character.Body.isKinematic = false;
+        Character.Movement.Detach(false);
         Character.Movement.SetGravity(true);
 
         base.Exit();
@@ -204,25 +204,43 @@ public class Character_Ledge : FiniteStateMachine
     /// </summary>
     public override void Transitions()
     {
-        float push = Push();
-
-        if (Consume(ref _upRequested) || push > Character.Ledge.pushMargin)
-        {
-            Switch(typeof(Ledge_Climb));
-            return;
-        }
-
-        if (Consume(ref _downRequested) || push < -Character.Ledge.pushMargin)
-        {
-            Switch(typeof(Ledge_Release));
-            return;
-        }
-
+        // 누른 것이 쥐고 있는 것을 이긴다.
+        //
+        // 벽을 차려면 벽 반대쪽으로 밀고 있는 것이 당연한데, 미는 쪽을 먼저 보면
+        // 그 손이 언제나 놓기로 읽혀 벽점프에 닿을 수가 없다. 벽 쪽으로 밀고 있으면
+        // 오르기가 먼저 가져간다 — 스틱을 완전히 놓은 순간에만 차지는 셈이 된다.
+        //
+        // 점프는 그 프레임에 눌린 사건이고 방향은 계속 쥐고 있는 상태다. 사건이 먼저다.
+        //
         // 벽을 찰 발판이 없으면 뛰지 못한다. 그때 점프는 놓기가 된다 —
         // 어차피 내려가는 길이 그것뿐인데 키를 죽여두면 입력이 먹힌 것처럼 보인다.
         if (Consume(ref _jumpRequested))
+        {
             Switch(Braced ? typeof(Ledge_WallJump) : typeof(Ledge_Release));
+            return;
+        }
+
+        if (Consume(ref _upRequested)) { Switch(typeof(Ledge_Climb)); return; }
+
+        if (Consume(ref _downRequested)) { Switch(typeof(Ledge_Release)); return; }
+
+        // 쥐고 있는 방향은 <b>기다리는 동안에만</b> 읽는다.
+        //
+        // 오르기·놓기·벽점프는 한번 시작하면 제 클립을 도는 동작인데, 그 동안에도 방향을 읽으면
+        // 벽을 차려고 밀고 있던 손이 다음 프레임에 다시 놓기로 읽혀 방금 시작한 동작을 취소한다.
+        // 누르면 시작했다가 곧바로 취소되니 하다 마는 것처럼 보인다.
+        //
+        // 버튼은 이 위에 있다. 눌린 사건이므로 쥐고 있는 것에 밀리지 않고 어느 구간에서든 통한다.
+        if (!Waiting) return;
+
+        float push = Push();
+
+        if (push > Character.Ledge.pushMargin) Switch(typeof(Ledge_Climb));
+        else if (push < -Character.Ledge.pushMargin) Switch(typeof(Ledge_Release));
     }
+
+    /// <summary>아직 무엇을 할지 정하지 않은 구간인지. 손을 뻗는 중과 매달려 쉬는 중이 그렇다.</summary>
+    bool Waiting => _currentStateType == typeof(Ledge_Catch) || _currentStateType == typeof(Ledge_Hang);
 
     /// <summary>
     /// 조종 입력이 벽을 미는 정도. 벽 쪽이 양수, 반대가 음수, 안 밀면 0.
@@ -283,6 +301,10 @@ public class Character_Ledge : FiniteStateMachine
         _charged = true;
 
         // 붙어 있는 동안 껐던 것을 되돌린다. 이제부터 몸은 물리가 가져간다.
+        //
+        // <b>속도를 싣기 전에</b> 붙여야 한다. 떼어낸 몸은 속도로 움직이지 않아
+        // 대입해도 조용히 무시되고, 그러면 차는 힘이 통째로 사라진다.
+        Character.Movement.Detach(false);
         Character.Movement.SetGravity(true);
 
         // 수평은 벽을 밀어내는 몫만 실어 둔다. 방향키가 들어오면 그 위를 공중 조종이 이어받는다.
@@ -293,6 +315,10 @@ public class Character_Ledge : FiniteStateMachine
 
         // sampler에 실은 것을 몸이 이번 프레임 안에 받게 한다. 물리 적분을 기다리면 첫 프레임이 멈춰 보인다.
         Character.Movement.ClearMovement();
+
+        // 차고 나면 벽을 등지고 날아가야 한다. 도는 일은 공중 축이 이어받는다 —
+        // 여기서 붙들고 돌면 그동안 공중 조종과 도약을 잃는다.
+        if (fsm is Character_Controlled controlled) controlled.TurnAwayFromWall(outward);
 
         // 조향 목표를 지금 속도에 맞춰 둔다. ClearMovement가 목표를 0으로 두고 가는데,
         // Character_Movement.FixedUpdate가 상태보다 먼저 돌아 Coast가 걸리기 전 한 프레임을 제동한다 —

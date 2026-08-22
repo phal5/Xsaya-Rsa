@@ -33,6 +33,9 @@ public class CharacterManager : EntityManager
     [field: SerializeField] public float StunTime { get; private set; } = 0.4f;
     [Tooltip("다운 후 부활까지 걸리는 시간.")]
     [field: SerializeField] public float RespawnDelay { get; private set; } = 2f;
+    [Tooltip("벽을 찬 뒤 벽 반대쪽을 볼 때까지 도는 속도(초당 각도).")]
+    [field: SerializeField] public float WallTurnSpeed { get; private set; } = 360f;
+
     [Header("Heal - 자원 소모형")]
     [Tooltip("최대 회복 횟수. 시작 시 이만큼 채워진다.")]
     [field: SerializeField] public int HealChargeMax { get; private set; } = 3;

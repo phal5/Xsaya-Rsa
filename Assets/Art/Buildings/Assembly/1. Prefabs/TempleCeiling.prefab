@@ -111,18 +111,6 @@ PrefabInstance:
       value: ancient_stone_frame_3d_model
       objectReference: {fileID: 0}
     - target: {fileID: 3307351298257459426, guid: 4c2717a00767bf94a87adfb90372fe4e, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3307351298257459426, guid: 4c2717a00767bf94a87adfb90372fe4e, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 3307351298257459426, guid: 4c2717a00767bf94a87adfb90372fe4e, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 3307351298257459426, guid: 4c2717a00767bf94a87adfb90372fe4e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -162,10 +150,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4444277295272682381, guid: 4c2717a00767bf94a87adfb90372fe4e, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: a02bfdcb31b53d645947f0d18ce84cfa, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

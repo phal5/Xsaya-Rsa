@@ -43,8 +43,8 @@ public abstract class LedgeState : BaseCharacterState
         _holdFor = Grab.Seconds(clip);
         _place = characterManager.Body.position;
         _fitted = false;
-        _stretchForward = 1f;
         _stretchUp = 1f;
+        _withheld = 0f;
 
         if (!clip.IsSet) return;
 
@@ -79,51 +79,95 @@ public abstract class LedgeState : BaseCharacterState
     /// 옆(턱을 따라가는) 성분은 버린다 — 2D 모드에서 그것이 곧 Z이고,
     /// 위치 대입은 FreezePositionZ를 무시하기 때문이다.
     /// </summary>
+    /// <summary>
+    /// 클립이 몸을 옮기는 대로 따라간다. <b>올라서기 하나만</b> 쓴다.
+    ///
+    /// 루트 모션을 유니티가 스스로 적용하게 두면 Animator가 붙은 자식 오브젝트만 움직여
+    /// 메시가 몸에서 떨어져 나간다. 피격 판정은 몸에 있으니 그래서 가로채 여기서 옮겨 싣는다.
+    ///
+    /// <b>수평은 손대지 않는다.</b> 클립이 주는 만큼만 앞으로 간다.
+    /// 예전에는 도착점의 수평까지 맞추려고 앞으로 가는 몫을 비율로 늘리고, 턱을 넘기 전까지
+    /// 미뤘다가 한꺼번에 풀었다. 그렇게 밀어붙인 결과가 절벽을 파고들고 발판 한가운데로
+    /// 끌려가는 것이었다 — 어디에 서느냐는 원래 클립과 매달린 자리가 정하는 것이지
+    /// 우리가 좌표로 정할 일이 아니다.
+    ///
+    /// 옆(턱을 따라가는) 성분은 버린다 — 2D 모드에서 그것이 곧 Z이고,
+    /// 위치 대입은 FreezePositionZ를 무시하기 때문이다.
+    /// </summary>
     protected void Follow(Vector3 destination)
     {
         Vector3 wall = Ledge.Anchor.facing * Vector3.forward;
 
-        if (!_fitted) Fit(destination, wall);
+        if (!_fitted) Fit(destination);
 
         Vector3 delta = characterManager.Animation.ConsumeRootMotion();
 
-        _place += wall * (Vector3.Dot(delta, wall) * _stretchForward);
         _place += Vector3.up * (delta.y * _stretchUp);
+
+        // 턱을 넘기 전에는 앞으로 가지 않는다.
+        //
+        // 오르는 동안 두 몸 다 물리에서 떼어 두므로, 파고들어도 밀어내 줄 것이 없다.
+        // 그런데 몸이 아직 턱보다 아래인 동안 앞으로 가는 것은 곧 절벽 면을 파고드는 것이다.
+        // 실제로 오르는 동작도 그렇지 않다 — 벽을 따라 올라가다 허리가 턱을 넘고 나서야 넘어온다.
+        //
+        // <b>총량은 여전히 클립이 정한다.</b> 미룬 몫은 버리지 않고 넘어선 뒤에 함께 실리므로,
+        // 어디에 서는지는 그대로고 가는 순서만 바뀐다.
+        float forward = Vector3.Dot(delta, wall);
+
+        if (_place.y < destination.y - characterManager.FootOffset)
+        {
+            _withheld += forward;
+        }
+        else
+        {
+            _place += wall * (forward + _withheld);
+            _withheld = 0f;
+        }
 
         characterManager.Movement.Pin(_place);
     }
 
-    /// <summary>얼마나 늘려 걸지. 성분마다 <b>클립이 주는 총량</b> 대 <b>가야 할 총량</b>의 비다.</summary>
-    float _stretchForward = 1f, _stretchUp = 1f;
+    /// <summary>턱을 넘기 전까지 미뤄둔 앞으로 가는 몫.</summary>
+    float _withheld;
+
+    /// <summary>얼마나 늘려 걸지. <b>클립이 주는 총량</b> 대 <b>가야 할 총량</b>의 비다.</summary>
+    float _stretchUp = 1f;
 
     bool _fitted;
 
     /// <summary>
-    /// 클립이 끝나는 곳을 목적지에 맞춘다. <b>목적지로 당기지 않는다</b> — 당기면 경로가 직선이 된다.
+    /// 클립이 끝나는 높이를 목적지에 맞춘다. <b>목적지로 당기지 않는다</b> — 당기면 경로가 직선이 된다.
     ///
     /// 오르는 도중의 "목적지까지 남은 거리"는 오차가 아니라 아직 가야 할 길이다.
     /// 그것을 오차로 보고 지우면 클립이 그리던 곡선이 통째로 지워지고 몸이 절벽을 뚫고 질러간다.
     /// 어긋난 것은 경로가 아니라 <b>총량</b>이므로, 총량만 비율로 맞추고 모양은 클립에 맡긴다.
     ///
-    /// 앞과 위를 따로 재는 것은 어긋난 정도가 서로 다르기 때문이다 — 실측으로 Braced는
-    /// 앞 0.681·위 1.262를 주는데 0.59·1.55가 필요하고, Free는 앞 0.195·위 1.922를 준다.
-    /// Free의 앞이 유독 적은 것은 그 클립의 수평 이동이 대부분 옆(0.498)이라 우리가 버리기 때문이다.
+    /// 재는 것은 높이 하나다. 발이 윗면에 정확히 놓이는 것은 지켜야 하지만, 벽에서 얼마나
+    /// 안쪽에 서느냐는 지켜야 할 약속이 아니다 — 실측으로 Braced 클립은 앞으로 0.681을
+    /// 주는데 매달린 자리가 벽면 바깥 0.19이니 안쪽 0.49에 선다. 그걸로 충분하다.
     ///
     /// 클립을 물을 수 없으면 늘리지 않는다. 섞이기 시작한 직후라 아직 대답이 없는 것이므로
     /// 다음 프레임에 다시 묻는다.
     /// </summary>
-    void Fit(Vector3 destination, Vector3 wall)
+    void Fit(Vector3 destination)
     {
         if (!characterManager.Animation.TryClipTravel(out Vector3 travel)) return;
 
         _fitted = true;
 
-        Vector3 need = destination - _place;
+        // 주는 것이 없으면 늘릴 것도 없다. 0으로 나누지 않으려는 것이 아니라, 늘려봐야 0이라서다.
+        _stretchUp = Mathf.Abs(travel.y) > 0.001f ? (destination.y - _place.y) / travel.y : 1f;
 
-        _stretchForward = Stretch(Vector3.Dot(need, wall), travel.z);
-        _stretchUp = Stretch(need.y, travel.y);
+        // 수평은 <b>물는 순간 기록해 둔 턱</b>에서 시작한다.
+        //
+        // 클립이 앞으로 주는 양은 상수다. 그러니 서는 깊이는 오직 어디서 시작했느냐가 정하는데,
+        // 몸이 있던 자리에서 시작하면 그 자리가 매번 다르다 — 모아 가기가 끝났으면 기록된 자리이고
+        // 진입 중에 눌렀으면 아직 문 자리다. 같은 조작이 어떤 때는 깊이 들어가고 어떤 때는
+        // 가장자리에 걸치던 것이 이것이다.
+        //
+        // 높이와 옆은 건드리지 않는다. 높이는 늘리기가 맞추고, 옆은 2D 평면이라 그대로 두어야 한다.
+        Vector3 normal = -(Ledge.Anchor.facing * Vector3.forward);
+
+        _place += normal * Vector3.Dot(Ledge.Anchor.hang - _place, normal);
     }
-
-    /// <summary>주는 것이 없으면 늘릴 것도 없다. 0으로 나누지 않으려는 것이 아니라, 늘려봐야 0이라서다.</summary>
-    static float Stretch(float need, float given) => Mathf.Abs(given) > 0.001f ? need / given : 1f;
 }
