@@ -362,6 +362,22 @@ public static class PlatformBuilder
             module.spec.guid = guid;
             module.spec.name = prefab.name;
             module.spec.width = bounds.size.x;
+
+            // 몸을 막는 것은 콜라이더뿐이다. 장식 콜라이더까지 포함해 실제 부피를 잰다.
+            bool anyCollider = false;
+            Bounds solid = default;
+
+            foreach (Collider collider in probe.GetComponentsInChildren<Collider>())
+            {
+                if (!anyCollider) { solid = collider.bounds; anyCollider = true; }
+                else solid.Encapsulate(collider.bounds);
+            }
+
+            if (anyCollider)
+            {
+                module.spec.colliderDrop = bounds.max.y - solid.min.y;
+                module.spec.colliderRise = Mathf.Max(0f, solid.max.y - bounds.max.y);
+            }
             module.topOffset = bounds.max.y;
             module.centerZ = bounds.center.z;
 

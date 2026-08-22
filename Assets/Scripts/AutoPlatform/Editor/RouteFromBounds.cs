@@ -61,7 +61,7 @@ public static class RouteFromBounds
         route.branches.Clear();
 
         // 출발·도착 발판은 트리거의 폭을 그대로 쓴다. 트리거를 옮기거나 키운 것이 레벨에 나타나야 한다.
-        route.main.Add(Wide("출발", start, Module(route, bounds.startModule, route.ThickPad), LevelBounds.WidthOf(bounds.startTrigger)));
+        route.main.Add(Wide("출발", start, Module(route, bounds.startModule, route.WidePad), LevelBounds.WidthOf(bounds.startTrigger)));
 
         // 도착을 <b>먼저</b> 놓는다. 그래야 그 뒤로 놓는 모든 발판이 도착 발판을 장애물로 보고 피한다 —
         // 마지막에 얹으면 이미 자리를 차지한 것들과 부딪혀도 물러설 곳이 없다.
@@ -133,10 +133,26 @@ public static class RouteFromBounds
         MotionProfile p = route.profile;
         int legs = Mathf.Max(1, bounds.zigzags);
 
-        float padWidth = route.SpecOf(Module(route, bounds.module, route.NarrowPad)).width;
-        float span = Mathf.Max(1f, region.size.x - bounds.margin * 2f - padWidth);
+        LevelRoute.PadSpec pad = route.SpecOf(Module(route, bounds.module, route.ThinPad));
+        float span = Mathf.Max(1f, region.size.x - bounds.margin * 2f - pad.width);
 
-        float turnRise = Mathf.Min(TURN_RISE, p.MaxClimb);
+        // 꺾는 높이는 발판이 정한다.
+        //
+        // 꼭짓점은 제자리 위에 놓이므로 아래 발판과 X가 겹친다. 그러면 그 발판이 아래로 뻗은 만큼과
+        // 머리 위 여유를 합친 것보다 높이 올라가야 한다 — 고정값으로 두면 아트가 두꺼운 세트에서
+        // 꼭짓점이 전부 거부되고, 층을 접지 못해 경로가 옆으로만 뻗다 끝난다.
+        // 두 가지를 다 만족해야 한다 — 몸이 지나갈 공간(콜라이더)과, 아트끼리 안 닿는 거리.
+        // 종유석처럼 콜라이더 없는 장식은 통행을 막지 않으므로 여유를 요구하지 않는다.
+        float passage = pad.colliderDrop + pad.colliderRise + route.RequiredClearance;
+        float art = pad.drop + pad.rise;
+        float stack = Mathf.Max(passage, art) + 0.05f;
+
+        float turnRise = Mathf.Min(Mathf.Max(TURN_RISE, stack), p.LedgeCeiling);
+
+        if (stack > p.LedgeCeiling)
+            Warn($"[RouteFromBounds] '{pad.name}'은 위아래로 겹치려면 {stack:0.00} m가 필요한데 "
+                + $"(지나갈 공간 {passage:0.00} · 아트 {art:0.00}) "
+                + $"한 번에 오를 수 있는 최대는 {p.LedgeCeiling:0.00} m다. 층을 접지 못한다.");
         float rise = p.ApexHeight * 0.9f;
 
         for (int attempt = 0; attempt < 6; attempt++)
@@ -430,14 +446,14 @@ public static class RouteFromBounds
         while (Last(route).position.y < top + p.characterHeight && guard++ < 8)
         {
             float climb = direction;
-            if (Step(route, bounds, route.NarrowPad, ref climb, plan.turnRise, region, "벽타기")) continue;
+            if (Step(route, bounds, route.ThinPad, ref climb, plan.turnRise, region, "벽타기")) continue;
 
             climb = -direction;
-            if (!Step(route, bounds, route.NarrowPad, ref climb, plan.turnRise, region, "벽타기")) break;
+            if (!Step(route, bounds, route.ThinPad, ref climb, plan.turnRise, region, "벽타기")) break;
         }
 
         // 다 올랐으면 벽 너머로 건너간다.
-        Place(route, bounds, route.NarrowPad, ref direction, 0f,
+        Place(route, bounds, route.ThinPad, ref direction, 0f,
             width + lane, region, "벽넘기");
     }
 
@@ -478,7 +494,20 @@ public static class RouteFromBounds
             if (candidate.position.y > region.max.y || candidate.position.y < region.min.y) continue;
 
             if (!route.Fits(candidate)) continue;
-            if (!route.HoldReach(previous, candidate, out _, out _, out _, out _, out _)) continue;
+            if (!route.HoldReach(previous, candidate, out Ability technique, out _, out _, out _, out _)) continue;
+
+            // 걸음이 정해지면 출발 발판이 요구하는 머리 위 여유도 정해진다.
+            // 2단 점프로 떠나는 자리는 홑점프보다 1.3 m를 더 비워야 한다 —
+            // 그걸 확인하지 않으면 판정을 통과하고도 뛰다가 위층 바위에 머리가 닿는다.
+            float before = previous.departRise;
+            previous.departRise = Mathf.Max(before,
+                (technique & Ability.AirJump) != 0 ? route.profile.MaxClimb : route.profile.ApexHeight);
+
+            if (!route.Fits(previous))
+            {
+                previous.departRise = before;
+                continue;
+            }
 
             Append(route, candidate);
             return true;
@@ -517,10 +546,10 @@ public static class RouteFromBounds
             foreach (float rise in rises)
             {
                 float direction = toward;
-                if (Step(route, bounds, Module(route, bounds.module, route.NarrowPad), ref direction, rise, region, "이음")) { placed = true; break; }
+                if (Step(route, bounds, Module(route, bounds.module, route.ThinPad), ref direction, rise, region, "이음")) { placed = true; break; }
 
                 direction = -toward;
-                if (Step(route, bounds, Module(route, bounds.module, route.NarrowPad), ref direction, rise, region, "꺾임")) { placed = true; break; }
+                if (Step(route, bounds, Module(route, bounds.module, route.ThinPad), ref direction, rise, region, "꺾임")) { placed = true; break; }
             }
 
             if (!placed) break;
@@ -623,7 +652,7 @@ public static class RouteFromBounds
                 {
                     float half = route.HalfWidthOf(previous);
                     LevelRoute.Node candidate = Node($"지름길 {k}",
-                        new Vector2(Mathf.Clamp(baseX + offset, left + half, right - half), y), Module(route, bounds.module, route.NarrowPad));
+                        new Vector2(Mathf.Clamp(baseX + offset, left + half, right - half), y), Module(route, bounds.module, route.ThinPad));
 
                     if (!route.Fits(candidate)) continue;
                     if (!route.HoldReach(previous, candidate, out _, out _, out _, out _, out _)) continue;

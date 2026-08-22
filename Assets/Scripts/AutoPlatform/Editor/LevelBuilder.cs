@@ -16,6 +16,12 @@ public static class LevelBuilder
 
     const string ROUTE_NAME = "Level Route";
 
+    /// <summary>
+    /// 진행 창을 띄울지. 사람이 버튼을 눌렀을 때만 참이다 —
+    /// 스크립트로 돌릴 때 모달을 띄우면 그쪽이 멈춰 버린다.
+    /// </summary>
+    public static bool ShowProgress = true;
+
     /// <summary>지은 결과를 한눈에 보기 위한 것. 하나라도 0이 아니면 손볼 곳이 있다.</summary>
     public struct Report
     {
@@ -185,21 +191,41 @@ public static class LevelBuilder
         // 버려질 후보들이 뱉는 경고는 묻어 둔다. 채택된 결과의 경고만 남아야 눈에 띈다.
         RouteFromBounds.Quiet = true;
 
-        for (int offset = 0; offset < bounds.seedSearch; offset++)
+        // 한 후보를 푸는 데 드는 비용이 층 수와 함께 커진다. 표시도 취소도 없이 돌리면
+        // 에디터가 통째로 멎은 것처럼 보이므로, 진행을 보이고 언제든 그만둘 수 있게 한다.
+        try
         {
-            bounds.seed = original + offset;
-            RouteFromBounds.Generate(route, bounds);
+            for (int offset = 0; offset < bounds.seedSearch; offset++)
+            {
+                if (ShowProgress && EditorUtility.DisplayCancelableProgressBar(
+                    "레벨 만들기",
+                    $"씨앗 {original + offset} 살펴보는 중 ({offset + 1}/{bounds.seedSearch})",
+                    (offset + 1) / (float)bounds.seedSearch))
+                {
+                    Debug.Log($"[LevelBuilder] 씨앗 탐색을 {offset}개에서 멈췄다.", bounds);
+                    break;
+                }
 
-            List<string> got = MixOf(route);
-            if (!Satisfies(bounds, got) || got.Count <= richest) continue;
+                bounds.seed = original + offset;
+                RouteFromBounds.Generate(route, bounds);
 
-            richest = got.Count;
-            best = bounds.seed;
-            bestMix = string.Join(" · ", got);
+                List<string> got = MixOf(route);
+                if (!Satisfies(bounds, got) || got.Count <= richest) continue;
+
+                richest = got.Count;
+                best = bounds.seed;
+                bestMix = string.Join(" · ", got);
+
+                // 요구한 것을 다 담았고 더 담을 것도 없으면 거기서 그만둔다.
+                if (richest >= Tags.Length) break;
+            }
         }
-
-        RouteFromBounds.Quiet = false;
-        bounds.seed = original;
+        finally
+        {
+            if (ShowProgress) EditorUtility.ClearProgressBar();
+            RouteFromBounds.Quiet = false;
+            bounds.seed = original;
+        }
 
         if (best < 0)
         {

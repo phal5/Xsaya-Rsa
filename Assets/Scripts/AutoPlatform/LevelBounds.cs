@@ -53,8 +53,14 @@ public class LevelBounds : MonoBehaviour
 
     public bool requirePlateau = true;
 
-    [Tooltip("조건을 만족하는 씨앗을 찾을 때 훑어볼 개수. 0이면 seed를 그대로 쓴다.")]
-    [Min(0)] public int seedSearch = 40;
+    /// <summary>
+    /// 조건을 만족하는 씨앗을 찾을 때 훑어볼 개수.
+    ///
+    /// 한 후보를 푸는 비용이 층 수와 함께 커진다. 층이 많은 레벨에서 이 값을 크게 두면
+    /// 에디터가 몇 분씩 멎으므로, 넉넉하게 잡되 진행 창의 취소로 언제든 끊을 수 있게 해 두었다.
+    /// </summary>
+    [Tooltip("조건을 만족하는 씨앗을 찾을 때 훑어볼 개수. 0이면 seed를 그대로 쓴다. 크면 오래 걸린다.")]
+    [Range(0, 40)] public int seedSearch = 12;
 
     [Header("시작 · 도착 발판")]
     [Tooltip("출발 발판. -1이면 아트가 가장 두꺼운 것을 골라 지면에 선 것처럼 보이게 한다.")]

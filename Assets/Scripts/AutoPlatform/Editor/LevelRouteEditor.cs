@@ -251,9 +251,20 @@ public class LevelRouteEditor : Editor
                 GUIUtility.ExitGUI();
             }
 
+            // 발판만 지우고 동선을 남기면 기즈모 선이 그대로 남아, 지운 것처럼 보이지 않는다.
+            // 버튼 하나가 "이 루트가 만든 것 전부"를 뜻하도록 둘을 함께 없앤다.
             if (GUILayout.Button("지우기", GUILayout.Height(26), GUILayout.Width(80)))
             {
+                Undo.RecordObject(Route, "Clear Route");
+
+                int nodes = Route.main.Count + Route.obstacles.Count;
+                foreach (LevelRoute.Branch branch in Route.branches) nodes += branch.nodes.Count;
+
                 PlatformBuilder.Clear(Route);
+                Route.ClearRoute();
+
+                EditorUtility.SetDirty(Route);
+                Debug.Log($"[LevelRoute] 동선 {nodes}개 노드를 비웠다.", Route);
                 GUIUtility.ExitGUI();
             }
         }

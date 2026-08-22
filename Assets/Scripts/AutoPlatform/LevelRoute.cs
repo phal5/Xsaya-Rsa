@@ -34,6 +34,17 @@ public class LevelRoute : MonoBehaviour
         [Tooltip("윗면 위로 솟은 아트 길이.")]
         public float rise;
 
+        /// <summary>
+        /// 윗면에서 아래로 뻗은 <b>콜라이더</b> 길이. 몸이 실제로 막히는 부피는 이것뿐이다.
+        ///
+        /// 종유석이나 매달린 장식은 콜라이더가 없어 지나가는 데 지장이 없다.
+        /// 통행 여유를 아트로 재면 있지도 않은 벽을 요구하게 된다.
+        /// </summary>
+        public float colliderDrop;
+
+        [Tooltip("윗면 위로 솟은 콜라이더 길이.")]
+        public float colliderRise;
+
         public bool Valid => width > 0.01f;
     }
 
@@ -53,6 +64,15 @@ public class LevelRoute : MonoBehaviour
 
         /// <summary>발판 폭(m). 0이면 모듈 하나 크기 그대로.</summary>
         public float padWidth = 0f;
+
+        /// <summary>
+        /// 이 발판을 떠날 때 몸이 솟는 높이. 머리 위로 얼마나 비워야 하는지가 여기서 나온다.
+        ///
+        /// 홑점프로 떠나는 자리와 2단 점프로 떠나는 자리는 요구가 1.3 m나 다르다.
+        /// 모든 발판에 같은 값을 요구하면, 넉넉한 쪽은 쓸데없이 벌어지고
+        /// 빠듯한 쪽은 <b>통과 판정을 받고도 실제로는 머리가 닿는다</b>.
+        /// </summary>
+        public float departRise;
     }
 
     /// <summary>
@@ -117,6 +137,16 @@ public class LevelRoute : MonoBehaviour
     public bool drawEnvelopes = true;
     public bool drawBody = true;
     public bool drawOnlyWhenSelected = false;
+
+    /// <summary>
+    /// 동선을 통째로 비운다. 지어 놓은 발판은 건드리지 않는다 — 그쪽은 빌더의 몫이다.
+    /// </summary>
+    public void ClearRoute()
+    {
+        main.Clear();
+        branches.Clear();
+        obstacles.Clear();
+    }
 
     /// <summary>노드의 월드 위치. Z는 언제나 0으로 눌러 둔다.</summary>
     public Vector3 WorldOf(Node node)
@@ -311,6 +341,26 @@ public class LevelRoute : MonoBehaviour
     /// <summary>목록에서 가장 좁은 것. 아슬아슬한 디딤돌에 쓴다.</summary>
     public int NarrowPad => pads == null || pads.Length == 0 ? NoPad : 0;
 
+    /// <summary>
+    /// 아래로 뻗은 아트가 가장 짧은 것. <b>위아래로 촘촘히 쌓을 수 있는</b> 발판이다.
+    ///
+    /// 층 간격을 정하는 것은 폭이 아니라 이 값이다 — 아래로 7 m 매달린 것을 디딤돌로 쓰면
+    /// 아무리 좁아도 층을 10 m씩 벌려야 해서, 좁고 높은 레벨에서는 한 층도 못 쌓는다.
+    /// </summary>
+    public int ThinPad
+    {
+        get
+        {
+            if (pads == null || pads.Length == 0) return NoPad;
+
+            int best = 0;
+            for (int i = 1; i < pads.Length; i++)
+                if (pads[i].drop < pads[best].drop) best = i;
+
+            return best;
+        }
+    }
+
     /// <summary>가장 넓은 것.</summary>
     public int WidePad => pads == null || pads.Length == 0 ? NoPad : pads.Length - 1;
 
@@ -370,12 +420,28 @@ public class LevelRoute : MonoBehaviour
     [Min(0f)] public float headroom = 1.3f;
 
     /// <summary>
-    /// 발판 위에 반드시 비어 있어야 하는 높이.
+    /// 발판 위에 최소한 비어 있어야 하는 높이.
     ///
     /// 키만큼만 요구하면 <b>서 있을 수는 있지만 뛸 수는 없는</b> 자리가 만들어진다.
     /// 실제로 하는 일은 서 있는 것이 아니라 뛰는 것이므로, 정점만큼을 더 비운다.
     /// </summary>
     public float RequiredClearance => profile.characterHeight + headroom;
+
+    /// <summary>
+    /// 이 발판 위에 비어 있어야 하는 높이. 그 자리를 떠날 때 무엇을 하는지에 따라 달라진다.
+    /// </summary>
+    public float ClearanceNeededOn(Node below)
+        => profile.characterHeight + Mathf.Max(headroom, below.departRise);
+
+    /// <summary>두 발판이 한 걸음으로 이어져 있는가. 뛰어 올라가는 목표는 천장이 아니다.</summary>
+    public bool Connected(Node a, Node b)
+    {
+        foreach (Segment segment in Segments())
+            if ((segment.from == a && segment.to == b) || (segment.from == b && segment.to == a))
+                return true;
+
+        return false;
+    }
 
     /// <summary>두 발판의 X가 겹치는가. 겹치지 않으면 높이는 볼 것도 없다.</summary>
     public bool Shadows(Node a, Node b)
@@ -385,9 +451,22 @@ public class LevelRoute : MonoBehaviour
         return Mathf.Abs(a.position.x - b.position.x) < HalfWidthOf(a) + HalfWidthOf(b) + PadGap;
     }
 
-    /// <summary>아래 발판 윗면과 위 발판 아랫면 사이에 남는 빈 공간. 아트가 관통하면 음수다.</summary>
-    public float Clearance(Node below, Node above)
+    /// <summary>
+    /// 몸이 지나갈 수 있는 빈 공간. <b>콜라이더</b>로만 잰다 —
+    /// 종유석처럼 콜라이더 없는 장식은 몸을 막지 않는다.
+    /// </summary>
+    public float Passage(Node below, Node above)
+        => (above.position.y - SpecOf(above).colliderDrop) - (below.position.y + SpecOf(below).colliderRise);
+
+    /// <summary>
+    /// 아트끼리 남는 틈. 음수면 서로 파고든 것이다.
+    /// 통행과 달리 여기서는 여유가 필요 없다 — 닿지만 않으면 된다.
+    /// </summary>
+    public float ArtGap(Node below, Node above)
         => (above.position.y - SpecOf(above).drop) - (below.position.y + SpecOf(below).rise);
+
+    /// <summary>예전 이름. 통행 기준으로 읽는다.</summary>
+    public float Clearance(Node below, Node above) => Passage(below, above);
 
     /// <summary>이 자리에 발판을 놓아도 되는가 — 이미 있는 어떤 것과도 서로를 막지 않는가.</summary>
     public bool Fits(Node candidate)
@@ -397,10 +476,11 @@ public class LevelRoute : MonoBehaviour
             if (ReferenceEquals(other, candidate)) continue;
             if (!Shadows(candidate, other)) continue;
 
-            bool candidateOnTop = candidate.position.y > other.position.y;
-            float clearance = candidateOnTop ? Clearance(other, candidate) : Clearance(candidate, other);
+            Node below = candidate.position.y > other.position.y ? other : candidate;
+            Node above = below == other ? candidate : other;
 
-            if (clearance < RequiredClearance) return false;
+            if (Passage(below, above) < ClearanceNeededOn(below)) return false;
+            if (ArtGap(below, above) < 0f) return false;
         }
 
         return true;
@@ -423,10 +503,15 @@ public class LevelRoute : MonoBehaviour
 
                 if (!Shadows(below, above)) continue;
 
-                float clearance = Clearance(below, above);
-                if (clearance >= RequiredClearance) continue;
+                // 뛰어 올라가는 목표는 막는 것이 아니다.
+                if (Connected(below, above)) continue;
 
-                yield return (below, above, clearance);
+                float passage = Passage(below, above);
+                float art = ArtGap(below, above);
+
+                if (passage >= ClearanceNeededOn(below) && art >= 0f) continue;
+
+                yield return (below, above, art < 0f ? art : passage);
             }
         }
     }
