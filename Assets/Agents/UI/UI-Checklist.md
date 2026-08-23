@@ -78,6 +78,23 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   지금 빌드하면 UI가 아예 뜨지 않는다. 에디터 멀티씬 편집으로만 굴러가는 상태.
   → 씬 목록을 정리하면서 obsolete 항목도 같이 걷어낼 것.
 
+- [ ] **`BookTrigger.cs` 삭제** — 손으로 지워야 한다
+  `BookHolder` + `CollisionInvoke`로 대체되어 남은 역할이 없다.
+  `AssetDatabase.DeleteAsset`이 확인 대화상자를 띄워 스크립트로는 못 지웠다.
+  Project 창에서 `Assets/Scripts/UI/BookTrigger.cs`를 지우면 된다.
+  → 지우면 `z_BP/[Obsoletized]Scenes/Elden Shrine 1/Recap/Demo/Elden Shrine 1.unity`에
+    Missing Script가 뜬다. **그 씬이 지금 Build Settings에 enabled로 들어 있는
+    유일한 씬이다.** 어차피 씬 목록을 갈아야 하니 아래 항목과 같이 처리하는 게 낫다.
+
+- [ ] **대사 트리거를 실제로 배치해 검증** (아직 안 함)
+  부품은 다 만들었지만 아직 어느 씬에도 놓지 않았다. 배치할 때:
+  - `BookHolder`는 **콜라이더와 같은 GameObject**에 둘 것.
+    `InteractionDetector`가 `OverlapSphere` → `TryGetComponent<IInteractable>`로 잡으므로
+    `InteractableEvent`도 콜라이더와 같은 오브젝트여야 한다.
+  - 탐지 반경은 2m, 검사 주기 0.15초 (`InteractionDetector` 기본값).
+  - **`Book`의 페이지 인덱스는 리셋되지 않는다.** 한 번 끝까지 본 책을 다시 열면
+    대사 없이 열자마자 닫힌다. 반복시키려면 `GoToPage(0)`이 필요하다.
+
 - [ ] **플레이 모드에서 SSOT 변경 검증** (아직 안 함) — `UI - Start`, `UI - General` **양쪽**
   에디터 컴파일과 프리팹 배선까지만 확인했다. 실제로 돌려서 볼 것:
   1. 시작 시 "Press [ V ] to Raise"가 보이는가
@@ -91,6 +108,34 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   UI 씬이 Character 씬보다 먼저 활성화되면 첫 프레임에 NRE.
   → 가드를 덧대기보다, 배속을 미는 주체를 UI 밖으로 옮기는 쪽이 맞다.
     (UI는 읽어서 그리기만 하고, 배속 산정은 체력을 가진 쪽이 소유)
+
+- [x] **대사 트리거 배선 정비** (2026-08-23)
+  충돌로도, E키 상호작용으로도 같은 대사를 열 수 있게 입구를 하나로 모았다.
+
+  | 발동 | 배선 |
+  |---|---|
+  | 밟으면 자동 | `CollisionInvoke.onCollision` → `BookHolder.Open()` |
+  | E키로 말 걸기 | `InteractableEvent.onInteract` → `BookHolder.Open()` |
+
+  - **`BookHolder` 신규** (`Scripts/Interaction/`) — `Book`을 들고 `Open()` 하나만 노출.
+    `FlipBook`은 UI 씬에 있어 인스펙터로 못 꽂으므로 `FlipBook.Instance`로 런타임에 찾는다.
+    `Gateway`가 `Enter()` 하나로 두 길을 받는 것과 같은 모양.
+  - **`CollisionInvoke`에 `OnTriggerEnter` 추가** — 통과 가능한 볼륨으로도 발동한다.
+  - **`PlayerManager.IsPlayer(Collider)` 신규** — 근접 판정을 한 곳으로 모았다.
+    `Gateway`만 `attachedRigidbody`까지 봤고 나머지는 정확 일치만 봐서 규칙이 갈려 있었다.
+    `Gateway`는 자기 private 판정을 버리고 이걸 쓴다.
+  - **`ControlLock` 신규** (`Scripts/UI/`) — `Lock()`/`Release()`가
+    `PlayerManager.instance.Root`로 `CharacterRoot`를 간접 조회해 `ToUI()`/`ToControl()`.
+    UI 프리팹 2개 모두 `Flipbook` 오브젝트에 붙이고 `onSetBook`→`Lock`,
+    `onDialogueNull`→`Release`로 배선함.
+  - **`PlayerManager.Root` 신규 + Character 씬에서 배선** — 매니저와 `CharacterRoot`가
+    같은 씬(둘 다 프리팹 인스턴스)이라 오버라이드로 꽂힌다.
+
+- [x] **`FlipBook.SetBook`의 호출 순서 교정** (2026-08-23)
+  `Next()`가 `onSetBook`보다 먼저 돌고 있었다. 페이지가 없는 책에서는
+  `Next()`가 `onDialogueNull`로 먼저 닫고 뒤이어 `onSetBook`이 다시 여는 꼴이 되어,
+  `ControlLock`을 물린 뒤로는 **대사 없이 조작만 잠긴 채 남는 소프트락**이 된다.
+  (다 본 책을 다시 밟으면 그 경로로 들어간다) `onSetBook`을 먼저 부르도록 뒤집었다.
 
 ---
 

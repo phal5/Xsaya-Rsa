@@ -53,6 +53,11 @@ public class Stage : MonoBehaviour
     {
         Scene scene = gameObject.scene;
 
+        // 이미 이 씬이면 할 일이 없다. SetActiveScene은 <b>이 경우에도 거짓을 돌려주므로</b>
+        // 먼저 걸러내지 않으면 아무 문제 없는 상황이 실패로 잡힌다.
+        // 에디터에서 배경을 먼저 열고 Play하면 배경이 처음부터 액티브라 늘 여기에 걸린다.
+        if (scene == SceneManager.GetActiveScene()) return;
+
         if (!SceneManager.SetActiveScene(scene))
         {
             Debug.LogError($"[{name}] '{scene.name}'을 액티브 씬으로 세우지 못했습니다. 이 씬의 라이팅이 적용되지 않습니다.", this);

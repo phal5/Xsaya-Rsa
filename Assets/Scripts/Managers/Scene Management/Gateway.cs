@@ -28,9 +28,6 @@ public class Gateway : MonoBehaviour
     [Tooltip("도착해서 바라볼 방향. 오일러 각.")]
     [SerializeField] Vector3 _facing;
 
-    [Tooltip("도착한 자리를 쉬어간 자리로도 적는다. 끄면 관문을 넘은 직후에 죽었을 때 이전 스테이지로 되돌아간다.")]
-    [SerializeField] bool _restOnArrival = true;
-
 #if UNITY_EDITOR
     void OnValidate()
     {
@@ -51,16 +48,13 @@ public class Gateway : MonoBehaviour
     }
 #endif
 
+    /// <summary>닿으면 넘어간다. 콜라이더는 <b>Is Trigger를 켜두어야</b> 여기가 불린다.</summary>
     void OnTriggerEnter(Collider other)
     {
-        if (IsPlayer(other)) Enter();
+        if (PlayerManager.IsPlayer(other)) Enter();
     }
 
-    /// <summary>
-    /// 관문을 넘는다. 밟아서 넘는 것이 아니라 말을 걸어 여는 문이면
-    /// <see cref="InteractableEvent"/>의 onInteract에 이 메서드를 물리면 된다.
-    /// </summary>
-    public void Enter()
+    void Enter()
     {
         if (SceneDirector.instance == null)
         {
@@ -68,20 +62,6 @@ public class Gateway : MonoBehaviour
             return;
         }
 
-        SceneDirector.instance.Go(_scene, _place, Quaternion.Euler(_facing), _restOnArrival);
-    }
-
-    /// <summary>
-    /// 들어온 것이 플레이어인지. 외력 몸에는 콜라이더가 없으므로 여기 걸리는 것은 캡슐뿐이지만,
-    /// 캡슐이 몸에 직접 붙어 있지 않은 구성까지 보도록 리지드바디 쪽도 함께 본다.
-    /// </summary>
-    static bool IsPlayer(Collider other)
-    {
-        Transform player = PlayerManager.instance != null ? PlayerManager.instance.player : null;
-        if (player == null) return false;
-
-        if (other.transform == player) return true;
-
-        return other.attachedRigidbody != null && other.attachedRigidbody.transform == player;
+        SceneDirector.instance.Go(_scene, _place, Quaternion.Euler(_facing));
     }
 }

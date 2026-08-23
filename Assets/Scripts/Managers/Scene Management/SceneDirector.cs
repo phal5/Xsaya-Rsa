@@ -1,7 +1,5 @@
 using System.Collections;
-using Unity.Cinemachine;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -27,15 +25,12 @@ public class SceneDirector : MonoBehaviour
     [Tooltip("조작을 잠그고 푸는 곳. 캐릭터의 최상위 상태기계다.")]
     [SerializeField] CharacterRoot _root;
 
-    [Header("Transition")]
-    [Tooltip("화면을 가릴 시간. 0이면 기다리지 않는다. UIGroupFader의 Fade Duration과 맞춘다.")]
-    [SerializeField] float _leaveTime = 0.3f;
+    [Header("Initial Rest")]
+    [Tooltip("한 번도 쉬어가기 전에 죽었을 때 설 자리. 씬은 시작할 때 올라와 있던 무대로 잡는다.")]
+    [SerializeField] Vector3 _initialPlace = new Vector3(0f, 0.75f, 0f);
 
-    [Tooltip("떠나기 직전. 페이드 아웃을 여기 문다.")]
-    [SerializeField] UnityEvent _onLeave;
-
-    [Tooltip("도착해서 조작을 돌려주기 직전. 페이드 인을 여기 문다.")]
-    [SerializeField] UnityEvent _onArrive;
+    [Tooltip("그때 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다.")]
+    [SerializeField] Vector3 _initialFacing = new Vector3(1f, 0f, 0f);
 
     /// <summary>씬을 부르는 중인지. 관문을 두 번 밟는 것을 여기서 흘린다.</summary>
     public bool Busy { get; private set; }
@@ -47,16 +42,93 @@ public class SceneDirector : MonoBehaviour
     }
 
     /// <summary>
+    /// 아직 아무 데도 쉬어가지 않은 처음 상태를 채운다.
+    ///
+    /// <b>씬 이름은 인스펙터에 적지 않는다.</b> 시작 무대는 에디터에서 무엇을 열어놓고 Play했느냐로
+    /// 갈리는데, 적어두면 그 둘이 어긋나는 날 아무 예고 없이 다른 씬을 부른다.
+    /// 올라와 있는 무대를 그대로 쓰면 어긋날 자리가 없다.
+    ///
+    /// Awake가 아니라 Start다. 무대의 등록이 Awake에서 이뤄지므로 그보다 늦어야 한다.
+    /// </summary>
+    void Start()
+    {
+        if (Stage.Current == null)
+        {
+            Debug.LogWarning($"[{name}] 시작 시 무대가 없어 초기 부활 지점을 잡지 못했습니다. " +
+                             "쉬어가기 전에 죽으면 쓰러진 자리에서 그대로 일어납니다.", this);
+            return;
+        }
+
+        _restScene = Stage.Current.gameObject.scene.name;
+        _restPlace = _initialPlace;
+
+        // 방향 벡터를 회전으로 바꾼다. 0 벡터는 LookRotation이 받지 못하므로 정면으로 둔다.
+        _restFacing = _initialFacing.sqrMagnitude < 0.0001f
+            ? Quaternion.identity
+            : Quaternion.LookRotation(_initialFacing.normalized);
+    }
+
+    #region Checkpoint
+
+    /// <summary>
+    /// 마지막으로 쉬어간 자리. <b>체크포인트 오브젝트가 아니라 그때 몸이 서 있던 자리</b>다.
+    ///
+    /// 이 기록이 여기 있는 이유는 <b>쓰는 쪽이 여기</b>이기 때문이다. 다른 스테이지에 적힌 좌표는
+    /// 그 씬을 부를 수 있는 쪽에서만 뜻이 있고, 씬을 부르는 것은 이 클래스뿐이다.
+    /// 직렬화하지 않는다. 앱을 껐다 켜도 남아야 하는 것은 체크포인트가 아니라 세이브의 몫이다.
+    /// </summary>
+    string _restScene;
+    Vector3 _restPlace;
+    Quaternion _restFacing;
+
+    /// <summary>
+    /// 쉬어간 자리를 적는다. <see cref="Checkpoint"/>가 부른다.
+    ///
+    /// 몸이 지금 서 있는 자리를 적는다 — 그 땅은 방금 딛고 있었으므로 정의상 유효하다.
+    /// 체크포인트 오브젝트를 제단 위에 놓든 벽에 붙이든 스폰 오프셋을 따로 맞출 일이 없다.
+    /// </summary>
+    /// <param name="scene">그 자리가 속한 배경 씬의 이름.</param>
+    public void SetCheckpoint(string scene)
+    {
+        if (_character == null || _character.Body == null) return;
+
+        _restScene = scene;
+        _restPlace = _character.Body.position;
+        _restFacing = _character.Body.rotation;
+    }
+
+    /// <summary>
+    /// 쉬어간 자리로 돌려보낸다. <b>다운 상태가 제 시간을 다 쓰고 부른다.</b>
+    ///
+    /// <b>체력을 여기서 되돌리지 않는다.</b> 부르는 쪽이 이미 되돌린 뒤에 부르기 때문이다 —
+    /// 그 순서가 지켜져야 다른 스테이지로 돌아가는 길이 성립한다. 체력이 0인 채로는
+    /// 최상위 머신이 매 갱신마다 다시 쓰러뜨려, 씬이 올라오는 동안 몸을 붙들 수가 없다.
+    ///
+    /// 적어둔 자리가 없으면 아무것도 하지 않는다 — 아직 한 번도 쉬어가지 않았다는 뜻이므로
+    /// 옮길 곳이 없는 것이지, 쓰러진 자리가 옳은 것은 아니다.
+    /// </summary>
+    /// <returns>
+    /// 이 프레임에 끝났는지. <b>거짓이면 씬을 부르는 중이고, 조작은 이쪽이 돌려준다.</b>
+    /// </returns>
+    public bool Respawn()
+    {
+        if (string.IsNullOrEmpty(_restScene)) return true;
+
+        return Go(_restScene, _restPlace, _restFacing);
+    }
+
+    #endregion
+
+    /// <summary>
     /// 적어둔 씬의 적어둔 자리에 세운다. 그 씬이 이미 올라와 있으면 자리만 옮기고,
     /// 아니면 지금 배경을 내리고 그 씬을 불러온 뒤 옮긴다.
     /// </summary>
     /// <param name="scene">씬 <b>이름</b>. 체크포인트가 적어두는 것과 같은 단위다.</param>
-    /// <param name="rest">도착한 자리를 쉬어간 자리로도 적을지.</param>
     /// <returns>
     /// 이 프레임에 끝났는지. <b>거짓이면 씬을 부르는 중이고, 조작은 이쪽이 돌려준다</b> —
     /// 부르는 쪽이 뒤이어 조작을 풀면 로드가 끝나기 전에 움직이게 된다.
     /// </returns>
-    public bool Go(string scene, Vector3 place, Quaternion facing, bool rest = false)
+    public bool Go(string scene, Vector3 place, Quaternion facing)
     {
         if (_character == null || _root == null)
         {
@@ -75,7 +147,7 @@ public class SceneDirector : MonoBehaviour
         // 이미 올라와 있으면 부를 것이 없다. 같은 스테이지에서의 부활이 여기로 온다.
         if (SceneManager.GetSceneByName(scene).isLoaded)
         {
-            Place(scene, place, facing, rest);
+            Place(place, facing);
             return true;
         }
 
@@ -87,11 +159,11 @@ public class SceneDirector : MonoBehaviour
             return true;
         }
 
-        StartCoroutine(Transit(scene, place, facing, rest));
+        StartCoroutine(Transit(scene, place, facing));
         return false;
     }
 
-    IEnumerator Transit(string scene, Vector3 place, Quaternion facing, bool rest)
+    IEnumerator Transit(string scene, Vector3 place, Quaternion facing)
     {
         Busy = true;
 
@@ -102,11 +174,6 @@ public class SceneDirector : MonoBehaviour
         // 매 프레임 다시 못박지 않아도 그 자리에 그대로 있는다.
         _character.Movement.SetGravity(false);
         _character.Movement.Pin(_character.Body.position);
-
-        _onLeave.Invoke();
-
-        // 실시간으로 센다. 일시정지가 걸린 채로 관문을 넘어도 여기서 멎지 않게.
-        if (_leaveTime > 0f) yield return new WaitForSecondsRealtime(_leaveTime);
 
         // <b>내리고 나서 부른다.</b> 겹쳐 올리면 배경 두 벌의 텍스처가 동시에 상주하고,
         // 새 스폰 자리에 옛 지오메트리가 남아 물리가 몸을 밀어낸다.
@@ -125,15 +192,9 @@ public class SceneDirector : MonoBehaviour
         if (Stage.Current == null)
             Debug.LogWarning($"[{name}] '{scene}'에 Stage가 없습니다. 하늘과 환경광이 이전 씬 것으로 남습니다.", this);
 
-        Place(scene, place, facing, rest);
+        Place(place, facing);
 
         _character.Movement.SetGravity(true);
-
-        // 옛 리그는 씬과 함께 사라졌다. 끊어주지 않으면 브레인이 옛 자리에서 새 자리까지
-        // 화면을 훑고 온다 — 스테이지 하나를 가로지르는 길이다.
-        CinemachineCore.ResetCameraState();
-
-        _onArrive.Invoke();
 
         // 조작을 돌려주기 전에 푼다. 순서가 바뀌면 한 프레임 동안 관문을 다시 밟을 수 있다.
         Busy = false;
@@ -146,14 +207,10 @@ public class SceneDirector : MonoBehaviour
     /// 몸의 position만 대입하면 속도를 쥔 외력 몸이 제자리에 남아, 다음 물리 프레임에
     /// 그쪽이 몸을 도로 끌고 간다. 두 몸을 함께 놓는 길은 Pin 하나뿐이다.
     /// </summary>
-    void Place(string scene, Vector3 place, Quaternion facing, bool rest)
+    void Place(Vector3 place, Quaternion facing)
     {
         _character.Movement.Pin(place);
         _character.Body.rotation = facing;
-
-        // 자리를 옮긴 <b>뒤에</b> 적는다. SetCheckpoint는 몸이 지금 있는 곳을 적으므로
-        // 먼저 부르면 떠나온 자리가 적힌다.
-        if (rest) _character.SetCheckpoint(scene);
     }
 
     /// <summary>

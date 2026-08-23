@@ -11,6 +11,9 @@ using UnityEngine;
 /// 활성 씬이 무엇인지가 로드 순서에 딸려 흔들린다. 체크포인트는 자기가 놓인 씬에 있으므로
 /// gameObject.scene이 물어볼 것도 없이 맞다.
 ///
+/// 적는 곳은 <see cref="SceneDirector"/>다. 캐릭터가 아니라 거기인 이유는, 다른 스테이지에 적힌
+/// 좌표는 그 씬을 부를 수 있는 쪽에서만 뜻이 있기 때문이다.
+///
 /// 표시·문구·이벤트는 <see cref="InteractableEvent"/>가 이미 하는 일이라 그대로 물려받는다.
 /// 여기서 더하는 것은 자리를 적는 한 줄뿐이다.
 /// </summary>
@@ -22,7 +25,8 @@ public class Checkpoint : InteractableEvent
 
         // 이벤트보다 먼저 적는다. 이벤트가 씬을 부르거나 대화를 여는 경우,
         // 그 뒤에 적으면 적기도 전에 이 오브젝트가 사라져 있을 수 있다.
-        character.SetCheckpoint(gameObject.scene.name);
+        if (SceneDirector.instance != null) SceneDirector.instance.SetCheckpoint(gameObject.scene.name);
+        else Debug.LogError($"[{name}] SceneDirector가 없어 쉬어간 자리를 적지 못했습니다.", this);
 
         base.Interact(character);
     }

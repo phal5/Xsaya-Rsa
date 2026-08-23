@@ -3521,6 +3521,7 @@ GameObject:
   - component: {fileID: 781487821958718780}
   - component: {fileID: 3729839873865480485}
   - component: {fileID: 7915052533669092289}
+  - component: {fileID: 8709937197329144641}
   m_Layer: 5
   m_Name: Flipbook
   m_TagString: Untagged
@@ -3589,6 +3590,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 8709937197329144641}
+        m_TargetAssemblyTypeName: ControlLock, Assembly-CSharp
+        m_MethodName: Lock
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onDialogueNull:
     m_PersistentCalls:
       m_Calls:
@@ -3607,6 +3620,18 @@ MonoBehaviour:
       - m_Target: {fileID: 3729839873865480485}
         m_TargetAssemblyTypeName: UIGroupFader, Assembly-CSharp
         m_MethodName: FadeOut
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 8709937197329144641}
+        m_TargetAssemblyTypeName: ControlLock, Assembly-CSharp
+        m_MethodName: Release
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3668,6 +3693,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &8709937197329144641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8166312423880173821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f17dc0ab75a46b04cbc34f3fba4109ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ControlLock
 --- !u!1 &8188094052015669679
 GameObject:
   m_ObjectHideFlags: 0

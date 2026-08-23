@@ -104,48 +104,6 @@ public class CharacterManager : EntityManager
         return camera.transform.InverseTransformVector(forward);
     }
 
-    #region Checkpoint
-
-    /// <summary>
-    /// 마지막으로 쉬어간 자리. <b>체크포인트 오브젝트가 아니라 그때 몸이 서 있던 자리</b>다.
-    ///
-    /// 이 기록이 매니저에 있는 이유는 캐릭터 씬이 내려가지 않기 때문이다 —
-    /// Background만 갈아끼우는 구성이라 여기 적어둔 것이 씬을 넘어 살아남는다.
-    /// 직렬화하지 않는다. 앱을 껐다 켜도 남아야 하는 것은 체크포인트가 아니라 세이브의 몫이다.
-    /// </summary>
-    string _restScene;
-    Vector3 _restPlace;
-    Quaternion _restFacing;
-
-    /// <param name="scene">그 자리가 속한 Background 씬의 이름.</param>
-    public void SetCheckpoint(string scene)
-    {
-        if (Body == null) return;
-
-        _restScene = scene;
-        _restPlace = Body.position;
-        _restFacing = Body.rotation;
-    }
-
-    /// <summary>
-    /// 쉬어간 자리를 <b>씬 이름까지</b> 묻는다.
-    ///
-    /// 그 씬이 지금 올라와 있는지는 따지지 않는다. 안 올라와 있으면 불러오면 되는 일이고,
-    /// 불러올지 자리만 옮길지를 정하는 것은 <see cref="SceneDirector"/>의 몫이다.
-    /// 여기서 미리 걸러내면 다른 스테이지의 기록이 없는 것처럼 보여 되돌아갈 길이 막힌다.
-    /// </summary>
-    /// <returns>한 번이라도 쉬어간 적이 있는지.</returns>
-    public bool TryCheckpoint(out string scene, out Vector3 place, out Quaternion facing)
-    {
-        scene = _restScene;
-        place = _restPlace;
-        facing = _restFacing;
-
-        return !string.IsNullOrEmpty(_restScene);
-    }
-
-    #endregion
-
     #region Heal Charges
 
     /// <summary>남은 회복 횟수. 직렬화하지 않고 시작 시 최대치로 채운다.</summary>

@@ -57,8 +57,12 @@ public class FlipBook : MonoBehaviour
         if (_book == book) return;
         RemoveBook();
         _book = book;
-        Next();
+
+        // <b>여는 것을 먼저 알린다.</b> Next()가 앞서면 페이지가 없는 책에서 순서가 뒤집힌다 —
+        // Next()가 onDialogueNull로 먼저 닫고, 뒤이은 onSetBook이 다시 여는 꼴이 되어
+        // 아무 대사도 없이 조작만 잠긴 채 남는다. (다 본 책을 다시 밟으면 그렇게 된다)
         onSetBook.Invoke();
+        Next();
     }
 
     private void RemoveBook()
