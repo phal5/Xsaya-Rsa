@@ -32,6 +32,9 @@ public class BasicAttack : Character_SkillBase
     [Tooltip("공격하지 않는 동안 무기 오브젝트를 통째로 꺼둔다.")]
     [SerializeField] bool _disableWeaponObject;
 
+    [Tooltip("휘두르기 시작할 때 이펙트를 세울 스포너. 비워두면 아무것도 뿌리지 않는다.")]
+    [SerializeField] WeaponEffectSpawner _effect;
+
     [Header("Chain")]
     [Tooltip("적은 순서대로 이어진다. 비워두면 동작 없이 예전처럼 판정만 낸다.")]
     [SerializeField] Swing[] _chain;
@@ -266,10 +269,32 @@ public class BasicAttack : Character_SkillBase
     /// <summary>StartAttack이 피격 목록을 비우므로 다음 타가 같은 적을 다시 맞힌다.</summary>
     void Open()
     {
-        if (_weapon == null) return;
-
+        // 무기가 없어도 표시는 세운다. 여기서 돌아서면 _opened가 거짓으로 남아
+        // Windows()가 매 프레임 다시 열려 들고, 그때마다 이펙트가 하나씩 쏟아진다.
         _opened = true;
-        _weapon.StartAttack();
+
+        if (_weapon != null) _weapon.StartAttack();
+
+        Spawn();
+    }
+
+    /// <summary>
+    /// 휘두름이 시작되는 이 한 순간에만 뿌린다.
+    ///
+    /// 판정을 여는 자리와 같은 자리인 것이 요점이다. 연출과 판정이 서로 다른 신호를 보면
+    /// 프레임을 손볼 때마다 둘이 어긋나고, 어긋난 것은 화면에서 바로 드러나지 않는다.
+    ///
+    /// 클립에 애니메이션 이벤트를 심지 않는 이유는 스포너 주석에 적힌 그대로다 —
+    /// 공격이 늘어날 때마다 심는 것을 잊은 클립이 하나씩 생기고, 그것은 조용하다.
+    /// </summary>
+    void Spawn()
+    {
+        if (_effect == null) return;
+
+        GameObject over = Usable ? Current.effect : null;
+
+        if (over != null) _effect.Play(over);
+        else _effect.Play();
     }
 
     void Close()

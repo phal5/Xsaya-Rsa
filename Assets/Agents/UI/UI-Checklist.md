@@ -103,7 +103,33 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   4. 페이지를 넘길 때 중앙 문구가 깜빡이지 않는가 (멱등 가드)
   5. `MidScreenText`가 있는 페이지 ↔ 없는 페이지를 오갈 때 표시가 맞게 따라오는가
 
-- [ ] **`HPbar`의 초기화 순서 정리**
+- [x] **`HPbar` NRE (2026-08-24 03:02 발생)** — 원인 규명 완료, **수정 안 함**
+
+  `HPbar.cs:14`의 `PlayerManager.instance`가 **C# null**이었다.
+  (`playerDamagable`가 null이면 15번 줄에서 났을 것이고, 파괴된 객체를 가리켰다면
+   거기서는 예외가 안 난다. 즉 static이 한 번도 할당되지 않은 상태였다)
+
+  **직접 원인: 재생 중 도메인 리로드.**
+  Preferences의 `Script Changes While Playing`이 `Recompile And Continue Playing`(0),
+  Auto Refresh도 켜져 있다. 재생 중에 스크립트가 저장되면 어셈블리가 다시 로드되는데,
+  그때 유니티는 MonoBehaviour를 직렬화로 복원할 뿐 **`Awake`를 다시 부르지 않는다.**
+  - static은 리로드로 초기화됨 → `PlayerManager.instance`가 null인 채로 남는다
+  - 직렬화 안 되는 필드도 날아감 → 같은 순간 `SkillDefiner.evaluator`도 null이 되어
+    같은 초에 NRE가 났다 (`InputQueue`의 이벤트 대상은 정상적인 씬 인스턴스로 확인됨)
+
+  같은 3-씬 구성(`LastSceneManagerSetup.txt` 02:33 기록 = 현재와 동일)으로
+  깨끗하게 재생하면 **재현되지 않는다.** frame 839까지 에러 0건, `instance` 정상,
+  `TimeManager.Scale = 1`.
+
+  **왜 하필 지금 터졌나:** `UI - General`의 Header 페이더는 `_fadedOnStart = false`라
+  체력바가 **첫 프레임부터 Update를 돈다**. `UI - Start`는 `true`라 V를 누르기 전까지
+  꺼져 있어서 이 창이 열리지 않았다.
+
+  **결정: 수정하지 않는다** (2026-08-24, 회원님 판단).
+  빌드에서는 재생 중 재컴파일이 일어나지 않으므로 이 경로 자체가 존재하지 않는다.
+  에디터에서만 나는 유령 NRE에 코드를 바꾸지 않는다.
+  다시 보이면 Preferences의 `Script Changes While Playing`을 의심할 것 —
+  고칠 것은 코드가 아니라 그 설정이다.
   `PlayerManager.instance.playerDamagable`을 null 검사 없이 매 프레임 읽는다.
   UI 씬이 Character 씬보다 먼저 활성화되면 첫 프레임에 NRE.
   → 가드를 덧대기보다, 배속을 미는 주체를 UI 밖으로 옮기는 쪽이 맞다.

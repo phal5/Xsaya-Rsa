@@ -54,7 +54,12 @@ public class Gateway : MonoBehaviour
         if (PlayerManager.IsPlayer(other)) Enter();
     }
 
-    void Enter()
+    /// <summary>
+    /// 관문을 넘는다. 밟아서 넘는 것은 위에서 부르고, <b>말을 걸어 여는 문</b>이면
+    /// <see cref="InteractableEvent"/>의 onInteract에 이 메서드를 물린다.
+    /// 목적지는 어느 쪽으로 들어오든 같은 한 벌이다.
+    /// </summary>
+    public void Enter()
     {
         if (SceneDirector.instance == null)
         {

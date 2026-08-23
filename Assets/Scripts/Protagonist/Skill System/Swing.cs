@@ -42,5 +42,8 @@ public struct Swing
     [Tooltip("시작 자세를 이만큼(프레임) 세워 두고 나서 움직인다.")]
     [Min(0f)] public float holdStart;
 
+    [Tooltip("이 타에만 다른 이펙트를 뿌린다. 비워두면 스포너에 꽂아둔 것이 나간다.")]
+    public GameObject effect;
+
     public bool IsSet => !string.IsNullOrEmpty(state);
 }
