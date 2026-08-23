@@ -202,15 +202,22 @@ public class SceneDirector : MonoBehaviour
     }
 
     /// <summary>
-    /// 두 몸을 함께 옮긴다.
+    /// 두 몸을 함께 옮기고 화면을 2D로 되돌린다.
     ///
     /// 몸의 position만 대입하면 속도를 쥔 외력 몸이 제자리에 남아, 다음 물리 프레임에
     /// 그쪽이 몸을 도로 끌고 간다. 두 몸을 함께 놓는 길은 Pin 하나뿐이다.
+    ///
+    /// <b>2D 전환이 여기 있는 이유:</b> 씬을 넘는 경우 리그는 스테이지와 함께 갈린다.
+    /// 더 일찍 부르면 곧 사라질 옛 리그를 돌려놓게 되고, 새 리그는 제 씬에 적힌 모드로 시작한다.
+    /// 자리를 놓는 이 시점에는 새 리그가 이미 스스로 등록을 마쳤으므로 여기가 유일하게 맞는 자리다.
     /// </summary>
     void Place(Vector3 place, Quaternion facing)
     {
         _character.Movement.Pin(place);
         _character.Body.rotation = facing;
+
+        // 전투에서 3D로 열려 있었더라도 다시 세워질 때는 2D로 돌아온다.
+        if (PlayerManager.instance != null) PlayerManager.instance.Set2D(true);
     }
 
     /// <summary>
