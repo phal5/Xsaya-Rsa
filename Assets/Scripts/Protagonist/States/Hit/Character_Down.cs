@@ -40,7 +40,9 @@ public class Character_Down : BaseCharacterState
     {
         if (Time.time < _reviveTime) return;
 
-        Respawn();
+        // 옮기기가 이 프레임에 끝났을 때만 조작을 돌려준다.
+        // 다른 스테이지로 돌아가는 길이면 씬이 올라오는 동안 director가 붙들고 있다가 직접 푼다.
+        if (!Respawn()) return;
 
         // 이제 부모는 최상위다. 피격을 거쳐 들어왔든 낙사로 들어왔든 여기로 돌아간다.
         if (fsm is CharacterRoot root) root.ToControl();
@@ -49,19 +51,27 @@ public class Character_Down : BaseCharacterState
     /// <summary>
     /// 체력을 되돌리고 마지막으로 쉬어간 자리로 옮긴다.
     ///
-    /// <b>Pin으로 옮긴다.</b> 몸의 position만 대입하면 속도를 쥔 외력 몸이 제자리에 남아,
-    /// 다음 물리 프레임에 그쪽이 몸을 도로 끌고 간다. 두 몸을 함께 놓는 길은 Pin 하나뿐이다.
+    /// 옮기는 일 자체는 <see cref="SceneDirector"/>가 한다 — 쉬어간 자리가 다른 스테이지면
+    /// 그 씬을 먼저 불러와야 하는데, 여기서 그것까지 알 필요는 없다. 같은 스테이지면 그쪽이 자리만 옮긴다.
     ///
-    /// 적어둔 자리가 없거나 그 씬이 지금 올라와 있지 않으면 옮기지 않는다 —
-    /// 아직 한 번도 쉬어가지 않았다는 뜻이므로, 옮길 곳이 없는 것이지 그 자리가 옳은 것은 아니다.
+    /// <b>체력을 먼저 되돌린다.</b> 최상위 머신은 매 갱신마다 체력으로 사망을 판정하므로,
+    /// 되돌리기 전에 상태를 떠나면 다음 갱신에 곧바로 다시 쓰러진다.
     /// </summary>
-    void Respawn()
+    /// <returns>조작을 이 자리에서 돌려줘도 되는지. 거짓이면 director가 돌려준다.</returns>
+    bool Respawn()
     {
         if (characterManager.Damagable != null) characterManager.Damagable.Revive();
 
-        if (!characterManager.TryCheckpoint(out Vector3 place, out Quaternion facing)) return;
+        // 적어둔 자리가 없으면 아직 한 번도 쉬어가지 않았다는 뜻이다.
+        // 옮길 곳이 없는 것이지 쓰러진 자리가 옳은 것은 아니지만, 여기서 정할 일은 아니다.
+        if (!characterManager.TryCheckpoint(out string scene, out Vector3 place, out Quaternion facing)) return true;
 
-        characterManager.Movement.Pin(place);
-        characterManager.Body.rotation = facing;
+        if (SceneDirector.instance == null)
+        {
+            Debug.LogError("[Character_Down] SceneDirector가 없어 쉬어간 자리로 돌아갈 수 없습니다.");
+            return true;
+        }
+
+        return SceneDirector.instance.Go(scene, place, facing);
     }
 }

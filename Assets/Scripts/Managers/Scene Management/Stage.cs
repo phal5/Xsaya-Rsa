@@ -21,6 +21,29 @@ using UnityEngine.SceneManagement;
 public class Stage : MonoBehaviour
 {
     /// <summary>
+    /// 지금 올라와 있는 무대. <see cref="SceneDirector"/>가 <b>무엇을 내려야 하는지</b>를 여기서 안다.
+    ///
+    /// director가 스스로 불러온 것만 기억하게 두면 에디터에서 배경을 열어놓고 Play한 경우를 놓친다.
+    /// 배경이 스스로 등록하면 어떻게 올라왔든 답이 같다 — 액티브 씬을 스스로 가져가는 것과 같은 사정이다.
+    /// </summary>
+    public static Stage Current { get; private set; }
+
+    /// <summary>
+    /// 등록은 Awake다. 무대가 올라왔다는 사실은 액티브 씬을 실제로 가져가기 전부터 참이고,
+    /// 묻는 쪽이 언제 물어도 답이 있어야 한다.
+    /// </summary>
+    void Awake()
+    {
+        Current = this;
+    }
+
+    void OnDestroy()
+    {
+        // 이미 다음 무대가 등록했으면 그것을 지우지 않는다.
+        if (Current == this) Current = null;
+    }
+
+    /// <summary>
     /// Awake가 아니라 Start다. 비동기 Additive 로드는 씬이 <b>로드 완료로 표시되기 전에</b> Awake를 돌리는데,
     /// SetActiveScene은 아직 로드되지 않은 씬을 거부한다. 그 창 안에서 부르면 조용히 실패한다.
     ///

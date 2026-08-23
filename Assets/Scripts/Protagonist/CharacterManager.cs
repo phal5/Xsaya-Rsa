@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class CharacterManager : EntityManager
 {
@@ -129,23 +128,20 @@ public class CharacterManager : EntityManager
     }
 
     /// <summary>
-    /// 쉬어간 자리를 묻는다. <b>지금 올라와 있는 씬의 것만</b> 돌려준다.
+    /// 쉬어간 자리를 <b>씬 이름까지</b> 묻는다.
     ///
-    /// 다른 씬에 적힌 좌표는 그 씬을 불러오기 전까지 뜻이 없다. 씬 이름을 처음부터 함께 적어두므로,
-    /// 씬을 넘는 부활을 붙일 때 기록은 이미 있고 읽는 쪽만 늘리면 된다.
+    /// 그 씬이 지금 올라와 있는지는 따지지 않는다. 안 올라와 있으면 불러오면 되는 일이고,
+    /// 불러올지 자리만 옮길지를 정하는 것은 <see cref="SceneDirector"/>의 몫이다.
+    /// 여기서 미리 걸러내면 다른 스테이지의 기록이 없는 것처럼 보여 되돌아갈 길이 막힌다.
     /// </summary>
-    public bool TryCheckpoint(out Vector3 place, out Quaternion facing)
+    /// <returns>한 번이라도 쉬어간 적이 있는지.</returns>
+    public bool TryCheckpoint(out string scene, out Vector3 place, out Quaternion facing)
     {
-        place = Vector3.zero;
-        facing = Quaternion.identity;
-
-        if (string.IsNullOrEmpty(_restScene)) return false;
-        if (!SceneManager.GetSceneByName(_restScene).isLoaded) return false;
-
+        scene = _restScene;
         place = _restPlace;
         facing = _restFacing;
 
-        return true;
+        return !string.IsNullOrEmpty(_restScene);
     }
 
     #endregion
