@@ -22,7 +22,17 @@ public class UIGroupFader : MonoBehaviour
     
     private FadeEngine _fadeEngine;
     private Dictionary<Graphic, float> _originalAlphas = new Dictionary<Graphic, float>();
-    
+
+    /// <summary>
+    /// 지금 보이는 상태인지. 같은 상태로 다시 페이드하는 것을 막는 데 쓴다.
+    ///
+    /// 초기값이 true인 이유: 이 컴포넌트가 꺼져 있으면 Start가 돌지 않고,
+    /// 그 경우 요소들은 에디터에서 authoring한 그대로 — 즉 보이는 채로 — 남는다.
+    /// </summary>
+    private bool _visible = true;
+
+    public bool Visible => _visible;
+
     #endregion
 
     #region Unity Lifecycle
@@ -49,11 +59,13 @@ public class UIGroupFader : MonoBehaviour
             // 1. Instantly snap all alpha values to 0 before the player sees frame 1
             ApplyAlphaToAll(0f);
             SetActivity(false);
+            _visible = false;
         }
         else
         {
             SetActivity(true);
             ApplyAlphaToAll(1);
+            _visible = true;
         }
     }
     
@@ -63,12 +75,16 @@ public class UIGroupFader : MonoBehaviour
     
     public void FadeIn()
     {
+        // 이미 보이는 것을 다시 페이드하면 알파가 0으로 튕겼다가 올라온다. 깜빡임이 된다.
+        if (_visible) return;
+        _visible = true;
+
         SetActivity(true);
 
 
         _fadeEngine.PlayFade(
-            duration: _fadeDuration, 
-            fadingIn: true, 
+            duration: _fadeDuration,
+            fadingIn: true,
             onUpdate: ApplyAlphaToAll
         );
     }
@@ -76,11 +92,13 @@ public class UIGroupFader : MonoBehaviour
     public void FadeOut()
     {
         if (!gameObject.activeInHierarchy) return;
-        
+        if (!_visible) return;
+        _visible = false;
+
         _fadeEngine.PlayFade(
-            duration: _fadeDuration, 
-            fadingIn: false, 
-            onUpdate: ApplyAlphaToAll, 
+            duration: _fadeDuration,
+            fadingIn: false,
+            onUpdate: ApplyAlphaToAll,
             onComplete: () => SetActivity(false)
         );
     }

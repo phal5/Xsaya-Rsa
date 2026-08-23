@@ -19,6 +19,11 @@ public class Instructor : MonoBehaviour
     {
         if (Keyboard.current[_key].wasPressedThisFrame)
         {
+            // 남의 오브젝트가 꺼지는 것에 기대지 않고 직접 멈춘다.
+            // 예전에는 SetVisibility(false)가 이 오브젝트째로 껐지만,
+            // 다른 쪽이 다시 켜면 예전 배선을 든 채로 되살아났다.
+            enabled = false;
+
             _messageUI.SetVisibility(false);
             _event.Invoke();
         }

@@ -20,10 +20,11 @@ public class Character_Ground : FiniteStateMachine
 
     // 입력 콜백이 세우고 Transitions()가 소비한다.
     bool _jumpRequested;
-    bool _dodgeRequested;
     bool _climbDownRequested;
 
     public CharacterManager Character => manager as CharacterManager;
+
+    Character_Controlled Owner => fsm as Character_Controlled;
 
     /// <summary>하위 상태가 경사면 이동에 쓰는 지면 노멀.</summary>
     public RaycastHit GroundHit => _hit;
@@ -72,7 +73,8 @@ public class Character_Ground : FiniteStateMachine
         // 입력 콜백은 표시만 남긴다. 실제 처리는 상태 기계의 갱신 주기 안에서 한다.
         if (Consume(ref _jumpRequested)) Jump();
 
-        if (Consume(ref _dodgeRequested))
+        // 회피 입력은 조작 머신이 상시로 들고 있다. 축마다 구독하면 축 밖(스킬 실행)의 대시를 흘린다.
+        if (Owner != null && Owner.ConsumeDodge())
         {
             if (_currentStateType != typeof(Ground_Dodge)) { TransitTo<Ground_Dodge>(); return; }
         }
@@ -133,7 +135,6 @@ public class Character_Ground : FiniteStateMachine
         if (_subscribed || InputManager.instance == null) return;
 
         InputManager.instance.move_jump.action.performed += OnJump;
-        InputManager.instance.move_dash.action.performed += OnDodge;
         InputManager.instance.move_climbDown.action.performed += OnClimbDown;
         _subscribed = true;
     }
@@ -143,14 +144,11 @@ public class Character_Ground : FiniteStateMachine
         if (!_subscribed || InputManager.instance == null) return;
 
         InputManager.instance.move_jump.action.performed -= OnJump;
-        InputManager.instance.move_dash.action.performed -= OnDodge;
         InputManager.instance.move_climbDown.action.performed -= OnClimbDown;
         _subscribed = false;
     }
 
     void OnJump(InputAction.CallbackContext _) { _jumpRequested = true; }
-
-    void OnDodge(InputAction.CallbackContext _) { _dodgeRequested = true; }
 
     void OnClimbDown(InputAction.CallbackContext _) { _climbDownRequested = true; }
 

@@ -11,7 +11,9 @@ public class FlipBook : MonoBehaviour
     [Space(10f)]
     [SerializeField] TextMeshProUGUI speaker;
     [SerializeField] TextMeshProUGUI dialogue;
-    [SerializeField] TextMeshProUGUI midScreen;
+
+    [Tooltip("화면 중앙 문구. TMP를 직접 잡지 않는다 — 표시 여부는 MessageUI가 정한다.")]
+    [SerializeField] MessageUI midScreen;
     [Space(10f)]
     [SerializeField] private Book _book;
     public static FlipBook Instance { get; private set; }
@@ -36,7 +38,8 @@ public class FlipBook : MonoBehaviour
         Page? nullablePage = _book.GetNextPage();
         if (nullablePage == null)
         {
-            dialogue.text = midScreen.text = speaker.text = string.Empty;
+            dialogue.text = speaker.text = string.Empty;
+            midScreen.SetText(string.Empty);
             onDialogueNull.Invoke();
             RemoveBook();
             return;
@@ -44,7 +47,9 @@ public class FlipBook : MonoBehaviour
         Page page = nullablePage.Value;
         speaker.text = page.FooterSpeaker;
         dialogue.text = page.FooterText;
-        midScreen.text = page.MidScreenText;
+
+        // 빈 문구면 MessageUI가 알아서 숨긴다. 중앙 문구 페이더를 여기서 부르지 않는 이유다.
+        midScreen.SetText(page.MidScreenText);
     }
 
     public void SetBook(Book book)

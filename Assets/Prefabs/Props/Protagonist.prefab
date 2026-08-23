@@ -763,6 +763,7 @@ MonoBehaviour:
     m_Bits: 9
   _radius: 0.245
   _distance: 0.755
+  _hitTriggers: 0
 --- !u!114 &6510321842153810209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -984,41 +985,53 @@ MonoBehaviour:
     braceReach: 0.15
     edgeAhead: 0.5
     edgeDepth: 1.5
+    wallJumpUp: 6
+    wallJumpOut: 4
     pushMargin: 0.5
     frameRate: 30
     bracedHang:
       state: Braced Hanging Idle
       frames: 0
+      start: 0
     freeHang:
       state: Free Hanging Idle
       frames: 0
+      start: 0
     catchBraced:
       state: Jumping To Braced Hanging
       frames: 45
+      start: 0
     catchFree:
       state: Jump To Free Hang
       frames: 60
+      start: 0
     dropToFree:
       state: Drop To Freehang
       frames: 72
+      start: 0
     freeToBraced:
       state: Free Hang To Braced
       frames: 34
+      start: 0
     climbBraced:
       state: Braced Hang To Crouch
       frames: 17
+      start: 0
     climbFree:
       state: Freehang Climb
       frames: 58
+      start: 0
     mount:
       state: Idle
       frames: 12
+      start: 0
     wallJump:
       state: Jump From Wall
       frames: 0
       start: 13
   <StunTime>k__BackingField: 0.4
   <RespawnDelay>k__BackingField: 2
+  <WallTurnSpeed>k__BackingField: 360
   <HealChargeMax>k__BackingField: 3
   <HealAmount>k__BackingField: 40
   <HealTime>k__BackingField: 1.2
@@ -5067,10 +5080,67 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BasicAttack
   _duration: 0.1
-  _cooldown: 0.2
+  _cooldown: 0.5
   _lockMovement: 1
   _weapon: {fileID: 3049119711428009269}
   _disableWeaponObject: 1
+  _chain:
+  - state: Slash 1
+    start: 10
+    hitOpen: 11
+    hitClose: 99
+    end: 17
+    holdStart: 1.5
+  - state: Slash 2
+    start: 12
+    hitOpen: 13
+    hitClose: 99
+    end: 25
+    holdStart: 1.5
+  - state: Slash 3
+    start: 14
+    hitOpen: 15
+    hitClose: 99
+    end: 28
+    holdStart: 1.5
+  _frameRate: 30
+  _chainWindow: 0.35
+  _fade: 0.03
+  _exitFade: 0.5
+  _tempo:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 3
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 4.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 3
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _tempoParameter: SlashSpeed
 --- !u!1 &6837762355408050243
 GameObject:
   m_ObjectHideFlags: 0

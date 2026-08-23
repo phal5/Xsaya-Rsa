@@ -21,9 +21,10 @@ public class Character_Airborne : FiniteStateMachine
 
     // 입력 콜백이 세우고 Transitions()가 소비한다.
     bool _jumpRequested;
-    bool _dodgeRequested;
 
     public CharacterManager Character => manager as CharacterManager;
+
+    Character_Controlled Owner => fsm as Character_Controlled;
 
 
     public override void Enter()
@@ -65,7 +66,8 @@ public class Character_Airborne : FiniteStateMachine
         if (Consume(ref _jumpRequested)) Jump();
 
         // 티켓 판정은 Airborne_Dodge.Enter()가 소모와 함께 한다. 여기서 미리 보지 않는다.
-        if (Consume(ref _dodgeRequested))
+        // 회피 입력은 조작 머신이 상시로 들고 있다. 축마다 구독하면 축 밖(스킬 실행)의 대시를 흘린다.
+        if (Owner != null && Owner.ConsumeDodge())
         {
             if (_currentStateType != typeof(Airborne_Dodge))
             {
@@ -302,7 +304,6 @@ public class Character_Airborne : FiniteStateMachine
 
         InputManager.instance.move_jump.action.performed += OnJump;
         InputManager.instance.move_jump.action.canceled += OnJumpReleased;
-        InputManager.instance.move_dash.action.performed += OnDodge;
         _subscribed = true;
     }
 
@@ -312,7 +313,6 @@ public class Character_Airborne : FiniteStateMachine
 
         InputManager.instance.move_jump.action.performed -= OnJump;
         InputManager.instance.move_jump.action.canceled -= OnJumpReleased;
-        InputManager.instance.move_dash.action.performed -= OnDodge;
         _subscribed = false;
     }
 
@@ -323,8 +323,6 @@ public class Character_Airborne : FiniteStateMachine
         // 전이가 아니라 속도 조작이라 즉시 처리해도 상태가 흔들리지 않는다.
         Character.Steering.Drop();
     }
-
-    void OnDodge(InputAction.CallbackContext _) { _dodgeRequested = true; }
 
     #endregion
 

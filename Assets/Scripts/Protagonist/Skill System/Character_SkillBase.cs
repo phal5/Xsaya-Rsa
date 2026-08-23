@@ -15,7 +15,7 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
     [Tooltip("스킬이 도는 시간.")]
     [SerializeField, Min(0f)] protected float _duration = 0.4f;
 
-    [Tooltip("끝난 뒤 다시 쓸 수 있게 되기까지의 시간.")]
+    [Tooltip("스킬을 <b>건 순간부터</b> 다시 쓸 수 있게 되기까지의 시간.")]
     [SerializeField, Min(0f)] protected float _cooldown = 0.2f;
 
     [Header("Movement")]
@@ -25,7 +25,24 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
     float _readyTime;
     float _endTime;
 
+    /// <summary>
+    /// 쿨다운이 지났는지. <b>거는 순간</b>부터 재므로, 끊겨도 남은 쿨다운은 그대로 돈다.
+    ///
+    /// 끝난 뒤부터 재면 동작이 길수록 다음 공격이 늦어져, 같은 쿨다운이 스킬마다 다른 간격이 된다.
+    /// 시작부터 재면 "이 스킬은 0.5초에 한 번"이 동작 길이와 무관하게 그대로 성립한다.
+    /// </summary>
     public bool IsReady => Time.time >= _readyTime;
+
+    /// <summary>지금 이 스킬이 돌고 있는지. 도는 중에 다시 요청받는 스킬이 본다.</summary>
+    protected bool Running { get; private set; }
+
+    /// <summary>
+    /// 이번 진입이 끝났는지. 시간이 아닌 것으로 재는 스킬이 갈아끼운다.
+    ///
+    /// 클립을 배속으로 트는 스킬은 벽시계로 잴 수 없다. 같은 동작이라도 배속이 다르면
+    /// 걸리는 시간이 달라지므로, 그런 스킬은 <b>클립이 얼마나 지나갔는지</b>로 잰다.
+    /// </summary>
+    protected virtual bool Elapsed() => Time.time >= _endTime;
 
     Character_Execution _execution;
 
@@ -39,7 +56,7 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
     }
 
     /// <summary>콤보가 부르는 진입점. 쿨다운 중이면 조용히 무시한다.</summary>
-    public void Request()
+    public virtual void Request()
     {
         if (!IsReady) return;
 
@@ -54,6 +71,8 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
 
     public override void Enter()
     {
+        Running = true;
+        _readyTime = Time.time + _cooldown;
         _endTime = Time.time + _duration;
 
         // 속도는 상태 밖(Character_Movement)에 남으므로 명시적으로 세워야 한다.
@@ -66,13 +85,12 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
     {
         if (!_lockMovement) Steer();
 
-        if (Time.time >= _endTime) Finish();
+        if (Elapsed()) Finish();
     }
 
     public override void Exit()
     {
-        // 중간에 끊겼든 끝났든 쿨다운은 돈다.
-        _readyTime = Time.time + _cooldown;
+        Running = false;
         OnEnd();
     }
 

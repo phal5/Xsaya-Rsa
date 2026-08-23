@@ -41,9 +41,9 @@ public class Character_Animation : MonoBehaviour
     }
 
     /// <summary>컨트롤러의 상태 이름을 그대로 넘긴다. 같은 이름이면 다시 걸지 않는다.</summary>
-    public void Play(string state) => Play(state, _fade);
+    public void Play(string state) => Play(state, -1f);
 
-    /// <param name="fade">섞이는 시간. 자세가 크게 다른 두 동작을 잇는 곳이 기본값보다 길게 준다.</param>
+    /// <param name="fade">섞이는 시간. 자세가 크게 다른 두 동작을 잇는 곳이 기본값보다 길게 준다. 음수면 기본값.</param>
     public void Play(string state, float fade)
     {
         if (_animator == null || string.IsNullOrEmpty(state)) return;
@@ -54,7 +54,31 @@ public class Character_Animation : MonoBehaviour
         Drop();
 
         Warn(state);
-        _animator.CrossFadeInFixedTime(state, fade);
+        _animator.CrossFadeInFixedTime(state, Fade(fade));
+    }
+
+    float _once = -1f;
+
+    /// <summary>
+    /// <b>다음 한 번의 전환만</b> 이 시간으로 섞는다.
+    ///
+    /// 짧은 동작을 걸고 나가는 쪽이 쓴다. 나가는 블렌드는 다음 자세를 거는 쪽이 정하는데,
+    /// 그쪽은 자기가 무엇을 밀어내는지 모른다. 0.1초짜리 기본값이 0.11초짜리 동작을 덮으면
+    /// 그 동작은 온전한 자세를 한 번도 못 보여주고 사라진다.
+    ///
+    /// 명시적으로 넘긴 값이 언제나 이긴다. 걸어두고 아무도 안 쓰면 다음 전환에서 그냥 사라진다.
+    /// </summary>
+    public void FadeOnce(float fade) => _once = fade;
+
+    /// <summary>이번 전환에 쓸 시간. 넘긴 값 &gt; 한 번짜리 &gt; 기본값 순이고, 읽으면 한 번짜리는 풀린다.</summary>
+    float Fade(float requested)
+    {
+        float once = _once;
+        _once = -1f;
+
+        if (requested >= 0f) return requested;
+
+        return once >= 0f ? once : _fade;
     }
 
     /// <summary>
@@ -197,7 +221,8 @@ public class Character_Animation : MonoBehaviour
     /// 같은 이름이어도 다시 건다 — 어디서부터 트느냐가 인자의 일부이므로,
     /// 이름만 보고 걸러내면 "같은 클립의 다른 지점"을 부를 방법이 없어진다.
     /// </summary>
-    public void PlayFrom(string state, float offsetSeconds)
+    /// <param name="fade">섞이는 시간. 음수면 기본값을 쓴다.</param>
+    public void PlayFrom(string state, float offsetSeconds, float fade = -1f)
     {
         if (_animator == null || string.IsNullOrEmpty(state)) return;
 
@@ -206,7 +231,7 @@ public class Character_Animation : MonoBehaviour
         Drop();
 
         Warn(state);
-        _animator.CrossFadeInFixedTime(state, _fade, 0, offsetSeconds);
+        _animator.CrossFadeInFixedTime(state, Fade(fade), 0, offsetSeconds);
     }
 
     public void SetFloat(string parameter, float value)

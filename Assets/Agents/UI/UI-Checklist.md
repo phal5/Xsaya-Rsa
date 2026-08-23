@@ -21,6 +21,26 @@
   `Esc Menu`(fileID 4289678155353987793)의 `m_IsActive: 1` 오버라이드.
   프리팹 원본도 활성이라 값이 동일했다.
 
+- [x] **`OnScreenMessage`의 소유권을 `MessageUI`로 단일화 (SSOT)** (2026-08-23)
+  표시 여부를 셋이 나눠 갖던 것을 `MessageUI` 하나로 모았다.
+  - `MessageUI`가 `UIGroupFader _fader`(= `Central`)를 들고, `SetActive` 직접 호출을 없앴다.
+    `SetText`가 빈 문자열이면 그대로 숨긴다.
+  - `FlipBook.midScreen`: `TextMeshProUGUI` → `MessageUI` 참조. `Next()`는 `SetText`만 부른다.
+  - `FlipBook.onSetBook`/`onDialogueNull`에서 `Central`의 FadeIn/FadeOut 배선 제거.
+    (Footer/Flipbook 배선은 유지)
+  - 검증: `Central` 페이더를 가리키는 UnityEvent 항목 0개.
+
+- [x] **`Instructor` 1회성 처리** (2026-08-23)
+  `_event.Invoke()` 전에 `enabled = false`. `enabled`는 GameObject 활성 상태와 별개라
+  누가 오브젝트를 되살려도 부활하지 않는다. `Set()`이 다시 `enabled = true`로 되살린다.
+
+- [x] **`UIGroupFader`에 멱등 가드 추가** (2026-08-23)
+  같은 상태로 다시 페이드하면 알파가 끝값으로 튕겼다가 움직여 깜빡였다.
+  (`FadeOut`을 두 번 부르면 알파 1로 튀었다가 다시 0으로)
+  `_visible`/`public bool Visible`을 두고 `FadeIn`/`FadeOut`이 상태가 바뀔 때만 돌게 했다.
+  SSOT 이후 `SetText`가 매 페이지 표시 여부를 정하므로 이 가드가 없으면 페이지마다 깜빡인다.
+  초기값이 `true`인 이유는 아래 "주의할 점"의 Footer 항목 참고.
+
 ---
 
 ## 할 일
@@ -32,34 +52,13 @@
   지금 빌드하면 UI가 아예 뜨지 않는다. 에디터 멀티씬 편집으로만 굴러가는 상태.
   → 씬 목록을 정리하면서 obsolete 항목도 같이 걷어낼 것.
 
-- [ ] **`Instructor`를 1회성으로 만들기** — 아래 SSOT 항목과 같은 뿌리
-  `Instructor`는 `OnScreenMessage` 위에 `MessageUI`와 **같이** 얹혀 있다.
-  발동 시 `_messageUI.SetVisibility(false)`가 자기 GameObject를 꺼버리므로
-  평소에는 저절로 1회성처럼 보인다. 그런데 `FlipBook.onSetBook`이
-  `Central`의 `FadeIn` → `SetActivity(true)`로 같은 GameObject를 되살리기 때문에,
-  **대사가 한 번 열리고 나면 `Instructor`가 예전 `_key`/`_event`를 그대로 들고 부활한다.**
-  그 뒤 V를 누르면 5개 페이더의 `FadeIn`이 다시 호출된다.
-  → 남의 GameObject 활성 상태에 기대지 말고 `_event.Invoke()` 직후 `enabled = false`.
-    (`Set()`이 다시 `enabled = true`로 되살린다)
-  급하게 마무리하느라 남겨둔 항목.
-
-- [ ] **`OnScreenMessage`의 소유권을 `MessageUI`로 단일화 (SSOT)**
-  지금은 같은 GameObject의 표시 상태를 세 곳이 각자 건드린다:
-  - `MessageUI.SetVisibility()` → `gameObject.SetActive()`
-  - `Central`의 `UIGroupFader.SetActivity()` → 같은 오브젝트를 SetActive
-  - `FlipBook.midScreen` → TMP를 직접 참조해 텍스트를 씀
-
-  위의 `Instructor` 부활 버그가 바로 이 충돌이 겉으로 드러난 것이다.
-  → `MessageUI`가 텍스트와 표시를 모두 소유하고, `FlipBook`·`Instructor`는 `MessageUI`만 부른다.
-    `MessageUI`는 `SetActive` 대신 자기가 들고 있는 `UIGroupFader`로 표시를 넘긴다.
-    (`FlipBook.midScreen`은 `MessageUI` 참조로 바꾸고, `onSetBook`/`onDialogueNull`의
-     `Central` FadeIn/FadeOut 배선은 걷어낸다)
-  설계 합의 후 착수.
-
-- [ ] **`Time.timeScale`에 종속되지 않는 캐릭터 만들기**
-  `HPbar.Update()`가 매 프레임 `TimeManager.SetScale()`을 호출해 체력이 게임 속도를 정한다.
-  이 배속에서 예외인 액터(연출용 NPC, 컷신, 보스 특정 페이즈 등)를 어떻게 뺄지 미정.
-  설계 논의중.
+- [ ] **플레이 모드에서 SSOT 변경 검증** (아직 안 함)
+  에디터 컴파일과 프리팹 배선까지만 확인했다. 실제로 돌려서 볼 것:
+  1. 시작 시 "Press [ V ] to Raise"가 보이는가
+  2. V를 누르면 문구가 사라지고 Header·키 가이드 4개가 페이드인되는가
+  3. 대사를 열었다 닫은 뒤 V를 눌러도 **아무 일도 없어야 한다** (Instructor 부활 버그)
+  4. 페이지를 넘길 때 중앙 문구가 깜빡이지 않는가 (멱등 가드)
+  5. `MidScreenText`가 있는 페이지 ↔ 없는 페이지를 오갈 때 표시가 맞게 따라오는가
 
 - [ ] **`HPbar`의 초기화 순서 정리**
   `PlayerManager.instance.playerDamagable`을 null 검사 없이 매 프레임 읽는다.
