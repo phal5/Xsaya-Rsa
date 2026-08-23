@@ -1,0 +1,99 @@
+using UnityEngine;
+
+/// <summary>
+/// 부르면 무기 자리에 이펙트를 하나 세운다.
+///
+/// <see cref="WeaponSwingTrail"/>이 휘두르는 <b>동안</b>을 그린다면, 이쪽은 <b>순간</b>을 맡는다.
+/// 타격·발도·차징처럼 "지금"이 정해져 있는 연출은 부르는 쪽이 그 시점을 이미 알고 있으므로,
+/// 여기서 상태를 되읽지 않는다 — 읽기 시작하면 스킬이 늘어날 때마다 조건이 하나씩 붙는다.
+///
+/// <see cref="MeleeWeapon"/>은 주인공·보스·Agnostos가 함께 쓰는 판정 코드라 건드리지 않는다.
+/// 스킬 코드에서 <see cref="Play()"/>를 부르거나, 애니메이션 이벤트에 걸어둔다.
+/// </summary>
+public class WeaponEffectSpawner : MonoBehaviour
+{
+    [Tooltip("세울 이펙트 프리팹. Play에 직접 넘겨 이 자리를 대신할 수도 있다.")]
+    [SerializeField] GameObject effect;
+
+    [Tooltip("세울 자리. 비워두면 이 오브젝트 자리에 선다.")]
+    [SerializeField] Transform spawnPoint;
+
+    [Tooltip("켜면 무기의 자식이 되어 따라 움직인다. 터진 자리에 남아야 하는 임팩트는 꺼둔다.")]
+    [SerializeField] bool followWeapon;
+
+    [Tooltip("몇 초 뒤 치울지. 0이면 파티클 길이를 재서 알아서 정한다.")]
+    [SerializeField] float lifetime;
+
+    [Tooltip("끄면 불러도 아무것도 서지 않는다. 실행 중에는 EffectEnabled로 바꾼다.")]
+    [SerializeField] bool effectEnabled = true;
+
+    /// <summary>
+    /// 연출을 켜고 끄는 손잡이. 꺼두면 <see cref="Play()"/>가 조용히 지나간다.
+    ///
+    /// 이미 서 있는 것까지 걷어가지는 않는다. 터지는 중인 이펙트가 도중에 사라지는 것은
+    /// 꺼진 것이 아니라 <b>고장 난 것</b>으로 보인다.
+    /// </summary>
+    public bool EffectEnabled
+    {
+        get => effectEnabled;
+        set => effectEnabled = value;
+    }
+
+    /// <summary>인스펙터에 꽂아둔 이펙트를 세운다. 애니메이션 이벤트에서 바로 부를 수 있다.</summary>
+    public void Play() => Play(effect);
+
+    /// <summary>
+    /// 이번만 다른 이펙트를 세운다. 연속 베기의 1타·2타·3타처럼 <b>같은 무기가 타마다 다른 것을
+    /// 뿌려야 할 때</b> 쓴다. 이것을 위해 스포너를 여러 개 붙이면 어느 것이 켜져 있는지 알기 어려워진다.
+    /// </summary>
+    public void Play(GameObject effectOverride)
+    {
+        if (!effectEnabled || effectOverride == null) return;
+
+        Transform where = spawnPoint != null ? spawnPoint : transform;
+
+        GameObject spawned = Instantiate(
+            effectOverride,
+            where.position,
+            where.rotation,
+            followWeapon ? where : null);
+
+        Destroy(spawned, lifetime > 0f ? lifetime : LengthOf(spawned));
+    }
+
+    /// <summary>
+    /// 다 뿌린 이펙트를 치운다.
+    ///
+    /// Cartoon FX 프리팹은 stopAction이 None이라 <b>다 뿌리고도 빈 오브젝트로 남는다.</b>
+    /// 공격마다 하나씩 쌓이는데 보이는 것이 없으므로, 씬이 무거워질 때까지 아무도 눈치채지 못한다.
+    ///
+    /// 길이는 파티클에서 직접 잰다. 초를 적어두면 이펙트를 갈아끼울 때마다 같이 고쳐야 하고,
+    /// 잊은 쪽은 꼬리가 잘리거나 빈 오브젝트가 오래 남는 것으로 조용히 드러난다.
+    /// </summary>
+    static float LengthOf(GameObject spawned)
+    {
+        float longest = 0f;
+
+        foreach (ParticleSystem part in spawned.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ParticleSystem.MainModule main = part.main;
+
+            // 상수든 곡선이든 둘 중 값이 있는 쪽이 잡힌다.
+            float life = Mathf.Max(main.startLifetime.constantMax, main.startLifetime.curveMultiplier);
+
+            longest = Mathf.Max(longest, main.duration + life);
+        }
+
+        // 파티클이 하나도 없는 이펙트도 있다. 빛이나 데칼만 든 것은 여기서 길이를 알 수 없다.
+        return longest > 0f ? longest : FallbackLifetime;
+    }
+
+    const float FallbackLifetime = 2f;
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (lifetime < 0f) lifetime = 0f;
+    }
+#endif
+}

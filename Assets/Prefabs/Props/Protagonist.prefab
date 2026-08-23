@@ -2149,6 +2149,71 @@ Transform:
   - {fileID: 6780348068923485434}
   m_Father: {fileID: 5261951378766004139}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3229401152797900431
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 554519630919030552}
+  - component: {fileID: 7229486423097562362}
+  - component: {fileID: 3455219301374272521}
+  m_Layer: 0
+  m_Name: SlashAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &554519630919030552
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3229401152797900431}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3886442309561623773}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7229486423097562362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3229401152797900431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8170869aea2be479b4dc3300c52900, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponEffectSpawner
+  effect: {fileID: 8960971173521281733, guid: 283daa0b308c5104ea07156fb1f464da, type: 3}
+  spawnPoint: {fileID: 554519630919030552}
+  followWeapon: 0
+  lifetime: 0
+  effectEnabled: 1
+--- !u!114 &3455219301374272521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3229401152797900431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 320a8e52006795949b34c698f1828d52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSwingEffect
+  attackWindow: {fileID: 8979077100044838613}
+  spawner: {fileID: 7229486423097562362}
+  effectEnabled: 1
 --- !u!1 &3230280336425901716
 GameObject:
   m_ObjectHideFlags: 0
@@ -5421,6 +5486,7 @@ Transform:
   - {fileID: 262096814760316546}
   - {fileID: 8417780979050310807}
   - {fileID: 3553028544719137794}
+  - {fileID: 554519630919030552}
   m_Father: {fileID: 3648719395768040299}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!33 &3008781207831943402
