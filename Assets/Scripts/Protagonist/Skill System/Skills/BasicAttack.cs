@@ -67,6 +67,9 @@ public class BasicAttack : Character_SkillBase
     /// <summary>직전 동작이 끊기지 않고 끝났는지.</summary>
     bool _finished;
 
+    /// <summary>직전 동작이 끝난 시각.</summary>
+    float _endedAt;
+
     bool _opened;
 
     /// <summary>시작 자세를 세워 둘 남은 시간(초). 0보다 크면 클립도 우리 시계도 서 있다.</summary>
@@ -166,6 +169,7 @@ public class BasicAttack : Character_SkillBase
 
         // 끝까지 마친 동작만 이어칠 수 있다. 대시로 끊거나 얻어맞고 끊긴 연격은 1타부터 다시 간다.
         _finished = Elapsed();
+        _endedAt = Time.time;
 
         // 남은 시간을 통째로 블렌딩에 넘긴다.
         //
@@ -183,17 +187,19 @@ public class BasicAttack : Character_SkillBase
     float Left() => Mathf.Max(_action - (Time.time - _beganAt), 0f);
 
     /// <summary>
-    /// 직전 동작에 이어서 들어가는지. 마지막 동작 뒤에는 잇지 않는다.
+    /// 다시 칠 수 있게 된 시각. <b>클립이 끝나는 때와 쿨다운이 풀리는 때 중 늦은 쪽</b>이다.
     ///
-    /// 기준점은 동작이 끝난 시각이 아니라 <b>쿨다운이 풀린 시각</b>이다.
-    /// 끝난 시각에서 재면 클립이 짧은 동작일수록 쿨다운이 풀리기까지 창을 더 많이 까먹어,
-    /// 같은 창이 동작마다 다른 여유가 된다. 풀리는 순간부터 재면 어느 동작이든 똑같이 열린다.
+    /// 둘 중 하나만 보면 반대쪽 설정에서 창이 어긋난다. 쿨다운이 클립보다 길면 풀릴 때까지
+    /// 창을 까먹고, 짧으면 클립이 도는 동안 창이 지나간다. 늦은 쪽에서 재면 어느 쪽이든 맞는다.
     /// </summary>
+    float FreeAt => Mathf.Max(_endedAt, ReadyAt);
+
+    /// <summary>직전 동작에 이어서 들어가는지. 마지막 동작 뒤에는 잇지 않는다.</summary>
     bool Resume()
     {
         if (!Usable || Last || !_finished) return false;
 
-        return Time.time - ReadyAt <= _chainWindow;
+        return Time.time - FreeAt <= _chainWindow;
     }
 
     #region Tempo

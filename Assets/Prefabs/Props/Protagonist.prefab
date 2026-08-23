@@ -5080,7 +5080,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BasicAttack
   _duration: 0.1
-  _cooldown: 0.5
+  _cooldown: 0
   _lockMovement: 1
   _weapon: {fileID: 3049119711428009269}
   _disableWeaponObject: 1
