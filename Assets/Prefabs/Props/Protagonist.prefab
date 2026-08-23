@@ -5086,16 +5086,16 @@ MonoBehaviour:
   _disableWeaponObject: 1
   _chain:
   - state: Slash 1
-    start: 10
-    hitOpen: 11
-    hitClose: 99
-    end: 17
-    holdStart: 1.5
-  - state: Slash 2
     start: 12
     hitOpen: 13
     hitClose: 99
     end: 25
+    holdStart: 1.5
+  - state: Slash 2
+    start: 8
+    hitOpen: 9
+    hitClose: 99
+    end: 18
     holdStart: 1.5
   - state: Slash 3
     start: 14
@@ -5106,7 +5106,7 @@ MonoBehaviour:
   _frameRate: 30
   _chainWindow: 0.35
   _fade: 0.03
-  _exitFade: 0.5
+  _action: 0.3
   _tempo:
     serializedVersion: 2
     m_Curve:

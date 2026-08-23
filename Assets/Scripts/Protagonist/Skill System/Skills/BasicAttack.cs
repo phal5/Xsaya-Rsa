@@ -7,9 +7,11 @@ using UnityEngine;
 /// 그 전이들이 할 일은 전부 "다음 클립을 걸고 시간을 다시 센다"뿐이라, 상태로 나눌 값이 없다.
 /// 여기서는 <see cref="Swing"/> 배열의 색인 하나가 그 자리를 대신한다.
 ///
-/// 한 번의 베기는 <b>시작 자세 세우기 → 휘두름 → 끝 자세로 쿨다운 채우기 → 이동 자세로 복귀</b>다.
-/// 쿨다운은 <b>거는 순간부터</b> 재므로 "이 스킬은 0.5초에 한 번"이 동작 길이와 무관하게 성립하고,
-/// 남는 시간을 끝 자세로 채우니 무엇을 했는지가 화면에 남는다.
+/// 한 번의 베기는 <b>시작 자세 세우기 → 휘두름 → 남은 시간에 걸쳐 이동 자세로 풀리기</b>이고,
+/// 그 셋을 합쳐 <see cref="_action"/>만큼 걸린다. 클립이 쓰고 남은 몫이 그대로 블렌딩이 되므로
+/// 클립 길이가 동작마다 달라도 한 번의 베기가 차지하는 시간은 늘 같다.
+///
+/// 쿨다운은 그와 별개로 <b>거는 순간부터</b> 재어 다음 입력을 언제 받을지만 정한다.
 ///
 /// <b>휘두르는 동안에는 공격 키를 받지 않는다.</b> 한 동작이 끝나고 <see cref="_chainWindow"/>
 /// 안에 다시 누르면 그때 다음 동작으로 이어진다. 마지막 동작 뒤에는 잇지 않고 1타로 돌아간다.
@@ -43,8 +45,8 @@ public class BasicAttack : Character_SkillBase
     [Tooltip("동작으로 들어갈 때 섞이는 시간. 짧을수록 타격이 또렷하다.")]
     [SerializeField, Min(0f)] float _fade = 0.03f;
 
-    [Tooltip("쿨다운이 끝나고 이동 자세로 돌아가는 데 걸리는 시간.")]
-    [SerializeField, Min(0f)] float _exitFade = 0.5f;
+    [Tooltip("한 번의 베기가 차지하는 시간. 클립 재생과 이동 자세로 풀리는 시간을 <b>합쳐서</b> 이만큼이다.")]
+    [SerializeField, Min(0f)] float _action = 0.3f;
 
     [Header("Tempo")]
     [Tooltip("동작의 진행도(0~1)에 대한 재생 배속. 가운데가 빠른 산 모양이 휘두름을 또렷하게 만든다.")]
@@ -59,7 +61,12 @@ public class BasicAttack : Character_SkillBase
     /// <summary>지금 동작이 <b>클립 기준으로</b> 얼마나 지나갔는지. 배속을 적분한 값이다.</summary>
     float _frame;
 
-    float _endedAt = float.NegativeInfinity;
+    /// <summary>이번 동작을 건 시각. 남은 시간을 블렌딩에 넘기려고 잰다.</summary>
+    float _beganAt;
+
+    /// <summary>직전 동작이 끊기지 않고 끝났는지.</summary>
+    bool _finished;
+
     bool _opened;
 
     /// <summary>시작 자세를 세워 둘 남은 시간(초). 0보다 크면 클립도 우리 시계도 서 있다.</summary>
@@ -117,6 +124,7 @@ public class BasicAttack : Character_SkillBase
             return;
         }
 
+        _beganAt = Time.time;
         _frame = Current.start;
         _hold = Current.holdStart / _frameRate;
         _arrived = false;
@@ -149,29 +157,43 @@ public class BasicAttack : Character_SkillBase
         base.UpdateState();
     }
 
-    /// <summary>휘두름이 끝났고 쿨다운도 지났을 때. 그 사이는 끝 자세로 서 있다.</summary>
-    protected override bool Elapsed() => Usable ? (_arrived && IsReady) : base.Elapsed();
+    /// <summary>클립이 끝 프레임에 닿으면 끝난다. 남은 시간은 자세를 붙드는 데가 아니라 블렌딩에 쓴다.</summary>
+    protected override bool Elapsed() => Usable ? _arrived : base.Elapsed();
 
     protected override void OnEnd()
     {
         Close();
 
         // 끝까지 마친 동작만 이어칠 수 있다. 대시로 끊거나 얻어맞고 끊긴 연격은 1타부터 다시 간다.
-        _endedAt = Elapsed() ? Time.time : float.NegativeInfinity;
+        _finished = Elapsed();
 
-        // 나가는 블렌드를 여기서 정한다.
-        // 다음 자세를 거는 쪽(Ground_Idle 등)은 자기가 무엇을 밀어내는지 모르고 제 기본값을 쓴다.
-        if (Usable) manager.Animation.FadeOnce(_exitFade);
+        // 남은 시간을 통째로 블렌딩에 넘긴다.
+        //
+        // 한 번의 베기가 차지하는 시간을 고정하고 그 안에서 나누는 것이 요점이다.
+        // 클립 길이가 동작마다 다른데 블렌딩을 따로 적으면 합이 매번 달라져,
+        // "이 스킬은 0.3초"가 화면에서 성립하지 않는다.
+        //
+        // 끊겼으면 남은 시간을 주지 않는다. 대시로 빠져나가는데 베기 자세가 느리게 풀리면 어긋난다.
+        if (Usable) manager.Animation.FadeOnce(_finished ? Left() : _fade);
 
         if (_disableWeaponObject && _weapon != null) _weapon.gameObject.SetActive(false);
     }
 
-    /// <summary>직전 동작에 이어서 들어가는지. 마지막 동작 뒤에는 잇지 않는다.</summary>
+    /// <summary>고정된 시간에서 클립이 쓰고 남은 몫.</summary>
+    float Left() => Mathf.Max(_action - (Time.time - _beganAt), 0f);
+
+    /// <summary>
+    /// 직전 동작에 이어서 들어가는지. 마지막 동작 뒤에는 잇지 않는다.
+    ///
+    /// 기준점은 동작이 끝난 시각이 아니라 <b>쿨다운이 풀린 시각</b>이다.
+    /// 끝난 시각에서 재면 클립이 짧은 동작일수록 쿨다운이 풀리기까지 창을 더 많이 까먹어,
+    /// 같은 창이 동작마다 다른 여유가 된다. 풀리는 순간부터 재면 어느 동작이든 똑같이 열린다.
+    /// </summary>
     bool Resume()
     {
-        if (!Usable || Last) return false;
+        if (!Usable || Last || !_finished) return false;
 
-        return Time.time - _endedAt <= _chainWindow;
+        return Time.time - ReadyAt <= _chainWindow;
     }
 
     #region Tempo

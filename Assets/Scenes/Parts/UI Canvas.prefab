@@ -3867,7 +3867,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 18847955132401555}
         m_TargetAssemblyTypeName: UIGroupFader, Assembly-CSharp
         m_MethodName: FadeIn
         m_Mode: 1
@@ -3894,7 +3894,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 18847955132401555}
         m_TargetAssemblyTypeName: UIGroupFader, Assembly-CSharp
         m_MethodName: FadeOut
         m_Mode: 1

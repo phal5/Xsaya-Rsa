@@ -33,6 +33,9 @@ public abstract class Character_SkillBase : ComponentEntityState<CharacterManage
     /// </summary>
     public bool IsReady => Time.time >= _readyTime;
 
+    /// <summary>쿨다운이 풀리는 시각. 다음 입력을 언제부터 받는지가 곧 연격의 기준점이다.</summary>
+    protected float ReadyAt => _readyTime;
+
     /// <summary>지금 이 스킬이 돌고 있는지. 도는 중에 다시 요청받는 스킬이 본다.</summary>
     protected bool Running { get; private set; }
 

@@ -53,6 +53,13 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   `_event.Invoke()` 전에 `enabled = false`. `enabled`는 GameObject 활성 상태와 별개라
   누가 오브젝트를 되살려도 부활하지 않는다. `Set()`이 다시 `enabled = true`로 되살린다.
 
+- [x] **General 프리팹의 끊긴 `Flipbook` 페이더 배선 복구** (2026-08-23)
+  `Assets/Scenes/Parts/UI Canvas.prefab`의 `FlipBook`에서
+  `onSetBook[1]`·`onDialogueNull[1]`의 대상이 NULL이었다 (복사 과정에서 유실).
+  그대로 두면 General 씬에서 대사창이 페이드인되지 않는다.
+  Start 프리팹의 같은 자리를 참조 삼아 `Flipbook` 페이더의 `FadeIn`/`FadeOut`으로 복구.
+  mode=1(Void), callState=2(RuntimeOnly)까지 동일하게 맞췄다.
+
 - [x] **`UIGroupFader`에 멱등 가드 추가** (2026-08-23)
   같은 상태로 다시 페이드하면 알파가 끝값으로 튕겼다가 움직여 깜빡였다.
   (`FadeOut`을 두 번 부르면 알파 1로 튀었다가 다시 0으로)
@@ -70,14 +77,6 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   `Parts/UI.unity`·`Parts/Character.unity`·`Parts/Backgrounds/*`가 하나도 없어
   지금 빌드하면 UI가 아예 뜨지 않는다. 에디터 멀티씬 편집으로만 굴러가는 상태.
   → 씬 목록을 정리하면서 obsolete 항목도 같이 걷어낼 것.
-
-- [ ] **General 프리팹의 NULL UnityEvent 항목 확인** — 판단이 필요해 손대지 않음
-  `Assets/Scenes/Parts/UI Canvas.prefab`의 `FlipBook`에서
-  `onSetBook[1]`과 `onDialogueNull[1]`의 대상이 NULL이다.
-  Start 프리팹의 같은 자리는 `Flipbook` 페이더의 `FadeIn`/`FadeOut`이므로,
-  복사 과정에서 참조가 끊긴 것으로 보인다.
-  → 그렇다면 `Flipbook` 페이더로 다시 꽂아야 한다. **지금 상태로는 General 씬에서
-    대사창이 페이드인되지 않는다.** 추측으로 꽂지 않고 남겨둠 — 확인 후 처리.
 
 - [ ] **플레이 모드에서 SSOT 변경 검증** (아직 안 함) — `UI - Start`, `UI - General` **양쪽**
   에디터 컴파일과 프리팹 배선까지만 확인했다. 실제로 돌려서 볼 것:
