@@ -172,6 +172,7 @@ public class SceneDirector : MonoBehaviour
         if (SceneManager.GetSceneByName(scene).isLoaded)
         {
             Place(place, facing);
+            Restore2D();
             return true;
         }
 
@@ -203,26 +204,48 @@ public class SceneDirector : MonoBehaviour
         // 새 스폰 자리에 옛 지오메트리가 남아 물리가 몸을 밀어낸다.
         // 붙들어 둔 덕에 이 사이가 비어도 떨어지지 않으므로, 겹칠 이유가 없다.
         Stage leaving = Stage.Current;
-        if (leaving != null) yield return SceneManager.UnloadSceneAsync(leaving.gameObject.scene);
+        if (leaving != null)
+        {
+            Scene old = leaving.gameObject.scene;
+
+            // <b>먼저 비활성화하고 나서 파괴한다.</b> Destroy는 프레임 끝까지 미뤄지므로
+            // 그것만으로는 이 프레임 안에서 콜라이더가 사라지지 않는다 — 옛 지오메트리가
+            // 물리에 남은 채로 새 자리에 몸이 놓이면 겹친 상태에서 밀려나며 튕긴다.
+            // 비활성화는 부르는 즉시 먹으므로, 그 창을 닫는 것은 이쪽이다.
+            foreach (GameObject root in old.GetRootGameObjects())
+            {
+                root.SetActive(false);
+                Destroy(root);
+            }
+
+            // 껍데기만 남은 씬을 정리한다. 동기 언로드는 API 자체가 없다.
+            yield return SceneManager.UnloadSceneAsync(old);
+        }
 
         // 씬을 내리는 것만으로는 텍스처가 풀리지 않는다. 실제로 메모리가 돌아오는 곳은 여기다.
         yield return Resources.UnloadUnusedAssets();
 
-        yield return SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive);
+        // <b>동기 로드다.</b> 비동기로 걸면 로드가 끝날 때까지 프레임이 계속 돌고,
+        // 그동안 물리는 발판 없는 세상에서 스텝을 밟는다. 동기는 프레임 끝에 한 번에 통합되므로
+        // 그 창이 아예 생기지 않는다 — 대신 그만큼 화면이 멈춘다. 어차피 조작을 거둔 구간이라 그 편이 낫다.
+        SceneManager.LoadScene(scene, LoadSceneMode.Additive);
 
-        // <b>기다리기 전에 놓는다.</b> 새 리그는 올라오자마자 첫 LateUpdate에서 플레이어를 찾는데,
+        // <b>통합 전에 놓는다.</b> 새 리그는 태어나자마자 첫 LateUpdate에서 플레이어를 찾는데,
         // 그때 몸이 아직 떠나온 자리에 있으면 리그가 <b>그쪽으로</b> 한 번 맞췄다가 다시 돌아온다.
         // 화면이 스테이지를 가로질러 훑는 것이 그것이다. 먼저 놓으면 리그가 볼 자리가 처음부터 옳다.
         Place(place, facing);
 
-        // Stage가 액티브 씬을 가져가는 것은 Start다. 한 프레임 준다.
+        // 여기서 프레임이 끝나며 씬이 통합된다. 깨어나면 Stage.Start도 새 리그의 등록도 끝나 있다.
         yield return null;
 
         if (Stage.Current == null)
             Debug.LogWarning($"[{name}] '{scene}'에 Stage가 없습니다. 하늘과 환경광이 이전 씬 것으로 남습니다.", this);
 
+        // <b>새 리그가 등록된 뒤라야 한다.</b> 리그는 스테이지와 함께 갈리므로,
+        // 자리를 놓던 시점에 부르면 곧 사라질 옛 리그를 돌려놓게 된다.
+        Restore2D();
+
         // 옛 리그는 씬과 함께 사라졌다. 끊어주지 않으면 브레인이 옛 자리에서 새 자리까지 화면을 훑고 온다.
-        // <b>몸을 놓은 뒤라야 한다.</b> 먼저 부르면 리그가 아직 옛 자리를 겨냥한 상태로 굳는다.
         CinemachineCore.ResetCameraState();
 
         _character.Movement.SetGravity(true);
@@ -238,16 +261,21 @@ public class SceneDirector : MonoBehaviour
     /// 몸의 position만 대입하면 속도를 쥔 외력 몸이 제자리에 남아, 다음 물리 프레임에
     /// 그쪽이 몸을 도로 끌고 간다. 두 몸을 함께 놓는 길은 Pin 하나뿐이다.
     ///
-    /// <b>2D 전환이 여기 있는 이유:</b> 씬을 넘는 경우 리그는 스테이지와 함께 갈린다.
-    /// 더 일찍 부르면 곧 사라질 옛 리그를 돌려놓게 되고, 새 리그는 제 씬에 적힌 모드로 시작한다.
-    /// 자리를 놓는 이 시점에는 새 리그가 이미 스스로 등록을 마쳤으므로 여기가 유일하게 맞는 자리다.
+    /// 자리만 옮긴다. 2D 복귀는 <see cref="Restore2D"/>가 따로 하는데, 부를 수 있는 시점이 다르기 때문이다 —
+    /// 씬을 넘는 경우 리그가 스테이지와 함께 갈려서, 새 리그가 등록을 마친 뒤에야 돌려놓을 수 있다.
     /// </summary>
     void Place(Vector3 place, Quaternion facing)
     {
         _character.Movement.Pin(place);
         _character.Body.rotation = facing;
+    }
 
-        // 전투에서 3D로 열려 있었더라도 다시 세워질 때는 2D로 돌아온다.
+    /// <summary>
+    /// 전투에서 3D로 열려 있었더라도 다시 세워질 때는 2D로 돌아온다.
+    /// <b>지금 등록되어 있는 리그</b>를 돌려놓으므로, 부르는 시점이 곧 대상이다.
+    /// </summary>
+    void Restore2D()
+    {
         if (PlayerManager.instance != null) PlayerManager.instance.Set2D(true);
     }
 

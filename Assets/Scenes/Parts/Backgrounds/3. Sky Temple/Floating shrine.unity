@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: af140cd3e01f3b5488b1ed80368ef988, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -869,6 +869,9 @@ MonoBehaviour:
   variety: 0.8
   spacing: 0.35
   walls: 1
+  centerObstacle: 0
+  centerObstacleWidth: 0
+  centerObstacleHeight: 0.5
   requireDash: 1
   requireLedge: 1
   requirePlateau: 0
@@ -15177,6 +15180,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1035544353}
   m_SourcePrefab: {fileID: 100100000, guid: 73ce6b6b6a9d0df4d8b1f7098a8a5dfe, type: 3}
+--- !u!4 &619442897 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7471976124504877542, guid: 7fb84d039373eb44aa497c1e01c5b36b, type: 3}
+  m_PrefabInstance: {fileID: 1378426187}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &623761916
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24760,11 +24768,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7fb84d039373eb44aa497c1e01c5b36b, type: 3}
---- !u!4 &909823544 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4752400524430123228, guid: 7fb84d039373eb44aa497c1e01c5b36b, type: 3}
-  m_PrefabInstance: {fileID: 909823543}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &912136307
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -33306,6 +33309,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 51302e8d09f937047aee5314c98c6c29, type: 3}
   m_PrefabInstance: {fileID: 1176458752}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &1198293418 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7471976124504877542, guid: 7fb84d039373eb44aa497c1e01c5b36b, type: 3}
+  m_PrefabInstance: {fileID: 909823543}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1201887967 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 165806834040997869, guid: badf96df4d4a10e43893cdccc13c7e04, type: 3}
@@ -38417,11 +38425,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7fb84d039373eb44aa497c1e01c5b36b, type: 3}
---- !u!4 &1378426188 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4752400524430123228, guid: 7fb84d039373eb44aa497c1e01c5b36b, type: 3}
-  m_PrefabInstance: {fileID: 1378426187}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1378501496 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 165806834040997869, guid: badf96df4d4a10e43893cdccc13c7e04, type: 3}
@@ -41151,10 +41154,10 @@ Transform:
   - {fileID: 637399822}
   - {fileID: 1067737848}
   - {fileID: 1450011377}
-  - {fileID: 1378426188}
+  - {fileID: 619442897}
   - {fileID: 236113549}
   - {fileID: 198554613}
-  - {fileID: 909823544}
+  - {fileID: 1198293418}
   m_Father: {fileID: 1536594082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1484259926
@@ -52563,7 +52566,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1

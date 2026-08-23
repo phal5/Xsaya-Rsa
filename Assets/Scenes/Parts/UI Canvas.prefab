@@ -1897,7 +1897,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIGroupFader
   _fadeDuration: 0.5
-  _fadedOnStart: 1
+  _fadedOnStart: 0
   _uiElements:
   - {fileID: 3125781046765365684}
   - {fileID: 333834513538310774}

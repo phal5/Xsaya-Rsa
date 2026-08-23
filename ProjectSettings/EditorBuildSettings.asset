@@ -5,6 +5,27 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Parts/Character.unity
+    guid: 625e49858190e544abb48e624a97a4f5
+  - enabled: 1
+    path: Assets/Scenes/Parts/UI - General.unity
+    guid: 22c7e72b7f1256c47aaad96337f451a0
+  - enabled: 1
+    path: Assets/Scenes/Parts/UI - Start.unity
+    guid: ad58bb2b0e86ea54cb34665610005a58
+  - enabled: 1
+    path: Assets/Scenes/Parts/Backgrounds/1. Temple of Awakening/Temple of Awakening.unity
+    guid: 38beeb0da39a4ca47864e8942b980de5
+  - enabled: 1
+    path: Assets/Scenes/Parts/Backgrounds/2. the Shrine/the Shrine.unity
+    guid: f66669c5d690380428d9b2f037991c26
+  - enabled: 1
+    path: Assets/Scenes/Parts/Backgrounds/3. Sky Temple/Floating shrine.unity
+    guid: 674021b448aa5524f820363216bc0ce2
+  - enabled: 1
+    path: Assets/Scenes/Parts/Backgrounds/4. the Depths/Cave.unity
+    guid: d1a5d400d8bc56744bd4ef144caaf26f
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
