@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -209,13 +210,20 @@ public class SceneDirector : MonoBehaviour
 
         yield return SceneManager.LoadSceneAsync(scene, LoadSceneMode.Additive);
 
+        // <b>기다리기 전에 놓는다.</b> 새 리그는 올라오자마자 첫 LateUpdate에서 플레이어를 찾는데,
+        // 그때 몸이 아직 떠나온 자리에 있으면 리그가 <b>그쪽으로</b> 한 번 맞췄다가 다시 돌아온다.
+        // 화면이 스테이지를 가로질러 훑는 것이 그것이다. 먼저 놓으면 리그가 볼 자리가 처음부터 옳다.
+        Place(place, facing);
+
         // Stage가 액티브 씬을 가져가는 것은 Start다. 한 프레임 준다.
         yield return null;
 
         if (Stage.Current == null)
             Debug.LogWarning($"[{name}] '{scene}'에 Stage가 없습니다. 하늘과 환경광이 이전 씬 것으로 남습니다.", this);
 
-        Place(place, facing);
+        // 옛 리그는 씬과 함께 사라졌다. 끊어주지 않으면 브레인이 옛 자리에서 새 자리까지 화면을 훑고 온다.
+        // <b>몸을 놓은 뒤라야 한다.</b> 먼저 부르면 리그가 아직 옛 자리를 겨냥한 상태로 굳는다.
+        CinemachineCore.ResetCameraState();
 
         _character.Movement.SetGravity(true);
 
