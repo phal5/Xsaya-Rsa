@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -256,8 +256,9 @@ public class LevelRoute : MonoBehaviour
         }
 
         // 발로는 못 딛는 높이다. 턱을 물면 손 길이만큼 위가 더 열린다 —
-        // 발이 목표보다 reachHigh 아래를 지날 때 걸리므로, 그 높이로 다시 푼다.
-        float footTarget = dy - profile.ledgeReachHigh;
+        // 다만 <b>떨어지는 중에만</b> 물리므로 reachHigh를 그대로 쓰면 안 된다.
+        // 발이 창의 아래끝(reachLow)까지 올라와야 내려오면서 창을 온전히 지나며 잡힌다.
+        float footTarget = dy - profile.ledgeReachLow;
 
         foreach (Ability plan in MotionEnvelope.Plans)
         {
@@ -342,10 +343,12 @@ public class LevelRoute : MonoBehaviour
     public int NarrowPad => pads == null || pads.Length == 0 ? NoPad : 0;
 
     /// <summary>
-    /// 아래로 뻗은 아트가 가장 짧은 것. <b>위아래로 촘촘히 쌓을 수 있는</b> 발판이다.
+    /// <b>위아래로 가장 촘촘히 쌓이는</b> 발판. 층 간격을 정하는 것은 폭이 아니라 이 값이다 —
+    /// 아래로 7 m 매달린 것을 디딤돌로 쓰면 아무리 좁아도 층을 10 m씩 벌려야 한다.
     ///
-    /// 층 간격을 정하는 것은 폭이 아니라 이 값이다 — 아래로 7 m 매달린 것을 디딤돌로 쓰면
-    /// 아무리 좁아도 층을 10 m씩 벌려야 해서, 좁고 높은 레벨에서는 한 층도 못 쌓는다.
+    /// 아트가 얼마나 늘어졌는지만 보면 안 된다. 종유석처럼 콜라이더 없는 장식은 서로 안 닿기만 하면 되지만,
+    /// 콜라이더는 그 위에 사람이 지나갈 공간까지 요구한다. 아트는 짧아도 콜라이더가 통짜인 발판이
+    /// 아트만 길게 늘어진 발판보다 더 두껍게 쌓인다. 그래서 둘 중 <b>더 큰 쪽</b>으로 잰다.
     /// </summary>
     public int ThinPad
     {
@@ -355,10 +358,22 @@ public class LevelRoute : MonoBehaviour
 
             int best = 0;
             for (int i = 1; i < pads.Length; i++)
-                if (pads[i].drop < pads[best].drop) best = i;
+                if (StackCost(i) < StackCost(best)) best = i;
 
             return best;
         }
+    }
+
+    /// <summary>같은 발판을 위아래로 겹쳐 놓을 때 벌려야 하는 높이.</summary>
+    public float StackCost(int module)
+    {
+        PadSpec pad = SpecOf(module);
+        if (!pad.Valid) return float.PositiveInfinity;
+
+        float passage = pad.colliderDrop + pad.colliderRise + RequiredClearance;
+        float art = pad.drop + pad.rise;
+
+        return Mathf.Max(passage, art);
     }
 
     /// <summary>가장 넓은 것.</summary>

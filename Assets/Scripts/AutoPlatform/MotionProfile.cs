@@ -47,8 +47,15 @@ public class MotionProfile
     /// </summary>
     public float MaxClimb => ApexHeight * 2f;
 
-    /// <summary>턱까지 써서 오를 수 있는 최대 높이.</summary>
-    public float LedgeCeiling => MaxClimb + ledgeReachHigh;
+    /// <summary>
+    /// 턱까지 써서 오를 수 있는 최대 높이.
+    ///
+    /// <b>reachHigh가 아니라 reachLow로 잰다.</b> Character_Airborne.ToLedge가 <c>if (Rising) return;</c>로
+    /// 막아 두어 <b>떨어지는 중에만</b> 물리기 때문이다. 정점에서 손끝이 닿는 높이를 한계로 잡으면,
+    /// 정작 그 자리에서는 아직 올라가는 중이라 잡히지 않는다.
+    /// 내려오며 reachLow~reachHigh 창을 지나야 걸리므로, 창의 아래끝을 기준으로 삼는다.
+    /// </summary>
+    public float LedgeCeiling => MaxClimb + ledgeReachLow;
 
     /// <summary>
     /// 도달 판정 캐시를 무르는 열쇠. 값이 하나라도 바뀌면 달라진다.

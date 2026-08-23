@@ -462,7 +462,7 @@ public static class TraversalSolver
 
         // 턱 잡기. 발이 목표보다 손 길이만큼 아래에 있을 때 물린다.
         // 가장 후한 조건인 reachHigh로 본다 — 실제 판정은 reachLow~reachHigh 사이에서 걸린다.
-        float footTarget = dy - p.ledgeReachHigh;
+        float footTarget = dy - p.ledgeReachLow;
 
         foreach (Ability plan in Plans)
         {

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -60,6 +60,9 @@ public static class RouteFromBounds
         route.main.Clear();
         route.branches.Clear();
 
+        // 장애물도 비운다. 안 비우면 생성할 때마다 쌓여 길이 점점 좁아진다.
+        route.obstacles.Clear();
+
         // 출발·도착 발판은 트리거의 폭을 그대로 쓴다. 트리거를 옮기거나 키운 것이 레벨에 나타나야 한다.
         route.main.Add(Wide("출발", start, Module(route, bounds.startModule, route.WidePad), LevelBounds.WidthOf(bounds.startTrigger)));
 
@@ -76,12 +79,37 @@ public static class RouteFromBounds
             return;
         }
 
+        // 가운데 덩어리는 길을 내기 전에 세운다. 그래야 생성기가 처음부터 피해 간다.
+        CenterObstacle(route, bounds, start, end, region);
+
         Emit(route, bounds, plan, start, end, region);
         Approach(route, bounds, plan, end, region);
         EmitBranches(route, bounds, plan, region);
         DropBrokenBranches(route);
 
         EditorUtility.SetDirty(route);
+    }
+
+    /// <summary>
+    /// 영역 한가운데에 가로로 긴 덩어리를 세운다. 경로는 이것을 넘지 못하고 옆으로 돌아간다.
+    /// </summary>
+    static void CenterObstacle(LevelRoute route, LevelBounds bounds, Vector2 start, Vector2 end, Bounds region)
+    {
+        if (!bounds.centerObstacle) return;
+
+        int module = route.WidePad;
+        if (module < 0) return;
+
+        float width = bounds.centerObstacleWidth > 0.01f
+            ? bounds.centerObstacleWidth
+            : region.size.x * 0.5f;
+
+        float y = Mathf.Lerp(start.y, end.y, bounds.centerObstacleHeight);
+
+        LevelRoute.Node slab = Wide("가운데 바위", new Vector2(region.center.x, y), module, width);
+        route.obstacles.Add(slab);
+
+        Debug.Log($"[RouteFromBounds] 가운데 장애물 — 폭 {route.HalfWidthOf(slab) * 2f:0.0} m · 높이 {y:0.0} m");
     }
 
     /// <summary>인스펙터에서 -1로 두면 그 자리에 어울리는 역할을 알아서 고른다.</summary>
@@ -121,7 +149,15 @@ public static class RouteFromBounds
     struct Plan
     {
         public float rise;
+
+        /// <summary>층과 층 사이의 높이. 한 걸음에 오르지 못할 수도 있다.</summary>
         public float turnRise;
+
+        /// <summary>그 높이를 몇 걸음에 나눠 오를지.</summary>
+        public int turnSteps;
+
+        /// <summary>한 걸음이 감당하는 높이. 도달 판정을 통과할 수 있는 크기다.</summary>
+        public float Climb => turnRise / Mathf.Max(1, turnSteps);
     }
 
     /// <summary>
@@ -136,23 +172,16 @@ public static class RouteFromBounds
         LevelRoute.PadSpec pad = route.SpecOf(Module(route, bounds.module, route.ThinPad));
         float span = Mathf.Max(1f, region.size.x - bounds.margin * 2f - pad.width);
 
-        // 꺾는 높이는 발판이 정한다.
-        //
-        // 꼭짓점은 제자리 위에 놓이므로 아래 발판과 X가 겹친다. 그러면 그 발판이 아래로 뻗은 만큼과
-        // 머리 위 여유를 합친 것보다 높이 올라가야 한다 — 고정값으로 두면 아트가 두꺼운 세트에서
-        // 꼭짓점이 전부 거부되고, 층을 접지 못해 경로가 옆으로만 뻗다 끝난다.
-        // 두 가지를 다 만족해야 한다 — 몸이 지나갈 공간(콜라이더)과, 아트끼리 안 닿는 거리.
-        // 종유석처럼 콜라이더 없는 장식은 통행을 막지 않으므로 여유를 요구하지 않는다.
-        float passage = pad.colliderDrop + pad.colliderRise + route.RequiredClearance;
-        float art = pad.drop + pad.rise;
-        float stack = Mathf.Max(passage, art) + 0.05f;
+        // 꺾는 높이는 발판이 정한다. 돌아오는 층은 아래 층 위를 지나므로, 그 발판이 겹쳐 놓일 때
+        // 벌려야 하는 높이(몸이 지나갈 공간과 아트끼리의 간격 중 큰 쪽)만큼은 올라가야 한다 —
+        // 고정값으로 두면 두꺼운 세트에서 꼭짓점이 전부 거부되고, 층을 접지 못해 옆으로만 뻗다 끝난다.
+        float stack = route.StackCost(Module(route, bounds.module, route.ThinPad)) + 0.05f;
 
-        float turnRise = Mathf.Min(Mathf.Max(TURN_RISE, stack), p.LedgeCeiling);
+        float turnRise = Mathf.Max(TURN_RISE, stack);
 
-        if (stack > p.LedgeCeiling)
-            Warn($"[RouteFromBounds] '{pad.name}'은 위아래로 겹치려면 {stack:0.00} m가 필요한데 "
-                + $"(지나갈 공간 {passage:0.00} · 아트 {art:0.00}) "
-                + $"한 번에 오를 수 있는 최대는 {p.LedgeCeiling:0.00} m다. 층을 접지 못한다.");
+        // 한 걸음으로 못 오르면 층 사이를 낮춰 잡는 대신 계단으로 나눈다.
+        // 낮춰 잡으면 위층이 아래층 머리를 막아 배치가 통째로 거부되고, 경로가 옆으로만 뻗다 끝난다.
+        int turnSteps = Mathf.Max(1, Mathf.CeilToInt(turnRise / p.LedgeCeiling - 0.001f));
         float rise = p.ApexHeight * 0.9f;
 
         for (int attempt = 0; attempt < 6; attempt++)
@@ -168,7 +197,7 @@ public static class RouteFromBounds
             rise = next;
         }
 
-        return new Plan { rise = rise, turnRise = turnRise };
+        return new Plan { rise = rise, turnRise = turnRise, turnSteps = turnSteps };
     }
 
     #endregion
@@ -277,8 +306,7 @@ public static class RouteFromBounds
             {
                 case Kind.Leg:
                     Run(route, bounds, plan, section, ref direction, plan.rise, region);
-                    direction = -direction;
-                    Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.turnRise, region, "꺾임");
+                    Turn(route, bounds, route.PadByRank(section.rank), ref direction, plan, region);
                     break;
 
                 case Kind.Terrace:
@@ -287,7 +315,7 @@ public static class RouteFromBounds
 
                 case Kind.Tower:
                     for (int i = 0; i < section.steps; i++)
-                        Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.turnRise, region, "탑");
+                        Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.Climb, region, "탑");
                     break;
 
                 case Kind.Dip:
@@ -326,8 +354,7 @@ public static class RouteFromBounds
             // 벽에 닿았거나 자리가 없다. 꼭짓점을 하나 세우고 반대쪽으로 남은 걸음을 잇는다.
             if (++bounces > 1) return;
 
-            direction = -direction;
-            if (!Step(route, bounds, route.PadByRank(section.rank), ref direction, plan.turnRise, region, "꺾임")) return;
+            if (!Turn(route, bounds, route.PadByRank(section.rank), ref direction, plan, region)) return;
 
             i--;
         }
@@ -409,7 +436,7 @@ public static class RouteFromBounds
         float right = region.max.x - bounds.margin;
 
         // 앞을 막도록 나아가던 쪽에 세운다. 오르는 발판이 들어갈 틈은 남긴다.
-        float lane = RouteShapes.StepDistance(p, plan.turnRise, bounds.spacing);
+        float lane = RouteShapes.StepDistance(p, plan.Climb, bounds.spacing);
         float x = anchor.position.x + direction * (route.HalfWidthOf(anchor) + lane + half);
 
         if (x - half < left || x + half > right) return;
@@ -437,7 +464,7 @@ public static class RouteFromBounds
     {
         MotionProfile p = route.profile;
         float width = wall.padWidth;
-        float lane = RouteShapes.StepDistance(p, plan.turnRise, bounds.spacing);
+        float lane = RouteShapes.StepDistance(p, plan.Climb, bounds.spacing);
 
         route.obstacles.Add(wall);
 
@@ -446,15 +473,46 @@ public static class RouteFromBounds
         while (Last(route).position.y < top + p.characterHeight && guard++ < 8)
         {
             float climb = direction;
-            if (Step(route, bounds, route.ThinPad, ref climb, plan.turnRise, region, "벽타기")) continue;
+            if (Step(route, bounds, route.ThinPad, ref climb, plan.Climb, region, "벽타기")) continue;
 
             climb = -direction;
-            if (!Step(route, bounds, route.ThinPad, ref climb, plan.turnRise, region, "벽타기")) break;
+            if (!Step(route, bounds, route.ThinPad, ref climb, plan.Climb, region, "벽타기")) break;
         }
 
         // 다 올랐으면 벽 너머로 건너간다.
         Place(route, bounds, route.ThinPad, ref direction, 0f,
             width + lane, region, "벽넘기");
+    }
+
+    /// <summary>
+    /// 층에서 다음 층으로 올라선다.
+    ///
+    /// 한 걸음에 오를 수 있는 층이면 예전처럼 돌아선 자리에서 한 번에 올린다.
+    /// 그러지 못하는 두꺼운 발판이면 <b>나아가던 쪽으로</b> 계단을 놓아 오른 뒤에 돌아선다 —
+    /// 층 바깥이라 아래를 막지 않으므로, 돌아서서 쌓다 제 머리를 치는 일이 없다.
+    /// </summary>
+    static bool Turn(LevelRoute route, LevelBounds bounds, int module,
+        ref float direction, Plan plan, Bounds region)
+    {
+        if (plan.turnSteps <= 1)
+        {
+            direction = -direction;
+            return Step(route, bounds, module, ref direction, plan.turnRise, region, "꺾임");
+        }
+
+        float each = plan.Climb;
+
+        for (int i = 0; i < plan.turnSteps; i++)
+        {
+            if (Step(route, bounds, module, ref direction, each, region, "계단")) continue;
+
+            // 벽에 막혔다. 돌아서서 마저 오른다.
+            direction = -direction;
+            if (!Step(route, bounds, module, ref direction, each, region, "계단")) return false;
+        }
+
+        direction = -direction;
+        return true;
     }
 
     /// <summary>기본 걸음. 이 높이에 맞는 거리를 도달 구간에서 뽑아 놓는다.</summary>
@@ -535,8 +593,8 @@ public static class RouteFromBounds
             // 마지막 한 걸음을 못 놓아 레벨 전체가 끊긴다.
             float[] rises =
             {
-                Mathf.Clamp(remaining, -plan.turnRise, Mathf.Min(plan.rise, plan.turnRise)),
-                plan.turnRise,
+                Mathf.Clamp(remaining, -plan.turnRise, Mathf.Min(plan.rise, plan.Climb)),
+                plan.Climb,
                 plan.rise,
                 0f,
                 -plan.turnRise,
@@ -573,7 +631,7 @@ public static class RouteFromBounds
     {
         if (bounds.branches <= 0) return;
 
-        float maxRise = Mathf.Min(plan.turnRise, route.profile.MaxClimb);
+        float maxRise = Mathf.Min(plan.Climb, route.profile.MaxClimb);
 
         // 건너뛰는 양에 위쪽 뚜껑을 씌운다. 가장 많이 건너뛰는 것을 고르면 곁길이 아니라
         // 레벨을 통째로 우회하는 두 번째 본선이 되어, 주 경로가 아무도 안 가는 길이 된다.
@@ -588,22 +646,35 @@ public static class RouteFromBounds
             int chosen = -1;
             int bestDistance = int.MaxValue;
 
+            bool chosenIsBow = false;
+
             for (int j = cursor + least; j <= cursor + most && j < route.main.Count - 1; j++)
             {
                 LevelRoute.Node from = route.main[cursor];
                 LevelRoute.Node to = route.main[j];
 
-                if (to.position.y - from.position.y <= maxRise) continue;
-                if (Mathf.Abs(to.position.x - from.position.x) > BRANCH_DRIFT) continue;
+                float dy = to.position.y - from.position.y;
+                float dx = Mathf.Abs(to.position.x - from.position.x);
+
+                // 두 갈래를 본다.
+                //   세로 지름길 — 위아래로 겹치는 짝을 곧게 잇는다.
+                //   가로 분기   — 옆으로 나란한 짝을 위나 아래로 활처럼 휘어 돌아간다.
+                bool shaft = dy > maxRise && dx <= BRANCH_DRIFT;
+                bool bow = dx > BRANCH_DRIFT && Mathf.Abs(dy) <= maxRise * 2f;
+
+                if (!shaft && !bow) continue;
 
                 int distance = Mathf.Abs((j - cursor) - least);
                 if (distance >= bestDistance) continue;
 
                 chosen = j;
+                chosenIsBow = bow && !shaft;
                 bestDistance = distance;
             }
 
-            if (chosen >= 0 && Shaft(route, bounds, region, cursor, chosen, maxRise))
+            if (chosen >= 0 && (chosenIsBow
+                ? Bow(route, bounds, region, cursor, chosen, maxRise)
+                : Shaft(route, bounds, region, cursor, chosen, maxRise)))
             {
                 made++;
                 cursor = chosen;
@@ -612,6 +683,73 @@ public static class RouteFromBounds
 
             cursor++;
         }
+    }
+
+    /// <summary>
+    /// 가로로 갈라지는 분기. 나란한 두 지점 사이를 위나 아래로 활처럼 휘어 잇는다.
+    ///
+    /// 곁길은 지름길만이 아니다 — 같은 곳으로 가는 <b>다른 길</b>이면 된다.
+    /// 세로로 겹치는 짝만 찾으면, 굴이 넓어져 경로가 가로로 퍼지는 순간 곁길이 하나도 안 생긴다.
+    /// </summary>
+    static bool Bow(LevelRoute route, LevelBounds bounds, Bounds region, int fromIndex, int toIndex, float maxRise)
+    {
+        LevelRoute.Node from = route.main[fromIndex];
+        LevelRoute.Node to = route.main[toIndex];
+
+        float left = region.min.x + bounds.margin;
+        float right = region.max.x - bounds.margin;
+
+        // 위로 휘는 것과 아래로 휘는 것을 둘 다 시도한다.
+        foreach (float lift in new[] { maxRise, -maxRise, maxRise * 1.6f, -maxRise * 1.6f })
+        {
+            for (int steps = 3; steps <= 5; steps++)
+            {
+                LevelRoute.Branch branch = new LevelRoute.Branch
+                {
+                    name = $"곁길 {fromIndex}→{toIndex}",
+                    fromIndex = fromIndex,
+                    rejoinIndex = toIndex,
+                };
+
+                route.branches.Add(branch);
+
+                bool laid = true;
+                for (int k = 1; k < steps && laid; k++)
+                {
+                    float t = (float)k / steps;
+
+                    // 활 모양 — 가운데가 가장 많이 휜다.
+                    float bulge = Mathf.Sin(t * Mathf.PI) * lift;
+
+                    float x = Mathf.Lerp(from.position.x, to.position.x, t);
+                    float y = Mathf.Lerp(from.position.y, to.position.y, t) + bulge;
+
+                    LevelRoute.Node previous = k == 1 ? from : branch.nodes[k - 2];
+                    float half = route.HalfWidthOf(previous);
+
+                    LevelRoute.Node candidate = Node($"곁길 {k}",
+                        new Vector2(Mathf.Clamp(x, left + half, right - half), y),
+                        Module(route, bounds.module, route.ThinPad));
+
+                    // 한 걸음이라도 놓지 못하면 이 활은 버린다.
+                    // 건너뛰고 다음으로 넘어가면 목록과 걸음 번호가 어긋난다.
+                    if (!route.Fits(candidate)
+                        || !route.HoldReach(previous, candidate, out _, out _, out _, out _, out _))
+                    {
+                        laid = false;
+                        break;
+                    }
+
+                    branch.nodes.Add(candidate);
+                }
+
+                if (laid && branch.nodes.Count == steps - 1 && Walkable(route, branch)) return true;
+
+                route.branches.Remove(branch);
+            }
+        }
+
+        return false;
     }
 
     static bool Shaft(LevelRoute route, LevelBounds bounds, Bounds region, int fromIndex, int toIndex, float maxRise)

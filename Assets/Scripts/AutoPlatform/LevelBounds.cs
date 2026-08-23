@@ -45,6 +45,21 @@ public class LevelBounds : MonoBehaviour
     [Tooltip("두꺼운 발판을 길목에 세워 넘어가지 못하게 한다. 옆으로 타고 올라야 지나갈 수 있다.")]
     public bool walls = true;
 
+    /// <summary>
+    /// 영역 한가운데에 가로로 긴 덩어리를 세운다.
+    ///
+    /// 경로를 만들기 <b>전에</b> 놓으므로, 생성기는 처음부터 그 자리를 피해 길을 낸다 —
+    /// 나중에 얹으면 이미 놓인 발판과 부딪힐 뿐 돌아가지 않는다.
+    /// </summary>
+    [Tooltip("가운데에 가로로 긴 장애물을 세워 경로가 빙 돌아가게 한다.")]
+    public bool centerObstacle = false;
+
+    [Tooltip("가운데 장애물의 폭. 0이면 영역 폭의 절반.")]
+    [Min(0f)] public float centerObstacleWidth = 0f;
+
+    [Tooltip("가운데 장애물의 높이. 출발 0, 도착 1 사이에서 고른다.")]
+    [Range(0.2f, 0.8f)] public float centerObstacleHeight = 0.5f;
+
     [Header("반드시 들어가야 할 구간")]
     [Tooltip("씨앗은 뽑기라 무엇이 나올지 정해지지 않는다. 여기 켠 것이 다 나올 때까지 씨앗을 훑는다.")]
     public bool requireDash = true;
