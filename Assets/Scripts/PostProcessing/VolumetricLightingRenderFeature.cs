@@ -9,15 +9,19 @@ using UnityEngine.Rendering.RenderGraphModule;
 ///
 ///   <see cref="ShadowVolume"/>          darkens whatever is rendered inside the box.
 ///   <see cref="VolumetricFogVolume"/>   raymarches in-scattered light inside the box.
+///   <see cref="VisionMask"/>            darkens the whole view except around reveal sources.
 ///
-/// Both live in one feature so the shade always resolves before the fog is added, without
-/// depending on the order of the renderer's feature list. Neither pass is enqueued when no
-/// matching volume is in view.
+/// They live in one feature so the order is fixed without depending on the renderer's feature
+/// list: shade the boxes, add the fog on top, then mask everything the player should not see.
+/// A pass is never enqueued when nothing of its kind is in view.
 /// </summary>
 public class VolumetricLightingRenderFeature : ScriptableRendererFeature
 {
     // Must match MAX_FOG_VOLUMES / MAX_SHADOW_VOLUMES in the shaders.
     private const int kMaxVolumes = 8;
+
+    // Must match MAX_REVEAL_SOURCES in VisionMask.shader.
+    private const int kMaxRevealSources = 4;
 
     [System.Serializable]
     public class Settings
@@ -33,17 +37,22 @@ public class VolumetricLightingRenderFeature : ScriptableRendererFeature
 
         [Tooltip("Shadow volume material, uses Hidden/Custom/ShadowVolume.")]
         public Material shadowVolumeMaterial = null;
+
+        [Tooltip("Vision mask material, uses Hidden/Custom/VisionMask.")]
+        public Material visionMaskMaterial = null;
     }
 
     public Settings settings = new Settings();
 
     private VolumetricLightingPass m_ScriptablePass;
     private ShadowVolumePass m_ShadowVolumePass;
+    private VisionMaskPass m_VisionMaskPass;
 
     public override void Create()
     {
         m_ScriptablePass = new VolumetricLightingPass(settings);
         m_ShadowVolumePass = new ShadowVolumePass(settings);
+        m_VisionMaskPass = new VisionMaskPass(settings);
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -59,6 +68,13 @@ public class VolumetricLightingRenderFeature : ScriptableRendererFeature
         {
             m_ScriptablePass.ConfigureInput(ScriptableRenderPassInput.Color | ScriptableRenderPassInput.Depth);
             renderer.EnqueuePass(m_ScriptablePass);
+        }
+
+        // Enqueued last so the mask also hides the fog the player should not see.
+        if (settings.visionMaskMaterial != null && VisionMask.ActiveMasks.Count > 0)
+        {
+            m_VisionMaskPass.ConfigureInput(ScriptableRenderPassInput.Color | ScriptableRenderPassInput.Depth);
+            renderer.EnqueuePass(m_VisionMaskPass);
         }
     }
 
@@ -211,6 +227,86 @@ public class VolumetricLightingRenderFeature : ScriptableRendererFeature
             material.SetVectorArray(s_TintId, m_Tints);
 
             BlitThroughMaterial(renderGraph, frameData, material, "ShadowVolumePass", false);
+        }
+    }
+
+    class VisionMaskPass : ScriptableRenderPass
+    {
+        private static readonly int s_MaskColorId = Shader.PropertyToID("_VisionMaskColor");
+        private static readonly int s_RevealCountId = Shader.PropertyToID("_VisionRevealCount");
+        private static readonly int s_RevealSphereId = Shader.PropertyToID("_VisionRevealSphere");
+        private static readonly int s_RevealParamsId = Shader.PropertyToID("_VisionRevealParams");
+
+        private readonly Settings m_Settings;
+        private readonly Vector4[] m_RevealSpheres = new Vector4[kMaxRevealSources];
+        private readonly Vector4[] m_RevealParams = new Vector4[kMaxRevealSources];
+        private readonly List<VisionRevealSource> m_Reveals = new List<VisionRevealSource>(kMaxRevealSources);
+
+        public VisionMaskPass(Settings settings)
+        {
+            m_Settings = settings;
+            renderPassEvent = settings.renderPassEvent;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            Material material = m_Settings.visionMaskMaterial;
+            if (material == null)
+                return;
+
+            VisionMask mask = VisionMask.Resolve();
+            if (mask == null)
+                return;
+
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+            Vector3 cameraPos = cameraData.camera.transform.position;
+
+            Color multiplier = mask.ResolveMultiplier();
+            material.SetVector(s_MaskColorId,
+                new Vector4(multiplier.r, multiplier.g, multiplier.b, mask.affectSky ? 1f : 0f));
+
+            material.SetInt(s_RevealCountId, CollectReveals(cameraPos));
+            material.SetVectorArray(s_RevealSphereId, m_RevealSpheres);
+            material.SetVectorArray(s_RevealParamsId, m_RevealParams);
+
+            BlitThroughMaterial(renderGraph, frameData, material, "VisionMaskPass", false);
+        }
+
+        /// <summary>Packs the nearest <see cref="kMaxRevealSources"/> reveal spheres for the shader.</summary>
+        private int CollectReveals(Vector3 cameraPos)
+        {
+            m_Reveals.Clear();
+
+            IReadOnlyList<VisionRevealSource> sources = VisionRevealSource.ActiveSources;
+            for (int i = 0; i < sources.Count; i++)
+            {
+                VisionRevealSource source = sources[i];
+                if (source != null && source.IsValid())
+                    m_Reveals.Add(source);
+            }
+
+            if (m_Reveals.Count > kMaxRevealSources)
+            {
+                m_Reveals.Sort((a, b) =>
+                    (a.PositionWS - cameraPos).sqrMagnitude.CompareTo((b.PositionWS - cameraPos).sqrMagnitude));
+                m_Reveals.RemoveRange(kMaxRevealSources, m_Reveals.Count - kMaxRevealSources);
+            }
+
+            for (int i = 0; i < m_Reveals.Count; i++)
+            {
+                VisionRevealSource source = m_Reveals[i];
+                Vector3 p = source.PositionWS;
+                m_RevealSpheres[i] = new Vector4(p.x, p.y, p.z, source.radius);
+                m_RevealParams[i] = new Vector4(source.InnerRadius, source.strength, 0f, 0f);
+            }
+
+            for (int i = m_Reveals.Count; i < kMaxRevealSources; i++)
+            {
+                m_RevealSpheres[i] = Vector4.zero;
+                m_RevealParams[i] = Vector4.zero;
+            }
+
+            return m_Reveals.Count;
         }
     }
 

@@ -18,6 +18,7 @@ MonoBehaviour:
     passMaterial: {fileID: 2100000, guid: 67d3dd702942d7a41934ef860420eb31, type: 2}
     jitterIntensity: 1
     shadowVolumeMaterial: {fileID: 2100000, guid: 83ce6cd2e1f67e04a92e83377ae0e8c7, type: 2}
+    visionMaskMaterial: {fileID: 2100000, guid: 132ca8abe45184449942f407eb3eede8, type: 2}
 --- !u!114 &-4760703493290278693
 MonoBehaviour:
   m_ObjectHideFlags: 0
