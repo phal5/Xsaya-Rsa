@@ -39,7 +39,12 @@ public class DamagableBase : MonoBehaviour, IDamageable
         if (Invulnerable) return;
 
         damageAmount *= _damageScale;
-        CurrentHealth -= damageAmount;
+
+        // 0 아래로 내려보내지 않는다. 남은 체력을 비율로 읽는 쪽이 있어서,
+        // 과잉 피해가 음수 비율이 되어 흘러나간다. 낙사는 피해가 무한대라 체력이 -∞가 되고,
+        // 그것을 배속으로 환산하면 0이 되어 시간이 아예 멎는다.
+        // 죽었는지는 아래에서 0 이하로 판정하므로 여기서 잘라도 그대로 성립한다.
+        CurrentHealth = Mathf.Max(CurrentHealth - damageAmount, 0f);
 
         Debug.Log($"{gameObject.name} took {damageAmount:F1} damage!");
 

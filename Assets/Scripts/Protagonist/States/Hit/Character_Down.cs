@@ -3,6 +3,9 @@
 /// <summary>
 /// 사망(다운). 체력이 0이 되면 들어오고, RespawnDelay 뒤에 마지막 체크포인트에서 일어나 조작으로 돌아간다.
 ///
+/// <b>여기만 벽시계로 돈다.</b> 시간 배속이 체력을 따라가므로 죽은 자리에서는 화면이 느려지거나 멎는데,
+/// 일어나는 시각까지 그것을 따라가면 부활이 늦어지거나 아예 오지 않는다.
+///
 /// <b>CharacterRoot 직속</b>이다. 피격을 거쳐 들어오는 것이 보통이지만 피격에 속하지 않으므로,
 /// 낙사나 함정처럼 때린 주체가 없는 죽음도 <see cref="CharacterRoot.ToDown"/> 하나로 들어온다.
 ///
@@ -15,7 +18,9 @@ public class Character_Down : BaseCharacterState
 
     public override void Enter()
     {
-        _reviveTime = Time.time + characterManager.RespawnDelay;
+        // 벽시계로 잰다. 시간 배속이 체력을 따라가는 설계라 죽는 순간 배속이 바닥을 치는데,
+        // 되살아나는 시계까지 거기 묶이면 일어나는 시각이 체력에 따라 달라진다.
+        _reviveTime = Time.unscaledTime + characterManager.RespawnDelay;
         characterManager.Animation.Play("Down");
 
         // 조종만 잃는다. 쓰러지기 직전 속도는 그대로 흘러야 한다.
@@ -25,10 +30,18 @@ public class Character_Down : BaseCharacterState
         if (characterManager.Damagable != null) characterManager.Damagable.Invulnerable = true;
     }
 
+    /// <summary>
+    /// 전이는 <b>여기서</b> 본다. FixedUpdate는 timeScale이 0이면 아예 돌지 않아,
+    /// 거기 걸어두면 시간이 멎은 판에서 영영 일어나지 못한다. Update는 배속과 무관하게 돈다.
+    /// </summary>
+    public override void UpdateState()
+    {
+        Transitions();
+    }
+
     public override void FixedUpdateState()
     {
         characterManager.Steering.Coast();
-        Transitions();
     }
 
     public override void Exit()
@@ -38,7 +51,7 @@ public class Character_Down : BaseCharacterState
 
     public override void Transitions()
     {
-        if (Time.time < _reviveTime) return;
+        if (Time.unscaledTime < _reviveTime) return;
 
         // 옮기기가 이 프레임에 끝났을 때만 조작을 돌려준다.
         // 쉬어간 자리가 다른 스테이지면 씬이 올라오는 동안 director가 붙들고 있다가 직접 푼다.
