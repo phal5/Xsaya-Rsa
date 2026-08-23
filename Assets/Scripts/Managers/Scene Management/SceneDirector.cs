@@ -26,11 +26,27 @@ public class SceneDirector : MonoBehaviour
     [SerializeField] CharacterRoot _root;
 
     [Header("Initial Rest")]
-    [Tooltip("한 번도 쉬어가기 전에 죽었을 때 설 자리. 씬은 시작할 때 올라와 있던 무대로 잡는다.")]
+#if UNITY_EDITOR
+    [Tooltip("처음 부활 지점이 놓인 씬. 꽂으면 아래 이름 칸이 채워진다. 비워두면 시작 무대를 쓴다.")]
+    [SerializeField] UnityEditor.SceneAsset _initialSceneAsset;
+#endif
+
+    [Tooltip("처음 부활 지점이 놓인 씬의 이름. 비어 있으면 시작할 때 올라와 있던 무대를 쓴다.")]
+    [SerializeField] string _initialScene;
+
+    [Tooltip("한 번도 쉬어가기 전에 죽었을 때 설 자리.")]
     [SerializeField] Vector3 _initialPlace = new Vector3(0f, 0.75f, 0f);
 
     [Tooltip("그때 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다.")]
     [SerializeField] Vector3 _initialFacing = new Vector3(1f, 0f, 0f);
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        // 씬 에셋은 빌드에 남지 않는다. 이름을 여기서 뽑아 적어둬야 빌드가 부를 수 있다.
+        if (_initialSceneAsset != null) _initialScene = _initialSceneAsset.name;
+    }
+#endif
 
     /// <summary>씬을 부르는 중인지. 관문을 두 번 밟는 것을 여기서 흘린다.</summary>
     public bool Busy { get; private set; }
@@ -44,22 +60,29 @@ public class SceneDirector : MonoBehaviour
     /// <summary>
     /// 아직 아무 데도 쉬어가지 않은 처음 상태를 채운다.
     ///
-    /// <b>씬 이름은 인스펙터에 적지 않는다.</b> 시작 무대는 에디터에서 무엇을 열어놓고 Play했느냐로
-    /// 갈리는데, 적어두면 그 둘이 어긋나는 날 아무 예고 없이 다른 씬을 부른다.
-    /// 올라와 있는 무대를 그대로 쓰면 어긋날 자리가 없다.
+    /// 씬을 적어두면 그것을 쓰고, 비워두면 시작할 때 올라와 있던 무대를 쓴다.
+    /// 비워두는 쪽이 안전한 기본값이다 — 무엇을 열어놓고 Play하든 갈 곳이 있고, 어긋날 자리가 없다.
+    /// 적어두는 쪽은 <b>처음 부활 지점이 특정 스테이지에 있을 때</b> 쓴다.
     ///
     /// Awake가 아니라 Start다. 무대의 등록이 Awake에서 이뤄지므로 그보다 늦어야 한다.
     /// </summary>
     void Start()
     {
-        if (Stage.Current == null)
+        string scene = _initialScene;
+
+        if (string.IsNullOrEmpty(scene))
         {
-            Debug.LogWarning($"[{name}] 시작 시 무대가 없어 초기 부활 지점을 잡지 못했습니다. " +
-                             "쉬어가기 전에 죽으면 쓰러진 자리에서 그대로 일어납니다.", this);
-            return;
+            if (Stage.Current == null)
+            {
+                Debug.LogWarning($"[{name}] 시작 시 무대가 없어 초기 부활 지점을 잡지 못했습니다. " +
+                                 "쉬어가기 전에 죽으면 쓰러진 자리에서 그대로 일어납니다.", this);
+                return;
+            }
+
+            scene = Stage.Current.gameObject.scene.name;
         }
 
-        _restScene = Stage.Current.gameObject.scene.name;
+        _restScene = scene;
         _restPlace = _initialPlace;
 
         // 방향 벡터를 회전으로 바꾼다. 0 벡터는 LookRotation이 받지 못하므로 정면으로 둔다.
