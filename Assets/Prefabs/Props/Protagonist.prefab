@@ -2084,13 +2084,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3229401152797900431}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3886442309561623773}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!114 &7229486423097562362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2105,7 +2105,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponEffectSpawner
   effect: {fileID: 8960971173521281733, guid: 283daa0b308c5104ea07156fb1f464da, type: 3}
   spawnPoint: {fileID: 554519630919030552}
-  followWeapon: 1
+  followWeapon: 0
   lifetime: 0
   effectEnabled: 1
 --- !u!1 &3230280336425901716
@@ -3337,6 +3337,7 @@ GameObject:
   - component: {fileID: 2852939028919057743}
   - component: {fileID: 8979077100044838613}
   - component: {fileID: 3049119711428009269}
+  - component: {fileID: 7742266037714327986}
   m_Layer: 0
   m_Name: Weapon
   m_TagString: Untagged
@@ -3404,6 +3405,23 @@ MonoBehaviour:
   damage: 25
   weaponCollider: {fileID: 8979077100044838613}
   weilder: {fileID: 7243969750857547376}
+--- !u!114 &7742266037714327986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4430420950507058271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8170869aea2be479b4dc3300c52900, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponEffectSpawner
+  effect: {fileID: 5955185567111014255, guid: 9156497bffb41c9488969cf93bacbe97, type: 3}
+  spawnPoint: {fileID: 4844310835471661013}
+  followWeapon: 0
+  lifetime: 0
+  effectEnabled: 1
 --- !u!1 &4452541681456163585
 GameObject:
   m_ObjectHideFlags: 0
@@ -4609,6 +4627,37 @@ Transform:
   - {fileID: 6083704836689974298}
   m_Father: {fileID: 2479977572012391532}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5870091252910584943
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4844310835471661013}
+  m_Layer: 0
+  m_Name: HitAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4844310835471661013
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5870091252910584943}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.76, y: 0.08, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3886442309561623773}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6156752404711456480
 GameObject:
   m_ObjectHideFlags: 0
@@ -5334,6 +5383,7 @@ Transform:
   - {fileID: 8417780979050310807}
   - {fileID: 3553028544719137794}
   - {fileID: 554519630919030552}
+  - {fileID: 4844310835471661013}
   m_Father: {fileID: 3648719395768040299}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: -9.992}
 --- !u!33 &3008781207831943402

@@ -25,9 +25,11 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _EdgeSoftness: 0.3
-    - _HeadBias: 0.35
-    - _Strength: 0.15
+    - _Chroma: 5
+    - _EdgeSoftness: 0.5
+    - _HeadBias: 0
+    - _Shade: 1
+    - _Strength: 0.5
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -4,13 +4,22 @@
 // 반원 메시의 UV는 U가 호를 따라가는 각도, V가 날의 폭이라 텍스처 없이 마스크가 나온다.
 //
 // 화면을 읽으려면 URP 애셋의 Opaque Texture가 켜져 있어야 한다. PC_RPAsset은 켜져 있다.
+//
+// 순차로 드러나는 것은 파티클 나이를 받아서 한다. 파티클 시스템 렌더러의 Custom Vertex Streams에
+// AgePercent가 UV 다음에 꽂혀 있어야 TEXCOORD0.z로 들어온다. 빠져 있으면 z가 0으로 고정되어
+// 아무것도 드러나지 않는다 — 이펙트가 통째로 안 보이면 여기부터 본다.
 Shader "Custom/SlashDistortion"
 {
     Properties
     {
-        _Strength ("왜곡 세기", Range(0, 0.5)) = 0.15
+        _Strength ("왜곡 세기", Range(0, 2)) = 0.15
         _EdgeSoftness ("가장자리 무르기", Range(0.01, 0.5)) = 0.3
         _HeadBias ("머리 쪽 쏠림", Range(0, 1)) = 0.35
+        _Chroma ("채도 강조 n", Range(-1, 5)) = 1.5
+        _Shade ("밝기 치우침 (-검게 / +희게)", Range(-1, 1)) = 0
+        _RevealTime ("드러나는 데 쓰는 수명 비율", Range(0.05, 1)) = 0.4
+        _RevealSoftness ("드러나는 경계 무르기", Range(0.001, 0.5)) = 0.08
+        _RevealFlip ("반대쪽부터 드러내기", Range(0, 1)) = 0
     }
 
     SubShader
@@ -41,14 +50,14 @@ Shader "Custom/SlashDistortion"
             struct Attributes
             {
                 float4 positionOS : POSITION;
-                float2 uv : TEXCOORD0;
+                float4 uv : TEXCOORD0;   // xy 메시 UV, z 파티클 나이(AgePercent 스트림)
                 half4 color : COLOR;
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
+                float3 uv : TEXCOORD0;
                 float4 screenPos : TEXCOORD1;
                 half4 color : COLOR;
             };
@@ -57,6 +66,11 @@ Shader "Custom/SlashDistortion"
                 float _Strength;
                 float _EdgeSoftness;
                 float _HeadBias;
+                float _Chroma;
+                float _Shade;
+                float _RevealTime;
+                float _RevealSoftness;
+                float _RevealFlip;
             CBUFFER_END
 
             Varyings Vertex(Attributes input)
@@ -66,7 +80,7 @@ Shader "Custom/SlashDistortion"
                 VertexPositionInputs positions = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionCS = positions.positionCS;
                 output.screenPos = positions.positionNDC;
-                output.uv = input.uv;
+                output.uv = input.uv.xyz;
                 output.color = input.color;
 
                 return output;
@@ -74,6 +88,17 @@ Shader "Custom/SlashDistortion"
 
             half4 Fragment(Varyings input) : SV_Target
             {
+                // 얇은 끝(U=0)에서 넓은 끝(U=1)으로 쓸어 드러낸다. 아직 오지 않은 자리는
+                // 반투명하게 두지 않고 아예 버린다 — 남겨두면 호 전체가 옅게 미리 보여서
+                // 순차로 그어지는 것이 아니라 통째로 나타났다 진해지는 것으로 읽힌다.
+                float head = saturate(input.uv.z / max(_RevealTime, 1e-4));
+                float along = lerp(input.uv.x, 1.0 - input.uv.x, _RevealFlip);
+                float edge = head * (1.0 + _RevealSoftness) - along;
+
+                clip(edge);
+
+                float reveal = saturate(edge / max(_RevealSoftness, 1e-4));
+
                 float2 screenUV = input.screenPos.xy / input.screenPos.w;
 
                 // 네 가장자리를 모두 무르게 만든다. 딱 끊으면 왜곡된 자리와 아닌 자리 사이에
@@ -87,7 +112,7 @@ Shader "Custom/SlashDistortion"
                 float tail = lerp(1.0, 1.0 - input.uv.x, _HeadBias);
 
                 // 파티클 알파를 그대로 받는다. Color over Lifetime으로 사라지게 할 수 있다.
-                float presence = alongArc * acrossBlade * tail * input.color.a;
+                float presence = alongArc * acrossBlade * tail * input.color.a * reveal;
 
                 // 날의 폭 방향이 화면에서 어느 쪽인지는 UV의 화면 미분이 알려준다.
                 // 메시가 어떤 각도로 놓이든, 심지어 회전 중이어도 따라온다.
@@ -105,7 +130,22 @@ Shader "Custom/SlashDistortion"
 
                 half3 scene = SampleSceneColor(saturate(screenUV + offset));
 
-                return half4(scene, presence);
+                // 굴곡이 큰 자리일수록 색이 짙어진다. 굴곡은 가장자리에서 0이므로
+                // 겉으로 갈수록 저절로 옅어지고, 따로 마스크를 곱해줄 필요가 없다.
+                float bend = abs(lens) * presence;
+
+                // 세 채널의 평균에서 얼마나 떨어져 있는지가 그 색의 치우침이다.
+                // 그 치우침을 n배 더 얹으면 회색에서 멀어진다 — n이 음수면 반대로 회색에 가까워진다.
+                float v = (scene.r + scene.g + scene.b) * (1.0 / 3.0);
+                half3 tinted = scene + (scene - v) * (_Chroma * bend);
+
+                // 굴곡이 큰 자리를 검거나 희게 민다. 채도를 올린 뒤에 얹으므로,
+                // 짙어진 색이 그대로 밝아지거나 어두워진다. 0이면 아무 일도 일어나지 않는다.
+                half3 target = saturate(sign(_Shade));          // 양수면 흰색, 음수면 검은색
+                half3 shaded = lerp(tinted, target, saturate(abs(_Shade) * bend));
+
+                // 아래로만 막는다. 위를 자르면 HDR 밝은 자리가 뭉개진다.
+                return half4(max(shaded, 0.0), presence);
             }
             ENDHLSL
         }

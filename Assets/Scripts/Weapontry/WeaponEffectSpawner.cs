@@ -46,15 +46,43 @@ public class WeaponEffectSpawner : MonoBehaviour
     /// 이번만 다른 이펙트를 세운다. 연속 베기의 1타·2타·3타처럼 <b>같은 무기가 타마다 다른 것을
     /// 뿌려야 할 때</b> 쓴다. 이것을 위해 스포너를 여러 개 붙이면 어느 것이 켜져 있는지 알기 어려워진다.
     /// </summary>
-    public void Play(GameObject effectOverride)
+    public void Play(GameObject effectOverride) => Spawn(effectOverride, null);
+
+    /// <summary>
+    /// 무기 자리가 아니라 <b>맞은 자리</b>에 세운다. 때린 쪽이 부른다.
+    ///
+    /// 맞은 쪽에서 부르지 않는 이유는 그쪽이 무엇에 맞았는지 모르기 때문이다.
+    /// IDamageable은 숫자 하나만 받으므로 방향도 무기도 알 수 없고,
+    /// KillVolume도 같은 길로 들어와 구덩이에 떨어진 것이 베인 것으로 보이게 된다.
+    /// </summary>
+    public void PlayAt(Vector3 position) => Spawn(effect, position);
+
+    /// <summary>
+    /// 맞은 콜라이더에서 무기와 가장 가까운 지점에 세운다.
+    ///
+    /// 트리거 충돌은 접점을 주지 않아서 — OnTriggerEnter가 넘기는 것은 상대 콜라이더뿐이다 —
+    /// 여기서 가장 가까운 점으로 대신한다. 다만 상대가 <b>볼록하지 않은 MeshCollider</b>면
+    /// Unity가 조용히 중심점을 돌려주므로, 그런 적에게는 몸통 한가운데에 뜬다.
+    /// </summary>
+    public void PlayAt(Collider target)
     {
-        if (!effectEnabled || effectOverride == null) return;
+        if (target == null) return;
+
+        Transform where = spawnPoint != null ? spawnPoint : transform;
+
+        PlayAt(target.ClosestPoint(where.position));
+    }
+
+    /// <summary>자리를 넘기지 않으면 무기 자리에 선다. 회전은 어느 쪽이든 무기를 따른다.</summary>
+    void Spawn(GameObject prefab, Vector3? position)
+    {
+        if (!effectEnabled || prefab == null) return;
 
         Transform where = spawnPoint != null ? spawnPoint : transform;
 
         GameObject spawned = Instantiate(
-            effectOverride,
-            where.position,
+            prefab,
+            position ?? where.position,
             where.rotation,
             followWeapon ? where : null);
 
