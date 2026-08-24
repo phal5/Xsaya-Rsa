@@ -93,6 +93,16 @@ public class CharacterRoot : FiniteStateMachine
         TransitTo<Character_Controlled>();
     }
 
+    /// <summary>
+    /// 누운 자리에서 시작한다. 씬에 처음 설 때와 부활할 때 이리로 온다.
+    /// 조작은 <see cref="Character_Rest"/>가 일어선 뒤 스스로 돌려준다.
+    /// </summary>
+    public void ToRest()
+    {
+        if (_currentStateType == typeof(Character_Rest)) return;
+        TransitTo<Character_Rest>();
+    }
+
     /// <summary>메뉴·대화가 열릴 때 부른다. 닫을 때 ToControl()을 불러야 풀린다.</summary>
     public void ToUI()
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 [Serializable]
-public class WeightedTransform
+public class WeightedTarget
 {
     public Transform target;
     [Range(0f, 1f)] public float weight;
@@ -14,7 +14,7 @@ public class WeightedTransform
 public class TransformWeightBlender : MonoBehaviour
 {
     [Tooltip("The sum of all weights will be forced to 1.")]
-    [SerializeField] List<WeightedTransform> targets = new List<WeightedTransform>();
+    [SerializeField] List<WeightedTarget> targets = new List<WeightedTarget>();
 
     private Coroutine activeTransition;
     private float _invDuration;
@@ -76,16 +76,16 @@ public class TransformWeightBlender : MonoBehaviour
     private IEnumerator TransitionRoutine(Transform targetTransform, float duration, Func<float, float> easeFunc, Action onComplete)
     {
         // 1. Find the target in the list, or add it if it doesn't exist
-        WeightedTransform mainTarget = targets.FirstOrDefault(t => t.target == targetTransform);
+        WeightedTarget mainTarget = targets.FirstOrDefault(t => t.target == targetTransform);
         if (mainTarget == null)
         {
-            mainTarget = new WeightedTransform { target = targetTransform, weight = 0f };
+            mainTarget = new WeightedTarget { target = targetTransform, weight = 0f };
             targets.Add(mainTarget);
         }
 
         // 2. Snapshot the initial state
         float startMainWeight = mainTarget.weight;
-        Dictionary<WeightedTransform, float> initialOtherWeights = new Dictionary<WeightedTransform, float>();
+        Dictionary<WeightedTarget, float> initialOtherWeights = new Dictionary<WeightedTarget, float>();
         float initialOtherSum = 0f;
 
         foreach (var t in targets)
@@ -145,7 +145,7 @@ public class TransformWeightBlender : MonoBehaviour
     /// <summary>
     /// Forces the target to 1 and all others to 0.
     /// </summary>
-    private void FinalizeWeights(WeightedTransform absoluteTarget)
+    private void FinalizeWeights(WeightedTarget absoluteTarget)
     {
         foreach (var t in targets)
         {

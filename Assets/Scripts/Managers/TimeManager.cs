@@ -19,11 +19,15 @@ public static class TimeManager
 
     static float _scale = DefaultScale;
     static bool _stopped;
+    static float _ceiling = 1f;
 
     /// <summary>정지를 걷어냈을 때 돌아갈 배속. 정지 중에도 이 값은 유지된다.</summary>
     public static float Scale => _scale;
 
     public static bool Stopped => _stopped;
+
+    /// <summary>연출이 눌러둔 상한(0~1). 배속과 곱해져 적용된다.</summary>
+    public static float Ceiling => _ceiling;
 
     /// <summary>
     /// static 필드는 씬을 넘겨도, (도메인 리로드를 끈 경우) 플레이를 다시 눌러도 남는다.
@@ -34,6 +38,7 @@ public static class TimeManager
     {
         _scale = DefaultScale;
         _stopped = false;
+        _ceiling = 1f;
         Apply();
     }
 
@@ -41,6 +46,21 @@ public static class TimeManager
     public static void SetScale(float scale)
     {
         _scale = Mathf.Max(0f, scale);
+        Apply();
+    }
+
+    /// <summary>
+    /// 연출이 시간을 <b>눌러두는</b> 상한. 0이면 멎고 1이면 배속이 그대로 나간다.
+    ///
+    /// SetScale과 따로 두는 이유는 정지를 따로 둔 이유와 같다. 배속 칸은 HPbar가 매 프레임
+    /// 체력으로 덮어쓰므로, 연출이 그 칸에 쓰면 <b>다음 프레임에 사라진다.</b>
+    /// 칸을 나눠두면 둘이 곱해질 뿐 서로를 지우지 않는다.
+    ///
+    /// 정지(Stop)와도 다르다. 그쪽은 껐다 켜는 스위치라 중간값이 없다.
+    /// </summary>
+    public static void SetCeiling(float ceiling)
+    {
+        _ceiling = Mathf.Clamp01(ceiling);
         Apply();
     }
 
@@ -60,6 +80,6 @@ public static class TimeManager
 
     static void Apply()
     {
-        Time.timeScale = _stopped ? 0f : _scale;
+        Time.timeScale = _stopped ? 0f : _scale * _ceiling;
     }
 }

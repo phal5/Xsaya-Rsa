@@ -81,6 +81,9 @@ public class BasicAttack : Character_SkillBase
     /// <summary>끝 프레임에 닿았는지. 닿은 뒤에는 쿨다운이 끝나기를 기다린다.</summary>
     bool _arrived;
 
+    /// <summary>끝 프레임에 닿기까지 걸린 시간(초). 붙들고 있는 동안에도 변하지 않는다.</summary>
+    float _clipTime;
+
     bool Usable => _chain != null && _chain.Length > 0;
 
     Swing Current => _chain[_index];
@@ -134,6 +137,7 @@ public class BasicAttack : Character_SkillBase
         _frame = Current.start;
         _hold = Current.holdStart / _frameRate;
         _arrived = false;
+        _clipTime = 0f;
         _opened = false;
 
         float speed = Speed();
@@ -164,7 +168,15 @@ public class BasicAttack : Character_SkillBase
     }
 
     /// <summary>클립이 끝 프레임에 닿으면 끝난다. 남은 시간은 자세를 붙드는 데가 아니라 블렌딩에 쓴다.</summary>
-    protected override bool Elapsed() => Usable ? _arrived : base.Elapsed();
+    /// <summary>
+    /// 끝 프레임에 닿았고 <b>쿨다운도 풀렸을 때</b> 끝난다. 그 사이는 마지막 자세로 서 있는다.
+    ///
+    /// 붙드는 일은 따로 하지 않는다 — 도착한 뒤로 <see cref="Tempo"/>가 배속을 0에 둔 채
+    /// 손을 떼므로, 끝날 때까지 그 프레임에 멈춰 있다.
+    ///
+    /// 쿨다운이 클립보다 짧으면(0 포함) 도착과 동시에 끝난다. 그때는 이 조건이 없는 것과 같다.
+    /// </summary>
+    protected override bool Elapsed() => Usable ? (_arrived && IsReady) : base.Elapsed();
 
     protected override void OnEnd()
     {
@@ -187,7 +199,13 @@ public class BasicAttack : Character_SkillBase
     }
 
     /// <summary>고정된 시간에서 클립이 쓰고 남은 몫.</summary>
-    float Left() => Mathf.Max(_action - (Time.time - _beganAt), 0f);
+    /// <summary>
+    /// 고정된 시간에서 클립이 쓰고 남은 몫.
+    ///
+    /// <b>붙들고 있던 시간은 빼지 않는다.</b> 여기서 재는 것은 클립 재생에 쓴 시간뿐이고,
+    /// 쿨다운을 채우느라 서 있던 시간까지 빼면 쿨다운이 길수록 블렌딩이 사라져 끝이 뚝 끊긴다.
+    /// </summary>
+    float Left() => Mathf.Max(_action - _clipTime, 0f);
 
     /// <summary>
     /// 다시 칠 수 있게 된 시각. <b>클립이 끝나는 때와 쿨다운이 풀리는 때 중 늦은 쪽</b>이다.
@@ -238,6 +256,7 @@ public class BasicAttack : Character_SkillBase
         // 여기서부터는 쿨다운이 끝날 때까지 이 자세로 서 있는다.
         _frame = Current.end;
         _arrived = true;
+        _clipTime = Time.time - _beganAt;
 
         manager.Animation.SetFloat(_tempoParameter, 0f);
     }
@@ -286,15 +305,41 @@ public class BasicAttack : Character_SkillBase
     ///
     /// 클립에 애니메이션 이벤트를 심지 않는 이유는 스포너 주석에 적힌 그대로다 —
     /// 공격이 늘어날 때마다 심는 것을 잊은 클립이 하나씩 생기고, 그것은 조용하다.
+    ///
+    /// <b>시점은 여기, 자리는 종점.</b> 궤적은 칼이 지나간 끝에 서야 하지만 그것을 기다렸다
+    /// 뿌리면 이미 벤 뒤에 선이 그어진다. 시점만 여기서 잡고 자리는 미리 재어둔 것을 쓴다.
     /// </summary>
     void Spawn()
     {
         if (_effect == null) return;
 
-        GameObject over = Usable ? Current.effect : null;
+        if (!Usable)
+        {
+            _effect.Play();
+            return;
+        }
 
-        if (over != null) _effect.Play(over);
-        else _effect.Play();
+        Vector3 place;
+        Quaternion facing;
+
+        if (Current.anchor != null)
+        {
+            // 손으로 잡아둔 자리를 그대로 쓴다. 이펙트가 어느 축을 법선으로 삼는지 코드가 알 필요가 없다 -
+            // 눈으로 맞춘 것이 곧 정답이고, 클립이 바뀌면 앵커만 옮기면 된다.
+            place = Current.anchor.position;
+            facing = Current.anchor.rotation;
+        }
+        else
+        {
+            // 캐릭터 기준으로 적어둔 자리를 월드로 푼다. 몸이 어느 쪽을 보든 같은 자리에 선다.
+            Transform body = manager.Body != null ? manager.Body.transform : transform;
+
+            place = body.TransformPoint(Current.effectPlace);
+            facing = body.rotation * Quaternion.Euler(Current.effectFacing);
+        }
+
+        if (Current.effect != null) _effect.PlayAt(Current.effect, place, facing);
+        else _effect.PlayAt(place, facing);
     }
 
     void Close()

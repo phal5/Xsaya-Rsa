@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 사망(다운). 체력이 0이 되면 들어오고, RespawnDelay 뒤에 마지막 체크포인트에서 일어나 조작으로 돌아간다.
+/// 사망(다운). 체력이 0이 되면 들어오고, RespawnDelay 뒤에 마지막 체크포인트로 옮겨진다.
+/// 거기서 곧바로 조작을 돌려주지 않고 <see cref="Character_Rest"/>에 넘긴다 — 누운 자리에서
+/// 일어나는 것까지가 부활이다.
 ///
 /// <b>여기만 벽시계로 돈다.</b> 시간 배속이 체력을 따라가므로 죽은 자리에서는 화면이 느려지거나 멎는데,
 /// 일어나는 시각까지 그것을 따라가면 부활이 늦어지거나 아예 오지 않는다.
@@ -57,8 +59,8 @@ public class Character_Down : BaseCharacterState
         // 쉬어간 자리가 다른 스테이지면 씬이 올라오는 동안 director가 붙들고 있다가 직접 푼다.
         if (!Respawn()) return;
 
-        // 이제 부모는 최상위다. 피격을 거쳐 들어왔든 낙사로 들어왔든 여기로 돌아간다.
-        if (fsm is CharacterRoot root) root.ToControl();
+        // 조작을 바로 돌려주지 않는다. 부활은 누운 자리에서 시작하고, 일어서는 것은 플레이어의 몫이다.
+        if (fsm is CharacterRoot root) root.ToRest();
     }
 
     /// <summary>

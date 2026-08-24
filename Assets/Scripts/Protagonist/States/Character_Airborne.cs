@@ -92,7 +92,12 @@ public class Character_Airborne : FiniteStateMachine
     #region Jump Animation - 도약 · 상승 · 하강 세 구간
 
     /// <summary>클립 위에서 지금 어느 구간에 있는지. 착지 이후는 지상 축이 이어받는다.</summary>
-    enum JumpPhase { Launch, RiseHold, Fall, FallHold }
+    /// <summary>
+    /// 도약 구간을 지나면 <see cref="JumpPhase.Track"/> 하나로 끝난다.
+    /// 예전에는 세우고(RiseHold) 풀고(Fall) 다시 세우는(FallHold) 셋으로 나뉘어 있었는데,
+    /// 그 셋이 하던 일은 전부 "지금 어느 프레임을 보여줄지"였고 이제 속도가 그것을 정한다.
+    /// </summary>
+    enum JumpPhase { Launch, Track }
 
     JumpPhase _phase;
 
@@ -132,8 +137,8 @@ public class Character_Airborne : FiniteStateMachine
         }
         else
         {
-            // 뛴 게 아니라 걸어 나가 떨어지는 경우. 도약 구간은 건너뛰고 하강부터 시작한다.
-            Resume(JumpPhase.Fall, eased: false);
+            // 뛴 게 아니라 걸어 나가 떨어지는 경우. 도약 구간은 건너뛰고 추종부터 시작한다.
+            Resume(JumpPhase.Track, eased: false);
             Character.Animation.PlayFrom(jump.stateName, jump.DropOffset);
         }
 
@@ -141,7 +146,8 @@ public class Character_Airborne : FiniteStateMachine
     }
 
     /// <summary>
-    /// 배속을 매 프레임 다시 계산한다. 세울 프레임이 가까우면 줄고, 막 풀렸으면 올라온다.
+    /// 배속을 매 프레임 다시 계산한다. 도약 구간은 예전처럼 목표 프레임까지 감속하며 다가가고,
+    /// 그 뒤로는 <b>수직 속도가 가리키는 프레임</b>을 따라간다.
     /// 클립이 갈렸으면(회피·스킬이 끼어듦) 아무것도 하지 않는다 — 남의 재생을 건드리지 않는다.
     /// </summary>
     void DriveJumpAnimation()
@@ -154,25 +160,15 @@ public class Character_Airborne : FiniteStateMachine
         switch (_phase)
         {
             case JumpPhase.Launch:
-                if (jump.Reached(frame, jump.riseHoldFrame)) { _phase = JumpPhase.RiseHold; goto case JumpPhase.RiseHold; }
+                if (jump.Reached(frame, jump.riseHoldFrame)) { _phase = JumpPhase.Track; goto case JumpPhase.Track; }
                 speed = jump.ApproachSpeed(frame, jump.riseHoldFrame, 1f, SinceResume);
                 break;
 
-            case JumpPhase.RiseHold:
-                // 떠오르는 동안은 멈춰 선다. 내려가기 시작하면 그때 푼다.
-                if (!Rising) { Resume(JumpPhase.Fall, eased: true); goto case JumpPhase.Fall; }
-                speed = 0f;
-                break;
-
-            case JumpPhase.Fall:
-                if (jump.Reached(frame, jump.fallHoldFrame)) { _phase = JumpPhase.FallHold; goto case JumpPhase.FallHold; }
-                speed = jump.ApproachSpeed(frame, jump.fallHoldFrame, 1f, SinceResume);
-                break;
-
-            case JumpPhase.FallHold:
+            case JumpPhase.Track:
             default:
-                // 착지 마무리는 지상 축이 이어받는다. 그때까지 멈춰 선다.
-                speed = 0f;
+                // 속도가 프레임을 정한다. 점프 속도만큼 솟으면 도약 자세, 그만큼 떨어지면 착지 직전 자세,
+                // 그 사이는 이어진다. 착지 마무리는 지상 축이 이 자리에서 이어받는다.
+                speed = jump.TrackSpeed(frame, jump.TrackTarget(Character.Movement.Velocity.y, Character.JumpSpeed));
                 break;
         }
 

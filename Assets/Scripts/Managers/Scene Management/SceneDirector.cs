@@ -26,13 +26,17 @@ public class SceneDirector : MonoBehaviour
     [Tooltip("조작을 잠그고 푸는 곳. 캐릭터의 최상위 상태기계다.")]
     [SerializeField] CharacterRoot _root;
 
+    [Tooltip("지역 표시 이름을 모아둔 목록. 로딩 화면이 여기서 이름을 얻는다.")]
+    [SerializeField] StageDirectory _stages;
+
     [Header("Initial Rest")]
 #if UNITY_EDITOR
-    [Tooltip("처음 부활 지점이 놓인 씬. 꽂으면 아래 이름 칸이 채워진다. 비워두면 시작 무대를 쓴다.")]
+    [Tooltip("처음 부활 지점이 놓인 씬. 비워두면 시작할 때 올라와 있던 무대를 쓴다.")]
     [SerializeField] UnityEditor.SceneAsset _initialSceneAsset;
 #endif
 
-    [Tooltip("처음 부활 지점이 놓인 씬의 이름. 비어 있으면 시작할 때 올라와 있던 무대를 쓴다.")]
+    // 위 에셋에서 뽑아 적어둔다. 손으로 고칠 자리가 아니라 감춘다.
+    [HideInInspector]
     [SerializeField] string _initialScene;
 
     [Tooltip("한 번도 쉬어가기 전에 죽었을 때 설 자리.")]
@@ -90,6 +94,24 @@ public class SceneDirector : MonoBehaviour
         _restFacing = _initialFacing.sqrMagnitude < 0.0001f
             ? Quaternion.identity
             : Quaternion.LookRotation(_initialFacing.normalized);
+
+        // <b>첫 등장의 방향도 여기서 정한다.</b> 부활은 Place()가 이 값을 몸에 싣는데,
+        // 첫 등장은 Go()를 거치지 않아 그 길이 없다. 예전에는 Character_Rest가 제 값으로
+        // 따로 돌려세웠고, 그래서 체크포인트가 적어둔 방향이 그 자리에서 덮여 사라졌다.
+        if (_character != null && _character.Body != null) _character.Body.rotation = _restFacing;
+    }
+
+    /// <summary>
+    /// 그 씬의 지역 표시 이름. 로딩 화면이 부른다.
+    ///
+    /// 목록이 없으면 씬 이름으로 대신한다 — 이름이 없다고 전환을 막을 일은 아니다.
+    /// </summary>
+    public string RegionName(string scene)
+    {
+        if (_stages != null) return _stages.NameOf(scene);
+
+        Debug.LogWarning($"[{name}] 지역 목록이 꽂혀 있지 않습니다. 씬 이름을 그대로 씁니다.", this);
+        return scene;
     }
 
     #region Checkpoint
@@ -108,17 +130,20 @@ public class SceneDirector : MonoBehaviour
     /// <summary>
     /// 쉬어간 자리를 적는다. <see cref="Checkpoint"/>가 부른다.
     ///
-    /// 몸이 지금 서 있는 자리를 적는다 — 그 땅은 방금 딛고 있었으므로 정의상 유효하다.
+    /// 위치는 몸이 지금 서 있는 자리를 그대로 쓴다 — 그 땅은 방금 딛고 있었으므로 정의상 유효하다.
     /// 체크포인트 오브젝트를 제단 위에 놓든 벽에 붙이든 스폰 오프셋을 따로 맞출 일이 없다.
+    ///
+    /// 방향은 <b>몸의 회전을 쓰지 않는다.</b> 부르는 쪽이 정해서 넘긴다 — 체크포인트마다
+    /// 일어서서 볼 방향을 저작자가 고정해두는 편이, 말을 건 각도에 따라 매번 달라지는 것보다 낫다.
     /// </summary>
     /// <param name="scene">그 자리가 속한 배경 씬의 이름.</param>
-    public void SetCheckpoint(string scene)
+    public void SetCheckpoint(string scene, Quaternion facing)
     {
         if (_character == null || _character.Body == null) return;
 
         _restScene = scene;
         _restPlace = _character.Body.position;
-        _restFacing = _character.Body.rotation;
+        _restFacing = facing;
     }
 
     /// <summary>
@@ -138,7 +163,8 @@ public class SceneDirector : MonoBehaviour
     {
         if (string.IsNullOrEmpty(_restScene)) return true;
 
-        return Go(_restScene, _restPlace, _restFacing);
+        // 부활은 누운 자리에서 시작한다. 관문 통과와 갈리는 유일한 지점이라 여기서 표시를 넘긴다.
+        return Go(_restScene, _restPlace, _restFacing, rest: true);
     }
 
     #endregion
@@ -152,7 +178,11 @@ public class SceneDirector : MonoBehaviour
     /// 이 프레임에 끝났는지. <b>거짓이면 씬을 부르는 중이고, 조작은 이쪽이 돌려준다</b> —
     /// 부르는 쪽이 뒤이어 조작을 풀면 로드가 끝나기 전에 움직이게 된다.
     /// </returns>
-    public bool Go(string scene, Vector3 place, Quaternion facing)
+    /// <param name="rest">
+    /// 도착한 뒤 누운 자리에서 시작할지. 부활이 참이고 관문 통과가 거짓이다.
+    /// 이 씬이 이미 올라와 있으면 조작을 부르는 쪽이 돌려주므로 여기서는 쓰이지 않는다.
+    /// </param>
+    public bool Go(string scene, Vector3 place, Quaternion facing, bool rest = false)
     {
         if (_character == null || _root == null)
         {
@@ -184,11 +214,11 @@ public class SceneDirector : MonoBehaviour
             return true;
         }
 
-        StartCoroutine(Transit(scene, place, facing));
+        StartCoroutine(Transit(scene, place, facing, rest));
         return false;
     }
 
-    IEnumerator Transit(string scene, Vector3 place, Quaternion facing)
+    IEnumerator Transit(string scene, Vector3 place, Quaternion facing, bool rest)
     {
         Busy = true;
 
@@ -199,6 +229,12 @@ public class SceneDirector : MonoBehaviour
         // 매 프레임 다시 못박지 않아도 그 자리에 그대로 있는다.
         _character.Movement.SetGravity(false);
         _character.Movement.Pin(_character.Body.position);
+
+        // <b>덮고 나서 손대기 시작한다.</b> 배경이 내려가면 카메라가 빈 하늘을 비추는데,
+        // 뒤따르는 로드가 동기라 그 화면이 얼어붙은 채로 눈에 남는다.
+        // Cover는 덮인 프레임이 한 번 그려진 뒤에 돌아오므로, 그 창이 닫힌다.
+        TransitionCurtain curtain = TransitionCurtain.Current;
+        if (curtain != null) yield return curtain.Cover(RegionName(scene));
 
         // <b>내리고 나서 부른다.</b> 겹쳐 올리면 배경 두 벌의 텍스처가 동시에 상주하고,
         // 새 스폰 자리에 옛 지오메트리가 남아 물리가 몸을 밀어낸다.
@@ -250,9 +286,18 @@ public class SceneDirector : MonoBehaviour
 
         _character.Movement.SetGravity(true);
 
+        // 이름을 읽을 틈을 준 뒤 걷는다. 로드가 빨라도 화면이 깜빡이고 지나가지 않게.
+        if (curtain != null)
+        {
+            yield return curtain.Hold();
+            yield return curtain.Reveal();
+        }
+
         // 조작을 돌려주기 전에 푼다. 순서가 바뀌면 한 프레임 동안 관문을 다시 밟을 수 있다.
         Busy = false;
-        _root.ToControl();
+
+        if (rest) _root.ToRest();
+        else _root.ToControl();
     }
 
     /// <summary>

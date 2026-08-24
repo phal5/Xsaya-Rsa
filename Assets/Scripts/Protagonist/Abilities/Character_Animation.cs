@@ -234,6 +234,29 @@ public class Character_Animation : MonoBehaviour
         _animator.CrossFadeInFixedTime(state, Fade(fade), 0, offsetSeconds);
     }
 
+    /// <summary>
+    /// 애니메이터가 붙은 오브젝트. 그림이 놓이는 자리이고, <b>몸이 아니다.</b>
+    ///
+    /// 연출이 그림만 옮겨야 할 때가 있다. 몸을 옮기면 물리와 판정이 함께 따라가지만,
+    /// 여기를 옮기면 보이는 것만 움직인다.
+    /// </summary>
+    public Transform Mesh => _animator == null ? null : _animator.transform;
+
+    /// <summary>
+    /// 애니메이터만 <b>벽시계</b>로 돌린다. 시간 배속이 눌린 동안에도 움직여야 하는 구간이 쓴다.
+    ///
+    /// 세상이 멎은 채 주인공만 일어서는 연출이 그것이다. 배속에 끌려가게 두면
+    /// 배속이 0인 동안 기상 동작도 함께 멎어, 키를 눌러도 아무 일도 일어나지 않는다.
+    /// </summary>
+    public void SetUnscaled(bool unscaled)
+    {
+        if (_animator == null) return;
+
+        _animator.updateMode = unscaled
+            ? AnimatorUpdateMode.UnscaledTime
+            : AnimatorUpdateMode.Normal;
+    }
+
     public void SetFloat(string parameter, float value)
     {
         if (_animator == null || string.IsNullOrEmpty(parameter)) return;

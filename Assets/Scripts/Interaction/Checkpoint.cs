@@ -19,15 +19,26 @@ using UnityEngine;
 /// </summary>
 public class Checkpoint : InteractableEvent
 {
+    [Tooltip("일어나서 볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. 말을 건 각도와 무관하게 항상 이쪽을 본다.")]
+    [SerializeField] Vector3 _facing = new Vector3(1f, 0f, 0f);
+
     public override void Interact(CharacterManager character)
     {
         if (!Available || character == null) return;
 
         // 이벤트보다 먼저 적는다. 이벤트가 씬을 부르거나 대화를 여는 경우,
         // 그 뒤에 적으면 적기도 전에 이 오브젝트가 사라져 있을 수 있다.
-        if (SceneDirector.instance != null) SceneDirector.instance.SetCheckpoint(gameObject.scene.name);
+        if (SceneDirector.instance != null) SceneDirector.instance.SetCheckpoint(gameObject.scene.name, Facing);
         else Debug.LogError($"[{name}] SceneDirector가 없어 쉬어간 자리를 적지 못했습니다.", this);
 
         base.Interact(character);
     }
+
+    /// <summary>
+    /// 방향 벡터를 회전으로 바꾼다. 0 벡터는 LookRotation이 받지 못하므로 정면으로 둔다.
+    /// <see cref="Gateway"/>·<see cref="SceneDirector"/>의 초기 지점과 같은 규칙이다.
+    /// </summary>
+    Quaternion Facing => _facing.sqrMagnitude < 0.0001f
+        ? Quaternion.identity
+        : Quaternion.LookRotation(_facing.normalized);
 }

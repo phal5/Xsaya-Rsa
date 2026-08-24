@@ -35,6 +35,38 @@ public class CharacterManager : EntityManager
     [Tooltip("벽을 찬 뒤 벽 반대쪽을 볼 때까지 도는 속도(초당 각도).")]
     [field: SerializeField] public float WallTurnSpeed { get; private set; } = 360f;
 
+    [Header("Rise")]
+    [Tooltip("누워 있다 일어나는 동작의 컨트롤러 상태 이름.")]
+    [field: SerializeField] public string RiseState { get; private set; } = "Rise";
+
+    [Tooltip("그 상태의 Speed에 물린 파라미터. 누워 기다리는 동안 0으로 눌러 세운다.")]
+    [field: SerializeField] public string RiseSpeedParameter { get; private set; } = "RiseSpeed";
+
+    [Tooltip("일어나는 데 걸리는 시간(초). 클립 길이와 맞춘다.")]
+    [field: SerializeField] public float RiseTime { get; private set; } = 5.33f;
+
+    [Tooltip("일어나기 시작해 시간 배속이 제자리로 돌아오기까지 걸리는 시간(초).")]
+    [field: SerializeField] public float RiseRamp { get; private set; } = 2f;
+
+    [Tooltip("누워 있는 동안 <b>메시</b>를 몸에서 이만큼 떼어 놓는다. 일어서며 0으로 돌아온다. 몸은 건드리지 않는다.")]
+    [field: SerializeField] public Vector3 RiseOffset { get; private set; } = new Vector3(-0.5f, 0.5f, 1f);
+
+    [Tooltip("누워 있는 동안 <b>메시</b>를 몸에서 이만큼 비틀어 놓는다(오일러). 일어서며 0으로 돌아온다.")]
+    [field: SerializeField] public Vector3 RiseTwist { get; private set; } = new Vector3(0f, 90f, 0f);
+
+    [Tooltip("비틀림을 되돌리기 시작할 <b>클립 프레임</b>. 클립이 스스로 몸을 돌리는 구간에 맞춘다 — " +
+             "따로 돌면 두 동작으로 보이고, 겹치면 한 동작이 된다.")]
+    [field: SerializeField, Min(0f)] public float RiseTurnFrame { get; private set; } = 117f;
+
+    [Tooltip("위 프레임이 기준으로 삼는 프레임레이트.")]
+    [field: SerializeField, Min(1f)] public float RiseFrameRate { get; private set; } = 30f;
+
+    /// <summary>비틀림을 되돌리기 시작하는 시각(초). 클립 끝에서 정확히 0이 된다.</summary>
+    public float RiseTurnStart => RiseFrameRate <= 0f ? 0f : RiseTurnFrame / RiseFrameRate;
+
+    [Tooltip("클립이 끝나고 선 자세로 섞이는 시간. <b>이 구간에 평면으로 들어온다</b> — 클립의 마지막은 아직 앉은 자세라, 실제로 일어서는 것은 이 블렌드다.")]
+    [field: SerializeField, Min(0f)] public float RiseSettle { get; private set; } = 0.6f;
+
     [Header("Heal - 자원 소모형")]
     [Tooltip("최대 회복 횟수. 시작 시 이만큼 채워진다.")]
     [field: SerializeField] public int HealChargeMax { get; private set; } = 3;
@@ -339,6 +371,13 @@ public class JumpAnimation
     [Tooltip("착지 마무리 구간의 배속.")]
     [Min(0.1f)] public float landingSpeed = 2f;
 
+    [Header("공중 추종 - 수직 속도를 프레임으로")]
+    [Tooltip("목표 프레임에 따라붙는 데 걸리는 시간(초). 짧을수록 속도 변화에 민감하다.")]
+    [Min(0.01f)] public float trackTime = 0.12f;
+
+    [Tooltip("따라붙을 때 낼 수 있는 최대 배속. 속도가 급변해도 클립이 튀지 않게 막는다.")]
+    [Min(0.1f)] public float trackMaxSpeed = 3f;
+
     /// <summary>감속 끝에서 목표 프레임에 닿았다고 볼 여유. 눈에 띄지 않는 거리다.</summary>
     const float SettleEpsilon = 0.05f;
 
@@ -380,6 +419,40 @@ public class JumpAnimation
     /// <summary>세울 곳 없이 그냥 풀 때. 가속만 건다.</summary>
     public float ResumeSpeed(float cruise, float sinceResume) => cruise * RiseFactor(sinceResume);
 
+    /// <summary>
+    /// 수직 속도가 가리키는 프레임. 솟는 만큼 <see cref="riseHoldFrame"/>에, 떨어지는 만큼
+    /// <see cref="fallHoldFrame"/>에 가까워진다.
+    ///
+    /// 자세를 바꾸는 것이 아니라 <b>같은 클립 안에서 어디를 보여줄지</b>를 정한다.
+    /// 두 눈금은 원래 세워두던 자리였고, 이제 그 사이가 이어진다 — 얼마나 세게 뛰었는지,
+    /// 얼마나 빨리 떨어지는지가 자세에 그대로 나타난다.
+    ///
+    /// 범위 밖 속도는 InverseLerp이 잘라낸다. 벽을 차서 더 빨리 솟아도 도약 자세보다 더 가지 않는다.
+    /// </summary>
+    /// <param name="reference">양 끝으로 삼을 속도. 보통 캐릭터의 점프 속도.</param>
+    public float TrackTarget(float verticalSpeed, float reference)
+    {
+        if (reference <= 0f) return riseHoldFrame;
+
+        return Mathf.Lerp(riseHoldFrame, fallHoldFrame,
+                          Mathf.InverseLerp(reference, -reference, verticalSpeed));
+    }
+
+    /// <summary>
+    /// 목표 프레임을 따라가는 배속. <b>뒤로도 간다</b> — 음수 배속은 클립을 되감는다.
+    ///
+    /// ApproachSpeed를 쓸 수 없다. 그쪽은 목표가 앞에 있다고 전제하는데, 여기서는 속도가 오르내리는 대로
+    /// 목표가 앞뒤로 움직인다 — 떨어지다 벽을 차면 목표가 도약 자세 쪽으로 되돌아간다.
+    ///
+    /// 남은 거리에 비례하는 단순 추종이라 목표를 지나치지 않고, 속도가 급변해도 상한이 막는다.
+    /// </summary>
+    public float TrackSpeed(float frame, float targetFrame)
+    {
+        float perSecond = (targetFrame - frame) / trackTime;
+
+        return Mathf.Clamp(perSecond / frameRate, -trackMaxSpeed, trackMaxSpeed);
+    }
+
     float RiseFactor(float sinceResume)
     {
         if (easeInTime <= 0f) return 1f;
@@ -406,7 +479,9 @@ public class JumpAnimation
     /// </summary>
     public bool TailPending(Character_Animation animation)
     {
-        return TryGetFrame(animation, out float frame) && frame >= fallHoldFrame;
+        // 추종은 목표에 점근할 뿐 정확히 닿지 않는다. 감속이 내려앉았다고 보는 여유를 여기에도 준다 —
+        // 없으면 30.99프레임에서 착지 마무리가 통째로 건너뛰어진다.
+        return TryGetFrame(animation, out float frame) && frame >= fallHoldFrame - SettleEpsilon;
     }
 
 #if UNITY_EDITOR

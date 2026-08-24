@@ -22,8 +22,19 @@ public class ControlLock : MonoBehaviour
         root.ToUI();
     }
 
+    /// <summary>
+    /// 조작을 돌려준다. <b>씬 전환이 도는 중이면 아무것도 하지 않는다.</b>
+    ///
+    /// 관문은 대사가 끝나길 기다리지 않고 곧바로 넘어가므로, 대사가 전환 도중에
+    /// 스스로 끝에 닿는 경우가 흔하다 — 그때 여기서 조작을 돌려주면 캐릭터가 여전히
+    /// 중력이 꺼진 채 붙들려 있거나 사망 연출 중인 상태에서 조작이 풀려버린다.
+    /// 그 자리는 이미 <see cref="SceneDirector"/>가 맡고 있으므로, 전환이 끝나며
+    /// 스스로 정할 최종 상태에 맡긴다.
+    /// </summary>
     public void Release()
     {
+        if (SceneDirector.instance != null && SceneDirector.instance.Busy) return;
+
         CharacterRoot root = Root();
         if (root == null) return;
 

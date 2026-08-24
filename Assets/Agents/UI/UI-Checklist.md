@@ -14,7 +14,7 @@ UI 씬·프리팹 작업 기록.
 전파되지 않는다. 반면 스크립트는 공유하므로, 직렬화 필드를 바꾸면 **양쪽 다** 재배선해야 한다.
 General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40).
 
-최종 갱신: 2026-08-23
+최종 갱신: 2026-08-24
 
 ---
 
@@ -67,6 +67,89 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   SSOT 이후 `SetText`가 매 페이지 표시 여부를 정하므로 이 가드가 없으면 페이지마다 깜빡인다.
   초기값이 `true`인 이유는 아래 "주의할 점"의 Footer 항목 참고.
 
+- [x] **`HPbar` NRE (2026-08-24 03:02 발생)** — 원인 규명 완료, **수정 안 함**
+
+  `HPbar.cs:14`의 `PlayerManager.instance`가 **C# null**이었다.
+  (`playerDamagable`가 null이면 15번 줄에서 났을 것이고, 파괴된 객체를 가리켰다면
+   거기서는 예외가 안 난다. 즉 static이 한 번도 할당되지 않은 상태였다)
+
+  **직접 원인: 재생 중 도메인 리로드.**
+  Preferences의 `Script Changes While Playing`이 `Recompile And Continue Playing`(0),
+  Auto Refresh도 켜져 있다. 재생 중에 스크립트가 저장되면 어셈블리가 다시 로드되는데,
+  그때 유니티는 MonoBehaviour를 직렬화로 복원할 뿐 **`Awake`를 다시 부르지 않는다.**
+  - static은 리로드로 초기화됨 → `PlayerManager.instance`가 null인 채로 남는다
+  - 직렬화 안 되는 필드도 날아감 → 같은 순간 `SkillDefiner.evaluator`도 null이 되어
+    같은 초에 NRE가 났다 (`InputQueue`의 이벤트 대상은 정상적인 씬 인스턴스로 확인됨)
+
+  같은 3-씬 구성(`LastSceneManagerSetup.txt` 02:33 기록 = 현재와 동일)으로
+  깨끗하게 재생하면 **재현되지 않는다.** frame 839까지 에러 0건, `instance` 정상,
+  `TimeManager.Scale = 1`.
+
+  **왜 하필 지금 터졌나:** `UI - General`의 Header 페이더는 `_fadedOnStart = false`라
+  체력바가 **첫 프레임부터 Update를 돈다**. `UI - Start`는 `true`라 V를 누르기 전까지
+  꺼져 있어서 이 창이 열리지 않았다.
+
+  **결정: 수정하지 않는다** (2026-08-24, 회원님 판단).
+  빌드에서는 재생 중 재컴파일이 일어나지 않으므로 이 경로 자체가 존재하지 않는다.
+  에디터에서만 나는 유령 NRE에 코드를 바꾸지 않는다.
+  다시 보이면 Preferences의 `Script Changes While Playing`을 의심할 것 —
+  고칠 것은 코드가 아니라 그 설정이다.
+
+- [x] **대사 트리거 배선 정비** (2026-08-23)
+  충돌로도, E키 상호작용으로도 같은 대사를 열 수 있게 입구를 하나로 모았다.
+
+  | 발동 | 배선 |
+  |---|---|
+  | 밟으면 자동 | `CollisionInvoke.onCollision` → `BookHolder.Open()` |
+  | E키로 말 걸기 | `InteractableEvent.onInteract` → `BookHolder.Open()` |
+
+  - **`BookHolder` 신규** (`Scripts/Interaction/`) — `Book`을 들고 `Open()` 하나만 노출.
+    `FlipBook`은 UI 씬에 있어 인스펙터로 못 꽂으므로 `FlipBook.Instance`로 런타임에 찾는다.
+    `Gateway`가 `Enter()` 하나로 두 길을 받는 것과 같은 모양.
+  - **`CollisionInvoke`에 `OnTriggerEnter` 추가** — 통과 가능한 볼륨으로도 발동한다.
+  - **`PlayerManager.IsPlayer(Collider)` 신규** — 근접 판정을 한 곳으로 모았다.
+    `Gateway`만 `attachedRigidbody`까지 봤고 나머지는 정확 일치만 봐서 규칙이 갈려 있었다.
+    `Gateway`는 자기 private 판정을 버리고 이걸 쓴다.
+  - **`ControlLock` 신규** (`Scripts/UI/`) — `Lock()`/`Release()`가
+    `PlayerManager.instance.Root`로 `CharacterRoot`를 간접 조회해 `ToUI()`/`ToControl()`.
+    UI 프리팹 2개 모두 `Flipbook` 오브젝트에 붙이고 `onSetBook`→`Lock`,
+    `onDialogueNull`→`Release`로 배선함.
+  - **`PlayerManager.Root` 신규 + Character 씬에서 배선** — 매니저와 `CharacterRoot`가
+    같은 씬(둘 다 프리팹 인스턴스)이라 오버라이드로 꽂힌다.
+
+- [x] **튜토리얼 인프라** (2026-08-24) — 인프라만. 씬 배치·프리팹 제작은 회원님 몫
+  프리팹으로 떼어 아무 씬에나 이식할 수 있는 안내 시스템. 씬을 넘는 참조가 0개다.
+
+  ```
+  TutorialStep.Begin()  →  HudService.Instance.Prompt(key, message, onDone)
+  ```
+  `BookHolder.Open() → FlipBook.Instance.SetBook()`과 같은 형태.
+
+  - **`HudService` 신규** (`Scripts/UI/`, 캔버스 루트) — 바깥 씬이 UI에 말을 거는 유일한 창구.
+    `Prompt(Key, string, UnityEvent)` / `ClearPrompt()` / `SetHudVisible(bool)`.
+    HUD 묶음(Header·Esc·X·Z·Arrow Keys 5개 페이더)은 여기서만 안다.
+  - **`TutorialStep` 신규** (`Scripts/UI/`) — 가르칠 내용을 전부 자기가 들고 있다.
+    `_key` / `_message` / `_beginOnStart` / `_hideHudWhileTeaching` / `_once` / `_id` / `_onDone`.
+  - **`Instructor`는 손대지 않았다.** 이미 있던 `Set(Key, string, UnityEvent)`를
+    처음으로 쓰게 됐을 뿐이다 (그전까지 호출자 0개).
+  - 설치: **프리팹 2개 모두** `HudService` 부착 + HUD 묶음 5개 배선.
+    General 쪽에는 `Instructor`가 없어 **비활성 상태로 추가**하고 `_messageUI`를 꽂았다.
+
+  순서 규칙: `HudService`는 `Awake`에 등록, `TutorialStep`은 `Start`에서 호출.
+  함께 올라온 씬은 모든 Awake가 모든 Start보다 먼저 도므로 씬 순서와 무관하다.
+  `HudService.Instance`가 없으면 경고만 남기고 지나간다 (UI 없이 스테이지만 띄우는 경우).
+
+  "한 번만"은 **실행 1회**로 구현했다. static `HashSet`에 `_id`를 적고,
+  `TimeManager`처럼 `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`로 되돌린다.
+  부활로 스테이지를 다시 불러와도 두 번 열리지 않는다. 실행을 넘는 영구 1회는
+  세이브 시스템이 없어 불가능하다.
+
+- [x] **`FlipBook.SetBook`의 호출 순서 교정** (2026-08-23)
+  `Next()`가 `onSetBook`보다 먼저 돌고 있었다. 페이지가 없는 책에서는
+  `Next()`가 `onDialogueNull`로 먼저 닫고 뒤이어 `onSetBook`이 다시 여는 꼴이 되어,
+  `ControlLock`을 물린 뒤로는 **대사 없이 조작만 잠긴 채 남는 소프트락**이 된다.
+  (다 본 책을 다시 밟으면 그 경로로 들어간다) `onSetBook`을 먼저 부르도록 뒤집었다.
+
 ---
 
 ## 할 일
@@ -95,6 +178,17 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   - **`Book`의 페이지 인덱스는 리셋되지 않는다.** 한 번 끝까지 본 책을 다시 열면
     대사 없이 열자마자 닫힌다. 반복시키려면 `GoToPage(0)`이 필요하다.
 
+- [ ] **`UI - Start`에 구워진 튜토리얼 정리** — `TutorialStep`을 쓰려면 반드시 먼저
+  Start 프리팹의 `Instructor`가 아직 **enabled=True, key=V, 문구 authoring, persistent 호출 5개**다.
+  즉 UI가 스스로 튜토리얼을 연다. 여기에 `TutorialStep`을 떨어뜨리면 둘이 겹쳐
+  프리팹이 띄운 문구를 `Set()`이 덮어쓰는 모양이 된다.
+  → Start 프리팹에서 `Instructor`를 **비활성**으로 바꾸고 `OnScreenMessage` 문구를 비운 뒤,
+    `Central` 페이더를 `_fadedOnStart = true`로 돌리면 General과 같은 출발선이 된다.
+    persistent 호출 5개는 `HudService._hudGroups`가 대신하므로 지워도 된다.
+    (겹쳐도 페이더 멱등 가드 덕에 깜빡이진 않지만, 두 주인이 남는다)
+
+  **`UI - General`은 지금 그대로 쓸 수 있다** — `Instructor` 비활성, 문구 없음, persistent 0개.
+
 - [ ] **플레이 모드에서 SSOT 변경 검증** (아직 안 함) — `UI - Start`, `UI - General` **양쪽**
   에디터 컴파일과 프리팹 배선까지만 확인했다. 실제로 돌려서 볼 것:
   1. 시작 시 "Press [ V ] to Raise"가 보이는가
@@ -103,73 +197,13 @@ General 쪽에는 `Instructor`가 없고 Transform이 하나 더 많다(41 vs 40
   4. 페이지를 넘길 때 중앙 문구가 깜빡이지 않는가 (멱등 가드)
   5. `MidScreenText`가 있는 페이지 ↔ 없는 페이지를 오갈 때 표시가 맞게 따라오는가
 
-- [x] **`HPbar` NRE (2026-08-24 03:02 발생)** — 원인 규명 완료, **수정 안 함**
-
-  `HPbar.cs:14`의 `PlayerManager.instance`가 **C# null**이었다.
-  (`playerDamagable`가 null이면 15번 줄에서 났을 것이고, 파괴된 객체를 가리켰다면
-   거기서는 예외가 안 난다. 즉 static이 한 번도 할당되지 않은 상태였다)
-
-  **직접 원인: 재생 중 도메인 리로드.**
-  Preferences의 `Script Changes While Playing`이 `Recompile And Continue Playing`(0),
-  Auto Refresh도 켜져 있다. 재생 중에 스크립트가 저장되면 어셈블리가 다시 로드되는데,
-  그때 유니티는 MonoBehaviour를 직렬화로 복원할 뿐 **`Awake`를 다시 부르지 않는다.**
-  - static은 리로드로 초기화됨 → `PlayerManager.instance`가 null인 채로 남는다
-  - 직렬화 안 되는 필드도 날아감 → 같은 순간 `SkillDefiner.evaluator`도 null이 되어
-    같은 초에 NRE가 났다 (`InputQueue`의 이벤트 대상은 정상적인 씬 인스턴스로 확인됨)
-
-  같은 3-씬 구성(`LastSceneManagerSetup.txt` 02:33 기록 = 현재와 동일)으로
-  깨끗하게 재생하면 **재현되지 않는다.** frame 839까지 에러 0건, `instance` 정상,
-  `TimeManager.Scale = 1`.
-
-  **왜 하필 지금 터졌나:** `UI - General`의 Header 페이더는 `_fadedOnStart = false`라
-  체력바가 **첫 프레임부터 Update를 돈다**. `UI - Start`는 `true`라 V를 누르기 전까지
-  꺼져 있어서 이 창이 열리지 않았다.
-
-  **결정: 수정하지 않는다** (2026-08-24, 회원님 판단).
-  빌드에서는 재생 중 재컴파일이 일어나지 않으므로 이 경로 자체가 존재하지 않는다.
-  에디터에서만 나는 유령 NRE에 코드를 바꾸지 않는다.
-  다시 보이면 Preferences의 `Script Changes While Playing`을 의심할 것 —
-  고칠 것은 코드가 아니라 그 설정이다.
-  `PlayerManager.instance.playerDamagable`을 null 검사 없이 매 프레임 읽는다.
-  UI 씬이 Character 씬보다 먼저 활성화되면 첫 프레임에 NRE.
-  → 가드를 덧대기보다, 배속을 미는 주체를 UI 밖으로 옮기는 쪽이 맞다.
-    (UI는 읽어서 그리기만 하고, 배속 산정은 체력을 가진 쪽이 소유)
-
-- [x] **대사 트리거 배선 정비** (2026-08-23)
-  충돌로도, E키 상호작용으로도 같은 대사를 열 수 있게 입구를 하나로 모았다.
-
-  | 발동 | 배선 |
-  |---|---|
-  | 밟으면 자동 | `CollisionInvoke.onCollision` → `BookHolder.Open()` |
-  | E키로 말 걸기 | `InteractableEvent.onInteract` → `BookHolder.Open()` |
-
-  - **`BookHolder` 신규** (`Scripts/Interaction/`) — `Book`을 들고 `Open()` 하나만 노출.
-    `FlipBook`은 UI 씬에 있어 인스펙터로 못 꽂으므로 `FlipBook.Instance`로 런타임에 찾는다.
-    `Gateway`가 `Enter()` 하나로 두 길을 받는 것과 같은 모양.
-  - **`CollisionInvoke`에 `OnTriggerEnter` 추가** — 통과 가능한 볼륨으로도 발동한다.
-  - **`PlayerManager.IsPlayer(Collider)` 신규** — 근접 판정을 한 곳으로 모았다.
-    `Gateway`만 `attachedRigidbody`까지 봤고 나머지는 정확 일치만 봐서 규칙이 갈려 있었다.
-    `Gateway`는 자기 private 판정을 버리고 이걸 쓴다.
-  - **`ControlLock` 신규** (`Scripts/UI/`) — `Lock()`/`Release()`가
-    `PlayerManager.instance.Root`로 `CharacterRoot`를 간접 조회해 `ToUI()`/`ToControl()`.
-    UI 프리팹 2개 모두 `Flipbook` 오브젝트에 붙이고 `onSetBook`→`Lock`,
-    `onDialogueNull`→`Release`로 배선함.
-  - **`PlayerManager.Root` 신규 + Character 씬에서 배선** — 매니저와 `CharacterRoot`가
-    같은 씬(둘 다 프리팹 인스턴스)이라 오버라이드로 꽂힌다.
-
-- [x] **`FlipBook.SetBook`의 호출 순서 교정** (2026-08-23)
-  `Next()`가 `onSetBook`보다 먼저 돌고 있었다. 페이지가 없는 책에서는
-  `Next()`가 `onDialogueNull`로 먼저 닫고 뒤이어 `onSetBook`이 다시 여는 꼴이 되어,
-  `ControlLock`을 물린 뒤로는 **대사 없이 조작만 잠긴 채 남는 소프트락**이 된다.
-  (다 본 책을 다시 밟으면 그 경로로 들어간다) `onSetBook`을 먼저 부르도록 뒤집었다.
-
 ---
 
 ## 내 담당 아님
 
 - **`Time.timeScale`에 종속되지 않는 캐릭터** — 회원님이 직접 처리하기로 함 (2026-08-23).
   `HPbar.Update()`가 매 프레임 `TimeManager.SetScale()`을 호출해 체력이 게임 속도를 정하는 구조.
-  이쪽을 건드리게 되면 `HPbar` 항목(위)과 겹치므로 먼저 확인할 것.
+  이쪽을 건드리게 되면 완료 항목의 `HPbar` NRE 분석과 겹치므로 먼저 확인할 것.
 
 ---
 

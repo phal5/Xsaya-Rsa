@@ -58,6 +58,18 @@ public class WeaponEffectSpawner : MonoBehaviour
     public void PlayAt(Vector3 position) => Spawn(effect, position);
 
     /// <summary>
+    /// 자리와 각도를 <b>모두</b> 받아 세운다. 무기가 있는 곳과 이펙트가 서야 할 곳이 다를 때 쓴다.
+    ///
+    /// 베기 궤적이 그렇다 — 그것은 칼이 지나간 <b>끝</b>에 서야 하는데, 뿌리는 시점의 칼은
+    /// 아직 시작점에 있다. 각도도 마찬가지로 무기가 아니라 궤적이 정한다.
+    /// </summary>
+    public void PlayAt(Vector3 position, Quaternion rotation) => Spawn(effect, position, rotation);
+
+    /// <summary>이번만 다른 이펙트를, 자리와 각도까지 정해 세운다.</summary>
+    public void PlayAt(GameObject effectOverride, Vector3 position, Quaternion rotation)
+        => Spawn(effectOverride, position, rotation);
+
+    /// <summary>
     /// 맞은 콜라이더에서 무기와 가장 가까운 지점에 세운다.
     ///
     /// 트리거 충돌은 접점을 주지 않아서 — OnTriggerEnter가 넘기는 것은 상대 콜라이더뿐이다 —
@@ -74,7 +86,7 @@ public class WeaponEffectSpawner : MonoBehaviour
     }
 
     /// <summary>자리를 넘기지 않으면 무기 자리에 선다. 회전은 어느 쪽이든 무기를 따른다.</summary>
-    void Spawn(GameObject prefab, Vector3? position)
+    void Spawn(GameObject prefab, Vector3? position, Quaternion? rotation = null)
     {
         if (!effectEnabled || prefab == null) return;
 
@@ -83,7 +95,7 @@ public class WeaponEffectSpawner : MonoBehaviour
         GameObject spawned = Instantiate(
             prefab,
             position ?? where.position,
-            where.rotation,
+            rotation ?? where.rotation,
             followWeapon ? where : null);
 
         Destroy(spawned, lifetime > 0f ? lifetime : LengthOf(spawned));

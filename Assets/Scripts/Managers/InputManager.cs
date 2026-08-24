@@ -16,6 +16,7 @@ public class InputManager : MonoBehaviour
     [field: SerializeField] public InputActionReference move_climbUp;
     [Tooltip("턱을 타고 내려가거나 놓는 키. ↓ 에 걸려 있다.")]
     [field: SerializeField] public InputActionReference move_climbDown;
+    [field: SerializeField] public InputActionReference move_raise;
 
     public static Vector3 CharacterMove { get; private set; }
     public static Vector2 CharacterLook { get; private set; }

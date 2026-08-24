@@ -3297,6 +3297,7 @@ GameObject:
   - component: {fileID: 5476890887710441336}
   - component: {fileID: 2958393897222650418}
   - component: {fileID: 538472195865395251}
+  - component: {fileID: 4578271510971376132}
   m_Layer: 5
   m_Name: UI Canvas
   m_TagString: Untagged
@@ -3434,6 +3435,26 @@ MonoBehaviour:
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6
+--- !u!114 &4578271510971376132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6572118616037248231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cb2cf3173312c742ba26f583da2930a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HudService
+  _instructor: {fileID: 7474317115429083787}
+  _message: {fileID: 2006348854971472841}
+  _hudGroups:
+  - {fileID: 2958015840262294569}
+  - {fileID: 4274415578947889991}
+  - {fileID: 435675804047765160}
+  - {fileID: 7561377506212729125}
+  - {fileID: 8504367583805390724}
 --- !u!1 &6632659804856811132
 GameObject:
   m_ObjectHideFlags: 0

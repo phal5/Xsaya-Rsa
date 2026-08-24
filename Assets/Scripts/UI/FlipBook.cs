@@ -8,6 +8,10 @@ public class FlipBook : MonoBehaviour
 {
     [SerializeField] UnityEvent onSetBook;
     [SerializeField] UnityEvent onDialogueNull;
+
+    [Tooltip("대사를 못 다 본 채로 강제로 닫을 때. 패널을 접는 연출만 물린다 — " +
+             "onDialogueNull과 달리 조작 잠금 해제는 여기 물리지 않는다. 이미 다른 경로가 조작을 가져간 뒤일 수 있다.")]
+    [SerializeField] UnityEvent onForceClose;
     [Space(10f)]
     [SerializeField] TextMeshProUGUI speaker;
     [SerializeField] TextMeshProUGUI dialogue;
@@ -35,6 +39,10 @@ public class FlipBook : MonoBehaviour
 
     public void Next()
     {
+        // 넘길 책이 없으면 조용히 지나간다. Enter 키가 상시 여기 물려 있어,
+        // ForceClose가 책을 거둔 직후에도 그 프레임에 남은 입력이 이리로 새어 들어올 수 있다.
+        if (_book == null) return;
+
         Page? nullablePage = _book.GetNextPage();
         if (nullablePage == null)
         {
@@ -70,6 +78,30 @@ public class FlipBook : MonoBehaviour
         _book?.ClearEvents();
         _book = null;
     }
+
+    /// <summary>지금 열려 있는 책이 이것인지. 남의 대사를 잘못 닫지 않으려면 부르는 쪽이 먼저 확인해야 한다.</summary>
+    public bool IsShowing(Book book) => _book == book;
+
+    /// <summary>
+    /// 지금 열려 있는 책을 <b>못 다 본 채로</b> 닫는다. 그 책을 연 관문이 씬과 함께 사라졌을 때 쓴다.
+    ///
+    /// <see cref="Next"/>가 끝에 닿아 스스로 닫는 정상 경로와 갈리는 지점은 <b>조작 잠금</b>이다.
+    /// onDialogueNull은 ControlLock.Release도 함께 물고 있는데, 대사가 끊긴 것은 대개 사망처럼
+    /// 다른 경로가 이미 조작을 가져간 뒤라 — 여기서 그것까지 풀면 되찾아간 조작을 도로 빼앗는다.
+    /// 그래서 패널을 접는 연출만 <see cref="onForceClose"/>에 따로 물려 그쪽만 부른다.
+    ///
+    /// <b>다른 책이 이미 열려 있으면 아무것도 하지 않는다.</b> 부르는 쪽이 자기 책이 아직도
+    /// 열려 있는지 매번 확인할 필요 없이, 늦게 도착한 호출이 남의 대사를 끊지 않도록 여기서 막는다.
+    /// </summary>
+    public void ForceClose(Book book)
+    {
+        if (_book != book) return;
+
+        dialogue.text = speaker.text = string.Empty;
+        midScreen.SetText(string.Empty);
+        onForceClose.Invoke();
+        RemoveBook();
+    }
 }
 
 [Serializable]
@@ -91,6 +123,14 @@ public class Book
     public Book() { }
 
     public Book(List<Page> pages) { _pages = pages; }
+
+    /// <summary>
+    /// 띄울 것이 있는지. 인스펙터에 비워둔 책을 여는 것과 아예 열지 않는 것을 구별하는 데 쓴다.
+    ///
+    /// 빈 책도 <see cref="FlipBook.SetBook"/>에 넣으면 열자마자 닫히므로 결과는 비슷하지만,
+    /// 그 사이에 조작이 한 번 잠기고 풀려 화면이 깜빡인다. 그 창을 아예 만들지 않는 쪽이 낫다.
+    /// </summary>
+    public bool HasPages => _pages != null && _pages.Count > 0;
 
     public Page? GetNextPage()
     {

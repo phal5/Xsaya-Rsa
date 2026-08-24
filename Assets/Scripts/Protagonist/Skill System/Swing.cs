@@ -20,6 +20,11 @@ using UnityEngine;
 ///
 /// 끝 자세를 얼마나 세울지는 여기 없다. <b>쿨다운이 끝날 때까지</b> 세운다 —
 /// 그래야 "이 스킬은 0.5초에 한 번"이 화면에서도 그대로 보인다.
+///
+/// 이펙트의 자리와 각도를 여기 적어두는 이유. 궤적은 칼이 <b>지나간 끝</b>에 서야 하는데
+/// 뿌리는 시점의 칼은 아직 시작점에 있다. 그 끝자리를 런타임에 알려면 클립을 앞질러
+/// 샘플링해야 하고, 그건 보이는 애니메이터를 건드리거나 그래프를 하나 더 돌리는 일이다.
+/// 미리 재어 적어두면 런타임에 할 일이 좌표 변환 하나로 줄고, 손으로 다듬을 수도 있다.
 /// </summary>
 [System.Serializable]
 public struct Swing
@@ -44,6 +49,15 @@ public struct Swing
 
     [Tooltip("이 타에만 다른 이펙트를 뿌린다. 비워두면 스포너에 꽂아둔 것이 나간다.")]
     public GameObject effect;
+
+    [Tooltip("이펙트가 설 자리와 각도를 <b>직접 잡아둔 오브젝트</b>. 꽂으면 아래 두 숫자보다 우선한다.\n무기 아래에 두면 안 된다 - 뿌리는 순간의 칼은 아직 시작점에 있어 궤적이 어긋난다. Body 아래에 둔다.")]
+    public Transform anchor;
+
+    [Tooltip("이펙트가 설 자리. 캐릭터 기준 좌표(x=오른쪽, y=위, z=앞). 칼이 지나간 끝을 적는다.")]
+    public Vector3 effectPlace;
+
+    [Tooltip("이펙트가 설 각도. 캐릭터 기준 오일러각. Y가 궤적의 수평 방향이다.")]
+    public Vector3 effectFacing;
 
     public bool IsSet => !string.IsNullOrEmpty(state);
 }

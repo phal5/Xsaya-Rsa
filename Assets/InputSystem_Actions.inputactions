@@ -79,10 +79,10 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Next",
+                    "name": "Raise",
                     "type": "Button",
                     "id": "b7230bb6-fc9b-4f52-8b25-f5e19cb2c2ba",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -350,11 +350,11 @@
                 {
                     "name": "",
                     "id": "cbac6039-9c09-46a1-b5f2-4e5124ccb5ed",
-                    "path": "<Keyboard>/2",
+                    "path": "<Keyboard>/v",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "Next",
+                    "action": "Raise",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -365,7 +365,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Next",
+                    "action": "Raise",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -515,10 +515,10 @@
                 {
                     "name": "",
                     "id": "91a506f9-2b41-411a-adf8-2536014a99bf",
-                    "path": "<Keyboard>/v",
+                    "path": "<Keyboard>/c",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Keyboard&Mouse",
                     "action": "Dash",
                     "isComposite": false,
                     "isPartOfComposite": false

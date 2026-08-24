@@ -26,10 +26,13 @@ Material:
     m_Ints: []
     m_Floats:
     - _Chroma: 5
-    - _EdgeSoftness: 0.5
-    - _HeadBias: 0
-    - _Shade: 1
-    - _Strength: 0.5
+    - _EdgeSoftness: 0.01
+    - _HeadBias: 1
+    - _RevealFlip: 0
+    - _RevealSoftness: 0.08
+    - _RevealTime: 0.634
+    - _Shade: 0.468
+    - _Strength: 2
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

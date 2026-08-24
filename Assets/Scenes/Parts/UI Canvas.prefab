@@ -2312,6 +2312,7 @@ GameObject:
   - component: {fileID: 314295840121827487}
   - component: {fileID: 8404801500155399503}
   - component: {fileID: 8070989906880258265}
+  - component: {fileID: 2498661988186709014}
   m_Layer: 5
   m_Name: OnScreenMessage
   m_TagString: Untagged
@@ -2452,6 +2453,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MessageUI
   _text: {fileID: 8404801500155399503}
   _fader: {fileID: 8759531030249910868}
+--- !u!114 &2498661988186709014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7137640266396347032}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95ae032fa3283464c95ca633beace1eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Instructor
+  _key: 0
+  _event:
+    m_PersistentCalls:
+      m_Calls: []
+  _messageUI: {fileID: 8070989906880258265}
 --- !u!1 &7249960758431460066
 GameObject:
   m_ObjectHideFlags: 0
@@ -3242,6 +3260,7 @@ GameObject:
   - component: {fileID: 4662065481382464782}
   - component: {fileID: 3390040674238128832}
   - component: {fileID: 7326691884731548469}
+  - component: {fileID: 6514501763358090955}
   m_Layer: 5
   m_Name: UI Canvas
   m_TagString: Untagged
@@ -3379,6 +3398,26 @@ MonoBehaviour:
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6
+--- !u!114 &6514501763358090955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8561750342625190549}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cb2cf3173312c742ba26f583da2930a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HudService
+  _instructor: {fileID: 2498661988186709014}
+  _message: {fileID: 8070989906880258265}
+  _hudGroups:
+  - {fileID: 3575832316201641961}
+  - {fileID: 8362020397569796446}
+  - {fileID: 4160312017288404131}
+  - {fileID: 8521158512398111345}
+  - {fileID: 6085697672099704531}
 --- !u!1 &8596590216758411532
 GameObject:
   m_ObjectHideFlags: 0
