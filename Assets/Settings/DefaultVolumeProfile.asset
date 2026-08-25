@@ -1097,7 +1097,7 @@ MonoBehaviour:
     m_Value: {r: 0, g: 0, b: 0, a: 1}
   useOverlay:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
 --- !u!114 &9001657382290151224
 MonoBehaviour:
   m_ObjectHideFlags: 3

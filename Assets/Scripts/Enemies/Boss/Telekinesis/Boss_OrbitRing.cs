@@ -88,6 +88,19 @@ public class Boss_OrbitRing : Boss_Telekinesis
         if (phase == Phase.Recovery && _throwOnFinish) ThrowOnSchedule();
     }
 
+    /// <summary>
+    /// 받아들인 창도 <b>이미 도는 고리라면</b> 아프게 만든다.
+    /// OnActivate가 그때 들고 있던 것에만 걸어두므로, 나중에 합류한 것은 여기서 따로 걸어야 한다.
+    /// </summary>
+    public override bool Absorb(Boss_Throwable throwable)
+    {
+        if (!base.Absorb(throwable)) return false;
+
+        if (phase != Phase.Windup) throwable.SetHarmful(true, Damage, _rehitDelay);
+
+        return true;
+    }
+
     /// <summary>고리를 기울인다. 수평으로만 돌면 평면적으로 보인다.</summary>
     protected override Vector3 SlotOf(int index, int total) => Tilted(base.SlotOf(index, total));
 

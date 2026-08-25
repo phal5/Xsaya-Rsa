@@ -26,7 +26,10 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     /// Stuck은 "쓰이고 사라진 것"이 아니라 <b>땅에 꽂혀 있는 것</b>이다.
     /// 아직 쓸 수 있는 물건이라 쳐내면 되날아가고, 시간이 지나면 그 자리에서 회수된다.
     /// </summary>
-    public enum Phase { Idle, Held, Aiming, Flying, Stuck }
+    /// <summary>
+    /// <b>새 값은 끝에 붙인다.</b> 가운데에 끼우면 이미 저장된 정수가 통째로 한 칸씩 밀린다.
+    /// </summary>
+    public enum Phase { Idle, Held, Aiming, Flying, Stuck, Captured }
 
     [Header("Body")]
     [Tooltip("비워두면 자기 자신에서 찾는다. 없으면 위치만 옮긴다.")]
@@ -83,8 +86,32 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     [Tooltip("쳐냈을 때 되날아가는 속도. 0이면 발사체의 기본 속도를 쓴다.")]
     [SerializeField, Min(0f)] float _deflectSpeed = 22f;
 
-    [Tooltip("되날아간 것이 주는 피해.")]
+    [Tooltip("되날아가는 동안의 속도 배수. 가로축은 <b>쳐낸 뒤 흐른 시간(초)</b>, 세로축은 위 속도에 곱할 배수다. " +
+             "마지막 키 이후로는 그 값이 그대로 이어진다. 평평한 1이면 지금까지와 같다. " +
+             "0을 찍으면 그 순간 추진이 사라져 중력만 남는다 - 멈춰 뜨는 것이 아니라 떨어진다.")]
+    [SerializeField] AnimationCurve _deflectSpeedCurve = AnimationCurve.Constant(0f, 1f, 1f);
+
+    [Tooltip("되날아간 것이 주는 피해. 보스가 창을 돌리는 중일 때만 실린다 - " +
+             "그렇지 않으면 때리러 가는 것이 아니라 되찾기러 가는 것이라 0으로 나간다.")]
     [SerializeField, Min(0f)] float _deflectDamage = 20f;
+
+    [Tooltip("되날아갈 때의 선회 속도(도/초). 때리러 가든 되찾기러 가든 보스를 따라붙어 반드시 닿게 한다. " +
+             "0이면 쳐낸 순간의 방향으로 곧게 날아가 빗나간다.")]
+    [SerializeField, Min(0f)] float _deflectHoming = 240f;
+
+    [Tooltip("보스에게 이만큼 가까워지면 흡수된다. 본체 콜라이더보다 넉넉하게 잡는다.")]
+    [SerializeField, Min(0.1f)] float _absorbRadius = 1.5f;
+
+    [Header("Capture - 흡수된 뒤 스스로 도는 궤도")]
+    [Tooltip("스킬의 고리와 다른 궤도다. 스킬이 돌고 있지 않을 때 흡수된 창이 혼자 도는 자리이고, " +
+             "다음 시전이 여기서 집어 간다. 그때부터는 스킬이 적어둔 반지름을 따른다.")]
+    [SerializeField, Min(0.5f)] float _captureRadius = 2.5f;
+
+    [Tooltip("보스 발치에서 그 궤도까지의 높이.")]
+    [SerializeField] float _captureHeight = 1.5f;
+
+    [Tooltip("도는 각속도(도/초). 음수면 반대로 돈다.")]
+    [SerializeField] float _captureSpin = 90f;
 
     #region Registry - 물건이 스스로 이름을 올린다
 
@@ -161,7 +188,11 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     public Phase phase { get; private set; } = Phase.Idle;
 
     /// <summary>지금 집을 수 있는지. 이미 다른 스킬이 들고 있으면 거짓.</summary>
-    public bool Available => phase == Phase.Idle;
+    /// <summary>
+    /// 집을 수 있는지. 흡수되어 혼자 도는 것도 포함한다 —
+    /// 그 상태의 뜻이 곧 "보스가 다음에 쓸 수 있는 물건"이기 때문이다.
+    /// </summary>
+    public bool Available => phase == Phase.Idle || phase == Phase.Captured;
 
     Boss_Projectile _projectile;
 
@@ -248,6 +279,9 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     public void Grab(Transform thrower)
     {
         if (!Available) return;
+
+        // 혼자 돌던 것을 스킬이 가져간다. 중심을 놓아야 Circle이 다시 끼어들지 않는다.
+        _absorbTarget = null;
 
         phase = Phase.Held;
         _thrower = thrower;
@@ -373,6 +407,8 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
         Phase.Flying => _parryWhileFlying,
         // 박혀 있는 것도 쳐낼 수 있다. 회수를 기다리는 창이 곧 플레이어의 무기가 된다.
         Phase.Stuck => _parryWhileStuck,
+        // 되찾긴 창은 쳐내도 다시 되찾기므로, 떠 있는 것과 같은 취급으로 둔다.
+        Phase.Captured => _parryWhileIdle,
         Phase.Idle => _parryWhileIdle,
         _ => false,
     };
@@ -392,25 +428,110 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// 집어 든 쪽으로 되돌려 보낸다.
+    /// 집어 든 쪽으로 되돌려 보낸다. <b>무엇이 되어 돌아가는지는 보스가 지금 무엇을 하고 있느냐가 정한다.</b>
+    ///
+    ///   창을 돌리는 중  때린다. 커밋에 들어간 보스는 손을 뺄 수 없으므로 그대로 맞는다.
+    ///   그렇지 않으면    되찾긴다. 궤도를 틀어 보스를 돌기 시작하고, 다음 공격에 같이 나간다.
+    ///
+    /// 둘 다 보스를 향해 <b>휘어서</b> 간다. 어느 쪽이든 닿는 것이 전제이기 때문이다.
+    ///
+    /// 이 갈림이 쳐내기의 값어치를 정한다 — 아무 때나 쳐내면 탄을 돌려주는 셈이고,
+    /// 보스가 고리를 돌리는 그 구간에 쳐내야 피해가 된다.
     ///
     /// 겨냥만 갈아끼우면 되는 것이 발사체가 타겟을 Transform으로 쥔 덕이다.
-    /// 무시 대상도 함께 뒤집혀, 되날아간 물건은 보스를 때리고 쳐낸 사람은 자기 것에 맞지 않는다.
+    /// 무시 대상도 함께 뒤집혀 쳐낸 사람은 자기 것에 맞지 않는다.
     /// </summary>
     void Deflect()
     {
         Transform player = PlayerManager.instance != null ? PlayerManager.instance.player : null;
-        Transform target = DeflectTarget;
+
+        // 지금 물건을 들고 있는 스킬이 있는지가 곧 "창을 돌리고 있는가"다.
+        bool spinning = Boss_Telekinesis.Holding != null;
+
+        _absorbTarget = DeflectTarget;
+        _absorbing = !spinning && _absorbTarget != null;
 
         phase = Phase.Flying;
         Projectile.SetContactDamage(false, 0f, 0f);
-        Projectile.Redirect(target, player != null ? player.root : null, _deflectDamage, _deflectSpeed);
 
-        // 겨눠진 쪽에 알린다. 피할지 말지는 그쪽이 정한다 — 창은 자기가 어디로 가는지만 안다.
-        if (target == null) return;
+        // <b>어느 쪽이든 선회를 싣는다.</b> 되찾기는 닿아야 성립하고, 때리는 쪽은 보스가
+        // 취약한 그 구간에 노린 것이므로 빗나가면 안 된다 - 커밋에 들어간 보스를 벌하는 것이
+        // 이 구간의 값어치인데, 곧게만 날아가면 보스가 조금 움직인 것만으로 그 값어치가 사라진다.
+        Projectile.Redirect(_absorbTarget, player != null ? player.root : null,
+                            spinning ? _deflectDamage : 0f,
+                            _deflectSpeed, _deflectSpeedCurve, _deflectHoming);
+    }
 
-        BossManager boss = target.GetComponentInParent<BossManager>();
-        if (boss != null) boss.NotifyDeflected();
+    Transform _absorbTarget;
+    bool _absorbing;
+
+    /// <summary>
+    /// 다 왔는지 본다. 닿는 판정을 발사체의 타격에 맡기지 않는 것은,
+    /// 흡수는 맞히는 일이 아니라 도착하는 일이기 때문이다 — 관통 설정이나 콜라이더 모양에 딸리면 안 된다.
+    /// </summary>
+    void CloseIn()
+    {
+        if (_absorbTarget == null) { _absorbing = false; return; }
+
+        if ((transform.position - _absorbTarget.position).sqrMagnitude > _absorbRadius * _absorbRadius) return;
+
+        Absorb();
+    }
+
+    /// <summary>
+    /// 보스에게 되찾긴다.
+    ///
+    /// 날아오는 사이에 고리가 돌기 시작했다면 그 자리에 합류한다. 아니면 스스로 돈다 —
+    /// 떠 있기만 해도 다음 시전이 집어 가지만, 도는 편이 "되찾겼다"가 눈에 읽힌다.
+    /// </summary>
+    void Absorb()
+    {
+        _absorbing = false;
+
+        MakeAvailable();
+
+        Boss_Telekinesis holding = Boss_Telekinesis.Holding;
+        if (holding != null && holding.Absorb(this)) { _absorbTarget = null; return; }
+
+        Capture();
+    }
+
+    /// <summary>
+    /// 혼자 도는 궤도에 올린다. 시작 각도는 <b>도착한 자리</b>에서 딴다 —
+    /// 0도에서 시작하면 삼켜지자마자 반대편으로 튀는 것이 보인다.
+    /// </summary>
+    void Capture()
+    {
+        if (_absorbTarget == null) return;
+
+        phase = Phase.Captured;
+
+        Vector3 offset = transform.position - _absorbTarget.position;
+        offset.y = 0f;
+
+        _captureAngle = offset.sqrMagnitude < 0.0001f
+            ? 0f
+            : Mathf.Atan2(offset.z, offset.x) * Mathf.Rad2Deg;
+    }
+
+    float _captureAngle;
+
+    /// <summary>
+    /// 보스 주위를 돈다. 스킬의 고리와 달리 자리를 나눠 가질 상대가 없으므로 각도를 혼자 굴린다.
+    /// 보스가 움직이면 중심도 따라 움직인다.
+    /// </summary>
+    void Circle()
+    {
+        if (_absorbTarget == null) { phase = Phase.Idle; return; }
+
+        _captureAngle += _captureSpin * Time.fixedDeltaTime;
+
+        float angle = _captureAngle * Mathf.Deg2Rad;
+        Vector3 centre = _absorbTarget.position + Vector3.up * _captureHeight;
+        Vector3 want = centre + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * _captureRadius;
+
+        transform.position = Vector3.Lerp(transform.position, want,
+            1f - Mathf.Exp(-_followSpeed * Time.fixedDeltaTime));
     }
 
     /// <summary>
@@ -449,7 +570,9 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     void FixedUpdate()
     {
         if (phase == Phase.Held) Follow();
+        else if (phase == Phase.Captured) Circle();
         else if (phase == Phase.Aiming) Aim();
+        else if (phase == Phase.Flying && _absorbing) CloseIn();
         else if (phase == Phase.Stuck) CountToRecovery();
     }
 
@@ -499,6 +622,10 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
     {
         phase = Phase.Stuck;
         _thrower = null;
+
+        // 흡수되지 못하고 어딘가에 박혔다. 표시를 지워야 다음 비행이 이 시계를 이어받지 않는다.
+        _absorbing = false;
+        _absorbTarget = null;
 
         _rest = transform.position;
         _restRotation = transform.rotation;

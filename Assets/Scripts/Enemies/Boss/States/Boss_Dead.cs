@@ -27,8 +27,14 @@ public class Boss_Dead : BaseEntityState<BossManager>
         manager.guarding = false;
         if (manager.health != null) manager.health.SetDamageScale(1f);
 
-        // 전투가 끝났으니 화면을 2D로 되돌린다. 카메라와 플레이어 Z는 PlayerManager가 안다.
-        if (PlayerManager.instance != null) PlayerManager.instance.Set2D(true);
+        // 전투가 끝났으니 화면을 <b>들어오기 전으로</b> 되돌린다. 2D를 박아두면
+        // 3D 스테이지에서 2D로 싸우는 보스를 잡는 순간 스테이지가 납작한 채로 굳는다.
+        if (manager.combatView != BossCombatView.Keep && PlayerManager.instance != null)
+            PlayerManager.instance.Set2D(manager.viewBefore);
+
+        // 전투가 끝났다고 알린다. Boss_Idle의 NotifyCombatStart와 짝을 이룬다.
+        // 소멸까지 기다리지 않는 것은, 그 사이 빈 체력바가 남으면 전투가 안 끝난 것처럼 보이기 때문이다.
+        manager.NotifyCombatEnd();
 
         _despawnAt = Time.time + manager.despawnDelay;
     }

@@ -1,4 +1,23 @@
 using UnityEngine;
+using UnityEngine.Events;
+
+/// <summary>
+/// 싸우는 동안의 화면. 보스마다 다르다.
+///
+/// Keep이 있는 이유는, 화면을 바꾸지 않는 보스와 "2D로 바꾸는 보스"가 다르기 때문이다.
+/// 둘을 bool 하나로 뭉개면, 3D 스테이지에 놓인 중간보스가 깨어나며 화면을 납작하게 만든다.
+/// </summary>
+public enum BossCombatView
+{
+    /// <summary>건드리지 않는다. 들어온 화면 그대로 싸운다.</summary>
+    Keep,
+
+    /// <summary>납작한 2D로 싸운다.</summary>
+    Flat2D,
+
+    /// <summary>Z가 열린 3D로 싸운다.</summary>
+    Full3D,
+}
 
 /// <summary>
 /// 보스의 데이터 허브. 상태들은 로직만 갖고, 참조와 수치는 전부 여기서 읽는다.
@@ -18,6 +37,14 @@ public class BossManager : EntityManager
     [field: SerializeField] public Animator animator { get; private set; }
     [Tooltip("루트 모션을 몸체로 전달하는 중계기. 애니메이터와 같은 오브젝트에 있다.")]
     [field: SerializeField] public RootMotionRelay rootMotion { get; private set; }
+
+    [Header("Combat Events")]
+    [Tooltip("전투가 열릴 때. 이 보스를 지켜보는 것들을 여기 꽂는다 — 체력바, 음악, 관문 잠그기 등. " +
+             "판마다 정확히 한 번만 발동한다.")]
+    [SerializeField] UnityEvent onCombatStart;
+
+    [Tooltip("전투가 끝날 때. 사망으로 닫히는 지점이다.")]
+    [SerializeField] UnityEvent onCombatEnd;
 
     [Header("Radii - retreat < melee < awake 를 지켜야 한다")]
     [Tooltip("이 안에 들어오면 잠에서 깬다.")]
@@ -82,6 +109,11 @@ public class BossManager : EntityManager
     [Tooltip("쓰러진 뒤 오브젝트가 사라지기까지의 시간. 사망 애니메이션 길이에 맞춘다.")]
     [field: SerializeField] public float despawnDelay { get; private set; } = 3f;
 
+    [Header("Combat View")]
+    [Tooltip("싸우는 동안의 화면. 깨어날 때 이쪽으로 바꾸고, 죽으면 들어오기 전으로 되돌린다. " +
+             "Keep이면 양쪽 다 하지 않는다.")]
+    [field: SerializeField] public BossCombatView combatView { get; private set; } = BossCombatView.Full3D;
+
     [Tooltip("씬을 다시 불러도 이 보스를 알아보기 위한 이름표. 보스마다 겹치지 않게 적는다. " +
              "오브젝트 이름을 쓰지 않는 이유는, 하이어라키에서 이름을 바꿨다고 죽은 보스가 되살아나면 안 되기 때문이다.")]
     [field: SerializeField] public string bossId { get; private set; } = "";
@@ -94,6 +126,14 @@ public class BossManager : EntityManager
     /// <summary>사망은 흡수 상태다. 이후 들어오는 피격은 전부 무시된다.</summary>
     public bool isDead { get; set; }
 
+    /// <summary>
+    /// 싸움을 열기 전의 화면. <see cref="Boss_Idle"/>이 적고 <see cref="Boss_Dead"/>가 되돌린다.
+    ///
+    /// 여는 쪽이 들고 있지 않는 이유는, 그 상태가 한 번 떠나면 돌아오지 않아
+    /// 죽는 시점에 물어볼 수가 없기 때문이다. 두 상태가 모두 보는 자리는 여기뿐이다.
+    /// </summary>
+    public bool viewBefore { get; set; } = true;
+
     float _staggerReadyTime;
     float _reactionReadyTime;
 
@@ -103,30 +143,27 @@ public class BossManager : EntityManager
     /// </summary>
     public bool staggerImmune { get; set; }
 
-    /// <summary>
-    /// 되날아오는 것이 생겼다. 창을 쳐낸 쪽이 알린다.
-    ///
-    /// 표시만 남기고 판단하지 않는다 — 피할 수 있는지, 피한다면 어떻게인지는 전투 상태가 안다.
-    /// 여기서 상태를 직접 바꾸면 매니저가 FSM의 전이를 쥐게 되어, 상태기계가 자기 전이의 주인이 아니게 된다.
-    /// </summary>
-    bool _deflectIncoming;
-
-    public void NotifyDeflected() { _deflectIncoming = true; }
-
-    /// <summary>표시를 가져가며 지운다. 한 번의 쳐내기에 한 번만 반응한다.</summary>
-    public bool ConsumeDeflect()
-    {
-        if (!_deflectIncoming) return false;
-
-        _deflectIncoming = false;
-        return true;
-    }
-
     public bool CanStagger => !guarding && !staggerImmune && Time.time >= _staggerReadyTime;
     public bool ReactionReady => Time.time >= _reactionReadyTime;
 
     public void StartStaggerCooldown() { _staggerReadyTime = Time.time + staggerCooldown; }
     public void StartReactionCooldown() { _reactionReadyTime = Time.time + reactionCooldown; }
+
+    #endregion
+
+    #region Combat Events
+
+    /// <summary>
+    /// 전투가 열렸다. <see cref="Boss_Idle"/>이 깨어나는 그 한 번에 부른다.
+    ///
+    /// 상태기계가 <b>무엇이 듣는지 모르게</b> 두려고 이벤트로 낸다. 체력바를 직접 부르면
+    /// 보스 FSM이 UI를 알게 되고, 바를 두지 않은 보스마다 예외를 하나씩 두게 된다.
+    /// 듣는 쪽은 인스펙터에서 정한다.
+    /// </summary>
+    public void NotifyCombatStart() { onCombatStart.Invoke(); }
+
+    /// <summary>전투가 끝났다. <see cref="Boss_Dead"/>가 부른다.</summary>
+    public void NotifyCombatEnd() { onCombatEnd.Invoke(); }
 
     #endregion
 

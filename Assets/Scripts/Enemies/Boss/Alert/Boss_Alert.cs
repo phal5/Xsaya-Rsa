@@ -106,33 +106,12 @@ public class Boss_Alert : FiniteStateMachine
 
     public override void Transitions()
     {
-        // 되날아오는 창이 먼저다. 확률과 쿨다운을 보는 평소 반응과 달리 이건 결정적이다.
-        ConsumeEvade();
         ConsumeReaction();
         ToIdle();
     }
 
-    /// <summary>
-    /// 쳐낸 창이 되날아온다. 옆으로 빠져 사선에서 벗어난다.
-    ///
-    /// 다만 <b>못 피하는 구간이 있다</b>. 스킬이 커밋에 들어가 있으면 — 창을 고리로 돌리는 중이
-    /// 여기 해당한다 — 그 스킬은 끊기지 않기로 되어 있으므로 회피도 시작하지 않는다.
-    /// 피격 경직과 같은 자리에서 막는 것은 Poise가 "여기서부터 이 스킬은 끊기지 않는다"는
-    /// 한 가지 뜻이기 때문이다. 피하지 못하면 그대로 맞는다.
-    /// </summary>
-    void ConsumeEvade()
-    {
-        if (Boss == null || !Boss.ConsumeDeflect()) return;
-
-        if (Boss.staggerImmune) return;
-        if (_currentStateType == typeof(Boss_ReactionMachine)) return;
-
-        Boss_ReactionMachine reaction = Reaction;
-        if (reaction == null) return;
-
-        reaction.RequestSidestep();
-        TransitTo<Boss_ReactionMachine>();
-    }
+    // 쳐낸 창을 피하던 자리가 여기 있었다. 이제 되날아온 창은 보스를 때리지 않고
+    // 고리에 흡수되므로(Boss_Throwable.Deflect) 피할 것이 없다.
 
     Boss_ReactionMachine _reaction;
 

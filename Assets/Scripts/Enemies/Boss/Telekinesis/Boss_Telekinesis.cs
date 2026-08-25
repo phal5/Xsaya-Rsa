@@ -10,15 +10,18 @@ using UnityEngine;
 /// 집는 규칙은 하나뿐이다 — <see cref="Boss_Throwable.Available"/>한 것 중 가까운 순서.
 /// 하나도 못 집으면 스킬이 성립하지 않으므로 <see cref="IsReady"/>가 거짓이 된다.
 /// 사거리와 쿨다운만 보고 골랐다가 빈손으로 시전하는 일을 여기서 막는다.
+///
+/// <b>거리는 보지 않는다.</b> 예전에는 보스 반경 안의 것만 집었는데, 회수는 창이 박힌 그 자리에서
+/// 이뤄지므로(<see cref="Boss_Throwable"/>) 멀리 빗나가 박힌 창은 다시 쓸 수 있게 된 뒤에도
+/// 영영 집히지 않았다. 그런 것이 몇 개 쌓이면 최소 개수 아래로 떨어져 스킬이 통째로 사라진다.
+/// 염력에 사거리를 두는 대신 그 경로를 없앴다 — 창이 놓인 곳은 보스 아레나뿐이고
+/// 배경은 한 번에 하나만 올라오므로, 남의 물건을 집을 일이 없다.
 /// </summary>
 public abstract class Boss_Telekinesis : Boss_SkillBase
 {
     [Header("Telekinesis - 무엇을 몇 개 집을지")]
     [Tooltip("한 번에 끌어올릴 개수. 주변에 이보다 적으면 있는 만큼만 쓴다.")]
     [SerializeField, Min(1)] int _count = 5;
-
-    [Tooltip("이 거리 안의 물건만 끌어온다.")]
-    [SerializeField, Min(1f)] float _gatherRadius = 12f;
 
     [Tooltip("이보다 적게 모이면 이 스킬을 쓰지 않는다.")]
     [SerializeField, Min(1)] int _minimumCount = 2;
@@ -34,6 +37,15 @@ public abstract class Boss_Telekinesis : Boss_SkillBase
     [SerializeField, Min(0.1f)] float _followSpeed = 8f;
 
     protected readonly List<Boss_Throwable> held = new List<Boss_Throwable>();
+
+    /// <summary>
+    /// 지금 물건을 들고 있는 스킬. 되날아온 창이 합류할 고리를 여기서 찾는다.
+    ///
+    /// 하나뿐이어도 되는 것은 보스가 한 번에 한 스킬만 시전하기 때문이다.
+    /// 창이 스킬을 거슬러 올라가 찾게 두면 보스 - 상태기계 - 스킬을 훑어야 하는데,
+    /// 그 길은 창이 알아야 할 것이 아니다.
+    /// </summary>
+    public static Boss_Telekinesis Holding { get; private set; }
 
     /// <summary>고리가 지금 몇 도 돌아가 있는지. 파생이 굴린다.</summary>
     protected float ringAngle;
@@ -62,15 +74,13 @@ public abstract class Boss_Telekinesis : Boss_SkillBase
 
     int CountAvailable(BossManager boss)
     {
-        if (boss == null || boss.character == null) return 0;
+        if (boss == null) return 0;
 
         int n = 0;
-        float radiusSquared = _gatherRadius * _gatherRadius;
 
         foreach (Boss_Throwable t in Boss_Throwable.All)
         {
             if (t == null || !t.Available) continue;
-            if ((t.transform.position - boss.character.position).sqrMagnitude > radiusSquared) continue;
             n++;
         }
 
@@ -84,6 +94,8 @@ public abstract class Boss_Telekinesis : Boss_SkillBase
         held.Clear();
         ringAngle = 0f;
 
+        Holding = this;
+
         Gather();
         base.Enter();
     }
@@ -94,7 +106,31 @@ public abstract class Boss_Telekinesis : Boss_SkillBase
         foreach (Boss_Throwable t in held) if (t != null) t.Cancel();
         held.Clear();
 
+        // 다음 스킬이 이미 들어와 있으면 그쪽을 지우지 않는다.
+        if (Holding == this) Holding = null;
+
         base.Exit();
+    }
+
+    /// <summary>
+    /// 되날아온 창을 고리에 받아들인다.
+    ///
+    /// 자리는 따로 만들지 않는다 — <see cref="SlotOf"/>가 개수로 나누므로,
+    /// 목록에 들어가는 순간 고리가 한 칸씩 벌어지며 제 자리가 생긴다.
+    /// 던질 때도 목록을 그대로 훑으므로 같이 나간다.
+    /// </summary>
+    /// <returns>실제로 받아들였는지.</returns>
+    public virtual bool Absorb(Boss_Throwable throwable)
+    {
+        if (throwable == null || held.Contains(throwable)) return false;
+
+        throwable.Grab(Thrower);
+
+        // 집히지 않았다면 이미 다른 국면에 있다는 뜻이다. 목록에 넣으면 자리 지정이 어긋난다.
+        if (throwable.phase != Boss_Throwable.Phase.Held) return false;
+
+        held.Add(throwable);
+        return true;
     }
 
     /// <summary>가까운 순서로 집는다.</summary>
@@ -103,14 +139,12 @@ public abstract class Boss_Telekinesis : Boss_SkillBase
         if (manager == null || manager.character == null) return;
 
         Vector3 origin = manager.character.position;
-        float radiusSquared = _gatherRadius * _gatherRadius;
 
         List<Boss_Throwable> candidates = new List<Boss_Throwable>();
 
         foreach (Boss_Throwable t in Boss_Throwable.All)
         {
             if (t == null || !t.Available) continue;
-            if ((t.transform.position - origin).sqrMagnitude > radiusSquared) continue;
             candidates.Add(t);
         }
 

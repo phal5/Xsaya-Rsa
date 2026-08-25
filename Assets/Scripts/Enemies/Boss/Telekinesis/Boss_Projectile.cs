@@ -77,12 +77,25 @@ public class Boss_Projectile : MonoBehaviour
     Vector3 _velocity;
     float _flightTimer;
 
+    /// <summary>
+    /// 되날아가는 동안의 속도 배수와 그 시계. 쳐내기만 쥐여준다 —
+    /// 보스가 던지는 것은 예전처럼 중력만 받는다.
+    /// </summary>
+    AnimationCurve _speedCurve;
+    float _speedCurveBase;
+    float _speedCurveTime;
+
+    /// <summary>이번 비행에만 쓰는 선회 속도. 음수면 인스펙터 값을 쓴다.</summary>
+    float _homingOverride = -1f;
+
     bool _contact;
     float _rehitTimer;
 
     readonly List<IDamageable> _alreadyHit = new List<IDamageable>();
 
     float Speed => _speedOverride > 0f ? _speedOverride : _speed;
+
+    float HomingRate => _homingOverride >= 0f ? _homingOverride : _homingTurnRate;
 
     #region Arming
 
@@ -122,6 +135,10 @@ public class Boss_Projectile : MonoBehaviour
 
     void Launch(Vector3 direction)
     {
+        // 커브도 선회도 쳐내기가 쥐여주는 것이다. 새로 쏘는 것은 들고 있지 않아야 한다.
+        _speedCurve = null;
+        _homingOverride = -1f;
+
         Flying = true;
         _velocity = direction * Speed;
         _flightTimer = _maxFlightTime;
@@ -132,7 +149,16 @@ public class Boss_Projectile : MonoBehaviour
     /// 날아가는 도중 겨냥을 갈아끼운다. 쳐내기가 이걸 쓴다.
     /// 무시 대상까지 함께 바꾸므로, 되날아간 것은 원래 던진 쪽을 때릴 수 있게 된다.
     /// </summary>
-    public void Redirect(Transform target, Transform ignore, float damage, float speedOverride = 0f)
+    /// <param name="speedCurve">
+    /// 되날아가는 동안의 속도 배수. 가로축은 쳐낸 뒤 흐른 시간(초)이고, 세로축이 <paramref name="speedOverride"/>에 곱해진다.
+    /// 비우면 예전처럼 한 번 실린 속도가 중력에만 깎인다.
+    /// </param>
+    /// <param name="homingTurnRate">
+    /// 이번 비행의 선회 속도(도/초). 음수면 인스펙터 값을 쓴다.
+    /// 되날아온 창이 보스에게 반드시 닿아야 하는 경우가 여기 해당한다.
+    /// </param>
+    public void Redirect(Transform target, Transform ignore, float damage, float speedOverride = 0f,
+                         AnimationCurve speedCurve = null, float homingTurnRate = -1f)
     {
         Origin = transform.position;
         Target = target;
@@ -144,6 +170,13 @@ public class Boss_Projectile : MonoBehaviour
         _velocity = AimDirection() * Speed;
         _flightTimer = _maxFlightTime;
         _alreadyHit.Clear();
+
+        // 키가 하나도 없는 커브는 Evaluate가 0을 돌려준다 — 그건 커브가 아니라 사고다.
+        _speedCurve = speedCurve != null && speedCurve.length > 0 ? speedCurve : null;
+        _speedCurveBase = Speed;
+        _speedCurveTime = 0f;
+
+        _homingOverride = homingTurnRate;
     }
 
     /// <summary>
@@ -158,7 +191,10 @@ public class Boss_Projectile : MonoBehaviour
         _rehitTimer = 0f;
     }
 
-    /// <summary>모든 겨냥과 판정을 내린다. 물건이 원위치로 돌아갈 때.</summary>
+    /// <summary>
+    /// 모든 겨냥과 판정을 내린다. 물건이 원위치로 돌아갈 때.
+    /// 속도 커브도 함께 버린다 — 다음 비행이 남의 시계를 이어받지 않게.
+    /// </summary>
     public void Disarm()
     {
         Flying = false;
@@ -167,6 +203,9 @@ public class Boss_Projectile : MonoBehaviour
         _ignore = null;
         _velocity = Vector3.zero;
         _alreadyHit.Clear();
+
+        _speedCurve = null;
+        _homingOverride = -1f;
     }
 
     /// <summary>이 발사체를 무시할 대상. 던진 쪽이 자기 것에 맞지 않게 한다.</summary>
@@ -189,6 +228,8 @@ public class Boss_Projectile : MonoBehaviour
         Vector3 from = transform.position;
 
         _velocity += Vector3.down * (_gravity * Time.fixedDeltaTime);
+        ApplySpeedCurve();
+
         transform.position += _velocity * Time.fixedDeltaTime;
 
         // 날아가는 방향을 바라보게 둔다. 창끝이 진행 방향을 가리켜야 박히는 자세가 맞는다.
@@ -270,7 +311,7 @@ public class Boss_Projectile : MonoBehaviour
     /// <summary>타겟을 쥐고 있으므로 쏜 뒤에도 겨냥을 고칠 수 있다. 0이면 아무것도 하지 않는다.</summary>
     void Steer()
     {
-        if (_homingTurnRate <= 0f || Target == null) return;
+        if (HomingRate <= 0f || Target == null) return;
 
         Vector3 want = AimPoint() - transform.position;
         if (want.sqrMagnitude < 0.0001f) return;
@@ -278,9 +319,28 @@ public class Boss_Projectile : MonoBehaviour
         float speed = _velocity.magnitude;
         Vector3 turned = Vector3.RotateTowards(
             _velocity.normalized, want.normalized,
-            _homingTurnRate * Mathf.Deg2Rad * Time.fixedDeltaTime, 0f);
+            HomingRate * Mathf.Deg2Rad * Time.fixedDeltaTime, 0f);
 
         _velocity = turned * speed;
+    }
+
+    /// <summary>
+    /// 속도를 커브가 정한 값으로 다시 맞춘다. <b>방향은 건드리지 않는다</b> —
+    /// 중력이 휘어둔 궤적은 그대로 두고 빠르기만 가져간다.
+    ///
+    /// 중력을 더한 <b>뒤에</b> 부른다. 앞에서 맞추면 그 프레임의 중력이 커브 위에 얹혀,
+    /// 인스펙터에 그린 값과 실제로 나는 빠르기가 어긋난다.
+    /// </summary>
+    void ApplySpeedCurve()
+    {
+        if (_speedCurve == null) return;
+
+        _speedCurveTime += Time.fixedDeltaTime;
+
+        float current = _velocity.magnitude;
+        if (current < 0.0001f) return;
+
+        _velocity *= _speedCurveBase * _speedCurve.Evaluate(_speedCurveTime) / current;
     }
 
     void Contact()
@@ -330,6 +390,11 @@ public class Boss_Projectile : MonoBehaviour
     /// <summary>반경 안에서 맞을 것을 찾아 때린다. 하나라도 때렸으면 참.</summary>
     bool Strike()
     {
+        // <b>피해가 없으면 아무것도 때리지 않는다.</b> 0을 실어 보내는 것은 "0만큼 때린다"가 아니라
+        // "때리러 가는 것이 아니다"라는 뜻이다. 그대로 두면 되찾기러 가는 창이 보스의 onDamage를
+        // 깨워 0 피해로 경직시킨다 - 체력은 그대로인데 보스만 휘청인다.
+        if (_damage <= 0f) return false;
+
         bool hit = false;
         Collider[] found = Physics.OverlapSphere(transform.position, _hitRadius);
 

@@ -19,6 +19,15 @@ public class PlayerManager : MonoBehaviour
     [Tooltip("플레이어 몸의 Z 정렬과 잠금을 담당한다.")]
     [field: SerializeField] public Dimensional dimension { get; private set; }
 
+    /// <summary>
+    /// 지금 화면이 2D인지. <see cref="Set2D"/>가 유일한 기록자다.
+    ///
+    /// 리그의 is2DMode를 열어 묻지 않는다 — 리그는 스테이지마다 갈리고 등록되기 전에는 없는데,
+    /// 화면이 어느 쪽인지는 그와 무관하게 언제나 답이 있어야 한다.
+    /// 처음은 2D다. 리그의 기본값도 Dimensional의 잠금도 그쪽에서 시작한다.
+    /// </summary>
+    public bool Is2D { get; private set; } = true;
+
     public static PlayerManager instance;
 
     private void Awake()
@@ -71,6 +80,8 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public void Set2D(bool to2D)
     {
+        Is2D = to2D;
+
         if (cameraRig != null) cameraRig.ToggleMode(to2D);
         if (dimension == null) return;
 
