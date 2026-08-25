@@ -48,7 +48,7 @@ public class CharacterManager : EntityManager
     [Tooltip("일어나기 시작해 시간 배속이 제자리로 돌아오기까지 걸리는 시간(초).")]
     [field: SerializeField] public float RiseRamp { get; private set; } = 2f;
 
-    [Tooltip("누워 있는 동안 <b>메시</b>를 몸에서 이만큼 떼어 놓는다. 일어서며 0으로 돌아온다. 몸은 건드리지 않는다.")]
+    [Tooltip("누워 있는 동안 <b>메시</b>를 몸에서 이만큼 떼어 놓는다. 일어서며 0으로 돌아온다. 몸은 건드리지 않는다. <b>한 번도 쉬어가기 전까지만 쓰인다</b> - 체크포인트를 밟은 뒤로는 그쪽에 적힌 값이 이를 대신한다.")]
     [field: SerializeField] public Vector3 RiseOffset { get; private set; } = new Vector3(-0.5f, 0.5f, 1f);
 
     [Tooltip("누워 있는 동안 <b>메시</b>를 몸에서 이만큼 비틀어 놓는다(오일러). 일어서며 0으로 돌아온다.")]

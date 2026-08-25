@@ -12,9 +12,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Parts/UI - General.unity
     guid: 22c7e72b7f1256c47aaad96337f451a0
   - enabled: 1
-    path: Assets/Scenes/Parts/UI - Start.unity
-    guid: ad58bb2b0e86ea54cb34665610005a58
-  - enabled: 1
     path: Assets/Scenes/Parts/Backgrounds/1. Temple of Awakening/Temple of Awakening.unity
     guid: 38beeb0da39a4ca47864e8942b980de5
   - enabled: 1
@@ -26,13 +23,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Parts/Backgrounds/4. the Depths/Cave.unity
     guid: d1a5d400d8bc56744bd4ef144caaf26f
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/z_BP/[Obsoletized]Scenes/Elden Shrine 1/Recap/Demo/Elden Shrine
-      1.unity
-    guid: 96fd05353dd962d468fbd2cef3686b8e
+    path: Assets/Scenes/Parts/Backgrounds/5. Ochyra Shop/Ochyra Shop.unity
+    guid: ae4cb4034b6c38c448ae58ce928efe73
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

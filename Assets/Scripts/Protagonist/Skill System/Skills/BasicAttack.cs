@@ -5,7 +5,7 @@ using UnityEngine;
 ///
 /// 휘두름마다 상태를 만들지 않았다. 그랬다면 전이가 동작 수만큼 늘어나는데
 /// 그 전이들이 할 일은 전부 "다음 클립을 걸고 시간을 다시 센다"뿐이라, 상태로 나눌 값이 없다.
-/// 여기서는 <see cref="Swing"/> 배열의 색인 하나가 그 자리를 대신한다.
+/// 여기서는 <see cref="SwingStrike"/> 배열의 색인 하나가 그 자리를 대신한다.
 ///
 /// 한 번의 베기는 <b>시작 자세 세우기 → 휘두름 → 남은 시간에 걸쳐 이동 자세로 풀리기</b>이고,
 /// 그 셋을 합쳐 <see cref="_action"/>만큼 걸린다. 클립이 쓰고 남은 몫이 그대로 블렌딩이 되므로
@@ -37,7 +37,7 @@ public class BasicAttack : Character_SkillBase
 
     [Header("Chain")]
     [Tooltip("적은 순서대로 이어진다. 비워두면 동작 없이 예전처럼 판정만 낸다.")]
-    [SerializeField] Swing[] _chain;
+    [SerializeField] SwingStrike[] _chain;
 
     [Tooltip("Swing에 적은 프레임을 초로 바꿀 때 쓰는 기준. 클립의 프레임 레이트와 맞춘다.")]
     [SerializeField, Min(1f)] float _frameRate = 30f;
@@ -86,7 +86,7 @@ public class BasicAttack : Character_SkillBase
 
     bool Usable => _chain != null && _chain.Length > 0;
 
-    Swing Current => _chain[_index];
+    SwingStrike Current => _chain[_index];
 
     bool Last => _index + 1 >= _chain.Length;
 

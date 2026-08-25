@@ -83,6 +83,23 @@ public class FlipBook : MonoBehaviour
     public bool IsShowing(Book book) => _book == book;
 
     /// <summary>
+    /// 책이 끝나는 것을 듣는다. <b>씬을 넘어 이 이벤트에 닿는 유일한 길이다</b> —
+    /// 배경 씬의 관문은 UI 씬의 이 오브젝트를 인스펙터에 꽂을 수 없다.
+    ///
+    /// 건 쪽이 <see cref="RemoveDialogueEndListener"/>로 반드시 거둔다.
+    /// 관문은 스테이지와 함께 파괴되므로 남겨두면 죽은 대상을 부르게 된다.
+    /// </summary>
+    public void AddDialogueEndListener(UnityAction call)
+    {
+        onDialogueNull.AddListener(call);
+    }
+
+    public void RemoveDialogueEndListener(UnityAction call)
+    {
+        onDialogueNull.RemoveListener(call);
+    }
+
+    /// <summary>
     /// 지금 열려 있는 책을 <b>못 다 본 채로</b> 닫는다. 그 책을 연 관문이 씬과 함께 사라졌을 때 쓴다.
     ///
     /// <see cref="Next"/>가 끝에 닿아 스스로 닫는 정상 경로와 갈리는 지점은 <b>조작 잠금</b>이다.

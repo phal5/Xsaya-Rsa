@@ -73,6 +73,11 @@ public class SceneDirector : MonoBehaviour
     /// </summary>
     void Start()
     {
+        // 아직 아무 데도 쉬어가지 않았을 때의 값. 인스펙터에 따로 두지 않는다 —
+        // 매니저에 이미 적혀 있고, 같은 값이 두 군데 있으면 어느 쪽이 진짜인지 물어야 한다.
+        // 무대를 못 잡고 아래에서 돌아 나가더라도 이 값은 서 있어야 하므로 먼저 채운다.
+        if (_character != null) _restOffset = _character.RiseOffset;
+
         string scene = _initialScene;
 
         if (string.IsNullOrEmpty(scene))
@@ -126,24 +131,38 @@ public class SceneDirector : MonoBehaviour
     string _restScene;
     Vector3 _restPlace;
     Quaternion _restFacing;
+    Vector3 _restOffset;
+
+    /// <summary>
+    /// 일어나는 동안 그림을 몸에서 떼어 놓을 거리. <see cref="Character_Rest"/>가 읽는다.
+    ///
+    /// 여기 두는 이유는 자리·방향과 같다 — 어느 체크포인트에서 일어나느냐에 딸린 값이고,
+    /// 그것을 아는 것은 이쪽뿐이다. 아직 아무 데도 쉬어가지 않았으면 매니저에 적힌 값이 그대로 남는다.
+    /// </summary>
+    public Vector3 RestOffset => _restOffset;
 
     /// <summary>
     /// 쉬어간 자리를 적는다. <see cref="Checkpoint"/>가 부른다.
     ///
-    /// 위치는 몸이 지금 서 있는 자리를 그대로 쓴다 — 그 땅은 방금 딛고 있었으므로 정의상 유효하다.
-    /// 체크포인트 오브젝트를 제단 위에 놓든 벽에 붙이든 스폰 오프셋을 따로 맞출 일이 없다.
-    ///
-    /// 방향은 <b>몸의 회전을 쓰지 않는다.</b> 부르는 쪽이 정해서 넘긴다 — 체크포인트마다
-    /// 일어서서 볼 방향을 저작자가 고정해두는 편이, 말을 건 각도에 따라 매번 달라지는 것보다 낫다.
+    /// 위치와 방향 <b>둘 다 부르는 쪽이 정해서 넘긴다.</b> 몸이 서 있던 자리를 쓰지 않는다 —
+    /// 체크포인트는 제 위치에 저작자가 잡아둔 오프셋을 더해 스폰 지점을 스스로 계산하고,
+    /// 여기는 그 결과를 그대로 받아 적을 뿐이다. 말을 건 각도·위치에 따라 매번 달라지면
+    /// 스폰 지점이 흔들리므로, 체크포인트마다 고정해두는 편이 낫다.
     /// </summary>
     /// <param name="scene">그 자리가 속한 배경 씬의 이름.</param>
-    public void SetCheckpoint(string scene, Quaternion facing)
+    /// <param name="place">쉬어간 뒤 설 자리. 체크포인트 위치 + 오프셋으로 이미 계산된 값이다.</param>
+    /// <param name="riseOffset">일어나는 동안 그림을 몸에서 떼어 놓을 거리. 자리마다 바닥이 다르므로 함께 받는다.</param>
+    public void SetCheckpoint(string scene, Vector3 place, Quaternion facing, Vector3 riseOffset)
     {
-        if (_character == null || _character.Body == null) return;
-
         _restScene = scene;
-        _restPlace = _character.Body.position;
+        _restPlace = place;
         _restFacing = facing;
+        _restOffset = riseOffset;
+
+        // 쉬어가는 것은 곧 체력을 채우는 것이다. Revive()를 쓰지 않는다 — 그건 죽음에서
+        // 돌아올 때의 몫이고, 여기는 살아있는 채로 등록하는 자리라 Invulnerable을 건드릴 일이 없다.
+        if (_character != null && _character.Damagable != null)
+            _character.Damagable.Heal(_character.Damagable.MaxHealth);
     }
 
     /// <summary>
@@ -312,7 +331,11 @@ public class SceneDirector : MonoBehaviour
     void Place(Vector3 place, Quaternion facing)
     {
         _character.Movement.Pin(place);
+
+        // 각도도 Pin과 같은 이유로 둘 다 적는다 - Rigidbody.rotation만 적으면 그림은 다음
+        // 시뮬레이션 스텝까지 옛 각도로 남고, 시간이 멎은 구간에서는 그 스텝이 오지 않는다.
         _character.Body.rotation = facing;
+        _character.Body.transform.rotation = facing;
     }
 
     /// <summary>

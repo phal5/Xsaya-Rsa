@@ -179,15 +179,6 @@ public class Character_Movement : MonoBehaviour, IMovement
     }
 
     /// <summary>
-    /// 몸을 한 지점에 못박는다. <b>중력을 끈 상태에서만 쓴다.</b>
-    ///
-    /// 켜둔 채 위치만 되돌리면 보이는 자리는 멎어 있어도 sampler의 아래 방향 속도는 계속 쌓이고,
-    /// 놓는 순간 그동안 쌓인 만큼이 한꺼번에 터진다. 매달림·오르기가 중력부터 끄는 이유다.
-    ///
-    /// 두 몸에 모두 적는다. Singular이 매 FixedUpdate마다 sampler를 rigidbody로 옮기지만,
-    /// 그 순서에 기대면 부르는 시점에 따라 한 프레임 어긋난다.
-    /// </summary>
-    /// <summary>
     /// 두 몸을 물리에서 떼어낸다. <b>자리의 주인이 하나여야 하는 구간</b>이 쓴다.
     ///
     /// 한쪽만 떼면 주인이 둘이 된다. 몸만 키네마틱으로 두면 외력 몸은 여전히 물리 바디라
@@ -203,15 +194,31 @@ public class Character_Movement : MonoBehaviour, IMovement
         _external.isKinematic = detached;
     }
 
+    /// <summary>
+    /// 몸을 한 지점에 못박는다. <b>중력을 끈 상태에서만 쓴다.</b>
+    ///
+    /// 켜둔 채 위치만 되돌리면 보이는 자리는 멎어 있어도 sampler의 아래 방향 속도는 계속 쌓이고,
+    /// 놓는 순간 그동안 쌓인 만큼이 한꺼번에 터진다. 매달림·오르기가 중력부터 끄는 이유다.
+    ///
+    /// 두 몸에 모두 적는다. Singular이 매 FixedUpdate마다 sampler를 rigidbody로 옮기지만,
+    /// 그 순서에 기대면 부르는 시점에 따라 한 프레임 어긋난다.
+    ///
+    /// Rigidbody와 Transform 둘 다에 적는다. Rigidbody.position은 <b>물리 자세만</b> 바꾸고,
+    /// 그것이 Transform에 실리는 시점은 다음 시뮬레이션 스텝이다 — 프로젝트가 Auto Sync Transforms를 꺼둔 탓이다.
+    /// 그러니 시간이 멎은 구간에서는 그 스텝이 오지 않아, 몸은 옮겨졌는데 그림과 카메라만 옛 자리에 남는다.
+    /// 부활 직후가 그렇다 — Character_Rest가 들어오면서 상한을 0으로 누르므로, 일어날 때까지 스텝이 한 번도 돌지 않는다.
+    /// </summary>
     public void Pin(Vector3 position)
     {
         _targetVelocity = Vector3.zero;
         _localVelocity = Vector3.zero;
 
         _external.position = position;
+        _external.transform.position = position;
         SetSampler(Vector3.zero);
 
         _own.position = position;
+        _own.transform.position = position;
         SetBodyVelocity(Vector3.zero);
     }
 

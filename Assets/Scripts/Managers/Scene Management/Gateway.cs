@@ -60,13 +60,12 @@ public class Gateway : MonoBehaviour
         if (PlayerManager.IsPlayer(other)) Enter();
     }
 
+    /// <summary>대사를 기다리는 중인지. 대사가 도는 동안 다시 밟는 것을 여기서 흘린다.</summary>
+    bool _waiting;
+
     /// <summary>
-    /// 관문에 들어선다. 적어둔 대사가 있으면 <b>띄우기만 하고 끝나길 기다리지 않는다</b> —
-    /// 넘어가는 것은 이 자리에서 곧바로 시작된다.
-    ///
-    /// 대사는 화면을 덮는 커튼(sortingOrder가 더 높다) 아래서 계속 돈다. 이 관문이
-    /// 스테이지와 함께 파괴되는 순간 <see cref="OnDisable"/>이 강제로 닫는다 — 그때는
-    /// 이미 커튼에 가려진 뒤라 눈에 띄지 않는다.
+    /// 관문에 들어선다. 적어둔 대사가 있으면 <b>먼저 보여주고 끝난 뒤에</b> 넘어가고,
+    /// 없으면 곧바로 넘어간다.
     ///
     /// 밟아서 넘는 것은 위에서 부르고, <b>말을 걸어 여는 문</b>이면
     /// <see cref="InteractableEvent"/>의 onInteract에 이 메서드를 물린다.
@@ -76,9 +75,32 @@ public class Gateway : MonoBehaviour
     /// </summary>
     public void Enter()
     {
-        if (_book != null && _book.HasPages && FlipBook.Instance != null)
-            FlipBook.Instance.SetBook(_book);
+        if (_waiting) return;
 
+        if (_book == null || !_book.HasPages || FlipBook.Instance == null)
+        {
+            Cross();
+            return;
+        }
+
+        // 거두는 것을 잊지 않기 위해 표시를 먼저 세운다. 이 관문은 곧 스테이지와 함께 파괴된다.
+        _waiting = true;
+        FlipBook.Instance.AddDialogueEndListener(OnDialogueEnd);
+        FlipBook.Instance.SetBook(_book);
+    }
+
+    /// <summary>
+    /// 대사가 끝나면 넘어간다.
+    ///
+    /// 이 이벤트에는 조작을 돌려주는 배선(onDialogueNull → ControlLock.Release)이 이미 물려 있다.
+    /// 인스펙터에 적힌 것이 먼저 돌고 런타임에 건 것이 뒤에 도므로, 조작이 풀린 직후
+    /// 전환이 다시 거둬간다 — 최종 상태는 전환 쪽이라 어긋나지 않는다.
+    /// </summary>
+    void OnDialogueEnd()
+    {
+        if (!_waiting) return;
+
+        Release();
         Cross();
     }
 
@@ -97,15 +119,30 @@ public class Gateway : MonoBehaviour
     }
 
     /// <summary>
-    /// 스테이지와 함께 사라질 때, 이 관문이 연 대사가 아직 떠 있으면 닫는다.
+    /// 파괴되거나 꺼지는 길에도 반드시 거둔다. 남겨두면 FlipBook이 죽은 대상을 부른다.
     ///
-    /// 끝나길 기다리지 않으므로 <b>거의 항상 여기서 닫힌다</b> — Next()가 끝까지 갈 겨를이
-    /// 아직 없다. ForceClose는 지금 열려 있는 책이 이것일 때만 움직이므로, 드물게
-    /// 그새 다 읽고 자연히 닫힌 뒤라도 안전하게 아무 일도 하지 않는다.
+    /// <b>여기서 아직 _waiting이면 대사를 못 다 본 채로 이 관문이 사라지는 것이다</b> —
+    /// 이 관문이 아니라 <b>다른 경로가</b>(대표적으로 사망) 씬을 넘겨 배경째 파괴됐을 때다.
+    /// 정상 종료(<see cref="OnDialogueEnd"/>)는 이미 _waiting을 꺼둔 뒤라 여기 걸리지 않는다.
+    ///
+    /// 그 자리를 남겨두면 FlipBook의 대사창이 새 씬 위에 그대로 떠 있는다 — Next()가 끝에 닿아야
+    /// 닫히는데, 아무도 더 넘기지 않기 때문이다. 그래서 여기서 강제로 닫는다.
     /// </summary>
     void OnDisable()
     {
-        if (_book != null && FlipBook.Instance != null) FlipBook.Instance.ForceClose(_book);
+        bool interrupted = _waiting;
+
+        Release();
+
+        if (interrupted && FlipBook.Instance != null) FlipBook.Instance.ForceClose(_book);
+    }
+
+    void Release()
+    {
+        if (!_waiting) return;
+
+        _waiting = false;
+        if (FlipBook.Instance != null) FlipBook.Instance.RemoveDialogueEndListener(OnDialogueEnd);
     }
 
     /// <summary>

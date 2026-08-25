@@ -152,10 +152,20 @@ public class HybridCameraRig : MonoBehaviour
 
     #region --- State Applications (The Movement) ---
 
+    /// <summary>
+    /// 두 State Applications 모두 <b>벽시계</b>(unscaledDeltaTime)로 감쇠한다.
+    ///
+    /// 이 게임은 체력에 배속이 묶여 있고(HPbar), 쓰러졌다 일어나는 동안은 그 배속이 거의 0까지
+    /// 눌린다. Place()는 캐릭터를 즉시 옮기지만, 카메라의 뒤쫓음은 시간이 흘러야 진행되는데
+    /// 그 시간이 게임 배속을 쓰면 배속이 눌린 동안 사실상 멎는다 — 일어나 배속이 풀려야
+    /// 그제야 화면이 움직이기 시작해, 마치 키를 눌러야 카메라가 따라오는 것처럼 보인다.
+    /// 카메라는 연출의 배속과 무관하게 늘 같은 속도로 뒤쫓아야 이 어긋남이 없다.
+    /// </summary>
     private void Apply2DState()
     {
         var (position, rotation) = GetIdeal2DState();
-        position = Vector3.SmoothDamp(transform.position, position, ref currentVelocity2D, positionDamping2D);
+        position = Vector3.SmoothDamp(transform.position, position, ref currentVelocity2D,
+            positionDamping2D, Mathf.Infinity, Time.unscaledDeltaTime);
         transform.SetPositionAndRotation(position, rotation);
     }
 
@@ -165,7 +175,7 @@ public class HybridCameraRig : MonoBehaviour
 
         // Apply rotation damping natively in 3D mode
         targetRotation3D = state.rot;
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation3D, Time.deltaTime * rotationDamping3D);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation3D, Time.unscaledDeltaTime * rotationDamping3D);
 
         // Orbit position based on the currently damped rotation
         Vector3 rotationCenter = character.position + offset3DWorld;

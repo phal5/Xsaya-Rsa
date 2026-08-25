@@ -70,7 +70,12 @@ public class Character_Rest : BaseCharacterState
             _base = mesh.localPosition;
             _baseTurn = mesh.localRotation;
 
-            _offset = characterManager.RiseOffset;
+            // 떼어 놓는 거리는 <b>어디서 일어나느냐에 딸린다.</b> 자리마다 바닥과 제단이 다르므로
+            // 체크포인트가 적어둔 값을 쓴다. director가 없는 판에서는 매니저에 적힌 값이 그 자리를 대신한다.
+            _offset = SceneDirector.instance != null
+                ? SceneDirector.instance.RestOffset
+                : characterManager.RiseOffset;
+
             _twist = Quaternion.Euler(characterManager.RiseTwist);
 
             mesh.localPosition = _base + _offset;

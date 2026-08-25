@@ -176269,7 +176269,7 @@ MonoBehaviour:
   size: {x: 35.3, y: 16.79, z: 20}
   edgeFade: 1
   density: 8.31
-  color: {r: 0.559, g: 1, b: 0.51, a: 1}
+  color: {r: 0.50980395, g: 0.6061173, b: 1, a: 1}
   anisotropy: 0.1
   stepCount: 8
   mainLightShadows: 1
