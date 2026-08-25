@@ -24,7 +24,8 @@ using UnityEngine;
 /// </summary>
 public class Checkpoint : InteractableEvent
 {
-    [Tooltip("스폰 지점. 이 오브젝트의 <b>로컬</b> 좌표계 기준 오프셋이다 — 오브젝트를 돌리거나 옮기면 함께 따라온다.")]
+    [Tooltip("스폰 지점. 이 오브젝트의 <b>로컬</b> 좌표계 기준 오프셋이다 - 오브젝트를 돌리거나 옮기면 함께 따라온다. " +
+             "<b>여기서 나온 Z가 곧 그 무대의 2D 평면이 된다</b> - 일어난 뒤 몸이 그 Z 위에서 논다.")]
     [SerializeField] Vector3 _offset = Vector3.zero;
 
     [Tooltip("일어나서 볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. 말을 건 각도와 무관하게 항상 이쪽을 본다.")]

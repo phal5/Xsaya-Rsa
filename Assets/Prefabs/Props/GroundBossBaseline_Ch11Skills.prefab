@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 2977458793867595075}
   - component: {fileID: 889524536380992628}
   - component: {fileID: 206875754087739941}
+  - component: {fileID: 7747237394205296725}
   m_Layer: 7
   m_Name: GroundBossBaseline_Ch11Skills
   m_TagString: Untagged
@@ -323,6 +324,7 @@ MonoBehaviour:
   <staggerTrigger>k__BackingField: Stagger
   <deathTrigger>k__BackingField: Death
   <despawnDelay>k__BackingField: 2.9
+  <bossId>k__BackingField: Ochyra_Ch11
   <deathFallTimeout>k__BackingField: 3
   <skillSpeedParameter>k__BackingField: SkillSpeed
 --- !u!114 &206875754087739941
@@ -344,6 +346,18 @@ MonoBehaviour:
   _riseGravityScale: 1
   _fallGravityScale: 2.5
   _takeoffGrace: 0.12
+--- !u!114 &7747237394205296725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701633796472095452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e7cc7a21da00764485047d0e8980915, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGrave
 --- !u!1 &1816231977918846840
 GameObject:
   m_ObjectHideFlags: 0

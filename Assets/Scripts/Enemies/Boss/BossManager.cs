@@ -82,6 +82,10 @@ public class BossManager : EntityManager
     [Tooltip("쓰러진 뒤 오브젝트가 사라지기까지의 시간. 사망 애니메이션 길이에 맞춘다.")]
     [field: SerializeField] public float despawnDelay { get; private set; } = 3f;
 
+    [Tooltip("씬을 다시 불러도 이 보스를 알아보기 위한 이름표. 보스마다 겹치지 않게 적는다. " +
+             "오브젝트 이름을 쓰지 않는 이유는, 하이어라키에서 이름을 바꿨다고 죽은 보스가 되살아나면 안 되기 때문이다.")]
+    [field: SerializeField] public string bossId { get; private set; } = "";
+
     #region Runtime Flags
 
     /// <summary>방어 중에는 경직되지 않는다.</summary>
@@ -265,6 +269,10 @@ public class BossManager : EntityManager
 
         if (meleeRadius >= awakeRadius)
             Debug.LogWarning($"[{name}] meleeRadius({meleeRadius}) >= awakeRadius({awakeRadius}). 깨어나는 즉시 사거리 안이라 접근 구간이 사라진다.", this);
+
+        // 이름표가 없으면 죽어도 명부에 오르지 못해, 무대를 다시 부를 때마다 되살아난다.
+        if (GetComponent<BossGrave>() != null && string.IsNullOrEmpty(bossId))
+            Debug.LogWarning($"[{name}] bossId가 비어 있습니다. 이대로는 죽여도 무대를 다시 부르면 되살아납니다.", this);
 
         foreach (Boss_SkillBase skill in GetComponentsInChildren<Boss_SkillBase>(true))
             WarnIfSkillRangeCollides(skill);

@@ -43,6 +43,13 @@ namespace Antigravity
                  "막을 걷기 전에 내리므로 타이틀 화면이 게임 위에 비치지 않습니다.")]
         [SerializeField] private bool unloadOwnSceneWhenDone = false;
 
+        [Header("Opening Script")]
+        [Tooltip("커튼을 덮기 <b>전에</b> 먼저 띄울 대사. 페이지가 없으면 건너뜁니다. " +
+                 "FlipBook.Instance가 이 시점에 있어야 하므로, Transition Curtain과 마찬가지로 " +
+                 "이 씬(타이틀)에 FlipBook을 따로 두어야 합니다 — 로드할 씬 목록의 UI 씬은 " +
+                 "아직 올라오지 않아 그 안의 FlipBook을 쓸 수 없습니다.")]
+        [SerializeField] private Book openingScript;
+
         /// <summary>
         /// 등록된 씬 이름 리스트 (읽기 전용)
         /// </summary>
@@ -175,6 +182,10 @@ namespace Antigravity
         {
             Busy = true;
 
+            // 커튼보다 먼저 돕니다. 다 봐야 다음(씬 로드)으로 넘어갑니다 — 겹쳐 나오거나
+            // 대사가 끝나기 전에 씬이 로드되는 것을 막으려면 순서가 이래야 합니다.
+            yield return PlayOpeningScriptRoutine();
+
             TransitionCurtain cover = ResolveCurtain();
 
             if (cover == null)
@@ -223,6 +234,40 @@ namespace Antigravity
                 if (cover != null) Destroy(cover.transform.root.gameObject);
                 Destroy(transform.root.gameObject);
             }
+        }
+
+        /// <summary>
+        /// 지정한 오프닝 대사를 띄우고 끝날 때까지 기다립니다. 대사가 비어있으면 곧바로 지나갑니다.
+        ///
+        /// FlipBook이 이 씬에 없으면(로드할 목록의 UI 씬이 아직 안 올라왔으므로) 경고만 남기고
+        /// 건너뜁니다 — 대사를 못 띄운다고 게임을 못 켜게 막을 일은 아닙니다.
+        /// </summary>
+        private System.Collections.IEnumerator PlayOpeningScriptRoutine()
+        {
+            if (openingScript == null || !openingScript.HasPages)
+            {
+                yield break;
+            }
+
+            if (FlipBook.Instance == null)
+            {
+                Debug.LogWarning("[AdditiveSceneLoader] FlipBook이 없어 오프닝 대사를 건너뜁니다. " +
+                                 "이 씬(타이틀)에 FlipBook을 두세요.", this);
+                yield break;
+            }
+
+            bool dialogueDone = false;
+            void OnDialogueDone()
+            {
+                dialogueDone = true;
+            }
+
+            FlipBook.Instance.AddDialogueEndListener(OnDialogueDone);
+            FlipBook.Instance.SetBook(openingScript);
+
+            yield return new WaitUntil(() => dialogueDone);
+
+            FlipBook.Instance.RemoveDialogueEndListener(OnDialogueDone);
         }
 
         /// <summary>

@@ -85,8 +85,13 @@ public class Character_Rest : BaseCharacterState
         characterManager.Animation.SetUnscaled(true);
 
         // 배속 0으로 눌러 첫 프레임 — 누운 자세 — 에 세워 둔다.
+        //
+        // <b>Play가 아니라 PlayFrom이다.</b> Play는 이름만 보고 같으면 돌아나가는데,
+        // 이미 한 번 일어선 뒤라면 애니메이터는 이름은 그대로 Rise인 채로 클립의 끝 —
+        // 일어선 자세 — 에 서 있다. 그 위에 배속 0을 얹으면 선 자세로 얼어붙는다.
+        // 되감는 일을 아무도 하지 않는 것이 문제였으므로, 시작 지점을 직접 준다.
         characterManager.Animation.SetFloat(characterManager.RiseSpeedParameter, 0f);
-        characterManager.Animation.Play(characterManager.RiseState);
+        characterManager.Animation.PlayFrom(characterManager.RiseState, 0f);
 
         Subscribe();
     }

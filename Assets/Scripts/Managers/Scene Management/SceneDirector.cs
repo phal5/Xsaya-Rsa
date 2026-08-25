@@ -303,14 +303,18 @@ public class SceneDirector : MonoBehaviour
         // 옛 리그는 씬과 함께 사라졌다. 끊어주지 않으면 브레인이 옛 자리에서 새 자리까지 화면을 훑고 온다.
         CinemachineCore.ResetCameraState();
 
-        _character.Movement.SetGravity(true);
-
         // 이름을 읽을 틈을 준 뒤 걷는다. 로드가 빨라도 화면이 깜빡이고 지나가지 않게.
         if (curtain != null)
         {
             yield return curtain.Hold();
             yield return curtain.Reveal();
         }
+
+        // <b>커튼이 걷힌 뒤에 중력을 돌려준다.</b> 앞에서 돌려주면 커튼이 도는 1초 남짓 동안
+        // 몸의 수직을 아무도 소유하지 않는다 - 그 사이 루트는 Character_UI이고, 그 상태는
+        // 수평만 눌러둘 뿐 수직은 sampler와 중력의 몫이다. 붙들어 둔 덕에 이 사이가 비어도
+        // 떨어지지 않는다는 위의 전제가 거기서 깨져, 도착 지점보다 한참 아래에서 일어나게 된다.
+        _character.Movement.SetGravity(true);
 
         // 조작을 돌려주기 전에 푼다. 순서가 바뀌면 한 프레임 동안 관문을 다시 밟을 수 있다.
         Busy = false;
@@ -331,6 +335,11 @@ public class SceneDirector : MonoBehaviour
     void Place(Vector3 place, Quaternion facing)
     {
         _character.Movement.Pin(place);
+
+        // <b>이 지점의 Z가 곧 이 무대의 2D 평면이다.</b> 옮기는 것과 평면을 정하는 것을 갈라놓으면,
+        // 바로 아래 Restore2D가 옛 평면으로 몸을 도로 끌고 간다.
+        if (PlayerManager.instance != null && PlayerManager.instance.dimension != null)
+            PlayerManager.instance.dimension.SetPlane(place.z);
 
         // 각도도 Pin과 같은 이유로 둘 다 적는다 - Rigidbody.rotation만 적으면 그림은 다음
         // 시뮬레이션 스텝까지 옛 각도로 남고, 시간이 멎은 구간에서는 그 스텝이 오지 않는다.

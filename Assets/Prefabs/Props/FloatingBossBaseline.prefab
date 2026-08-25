@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 889524536380992628}
   - component: {fileID: 206875754087739941}
   - component: {fileID: 4731040751242041132}
+  - component: {fileID: 5161582240151780949}
   m_Layer: 7
   m_Name: FloatingBossBaseline
   m_TagString: Untagged
@@ -334,6 +335,7 @@ MonoBehaviour:
   <staggerTrigger>k__BackingField: Stagger
   <deathTrigger>k__BackingField: Death
   <despawnDelay>k__BackingField: 2.9
+  <bossId>k__BackingField: Semprea
   <deathFallTimeout>k__BackingField: 3
   <skillSpeedParameter>k__BackingField: SkillSpeed
 --- !u!114 &206875754087739941
@@ -378,6 +380,18 @@ MonoBehaviour:
   _groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &5161582240151780949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701633796472095452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e7cc7a21da00764485047d0e8980915, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossGrave
 --- !u!1 &1816231977918846840
 GameObject:
   m_ObjectHideFlags: 0
