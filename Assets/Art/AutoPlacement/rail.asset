@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 806489433808c2a409d697ad98e3e0c3, type: 3}
+  m_Name: rail
+  m_EditorClassIdentifier: Assembly-CSharp::EnvironmentPlacerProfile
+  _entries:
+  - Prefab: {fileID: 100000, guid: 298f0bc30566d7b48a7d495f2dacf7dc, type: 3}
+    Weight: 1
+    MinScale: 1
+    MaxScale: 1
+    RandomYRotation: 0
+    GpuInstancing: 0
+  _minimumSpacing: 5
+  _isRandomPlacement: 0
+  _samplesBeforeRejection: 15
+  _yOffset: 0
+  _gpuInstancing: 0
+  _useRandomSeed: 0
+  _seed: 42
