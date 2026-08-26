@@ -330,7 +330,7 @@ MonoBehaviour:
   <guardTrigger>k__BackingField: Guard
   <staggerTrigger>k__BackingField: Stagger
   <deathTrigger>k__BackingField: Death
-  <despawnDelay>k__BackingField: 2.9
+  <despawnDelay>k__BackingField: 0
   <combatView>k__BackingField: 2
   <bossId>k__BackingField: Ochyra
   <deathFallTimeout>k__BackingField: 3

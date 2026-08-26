@@ -106,8 +106,13 @@ public class BossManager : EntityManager
     [field: SerializeField] public string staggerTrigger { get; private set; } = "Stagger";
     [field: SerializeField] public string deathTrigger { get; private set; } = "Death";
 
-    [Tooltip("쓰러진 뒤 오브젝트가 사라지기까지의 시간. 사망 애니메이션 길이에 맞춘다.")]
+    [Tooltip("쓰러진 뒤 오브젝트가 사라지기까지의 시간. 사망 애니메이션 길이에 맞춘다. " +
+             "<b>0이면 지우지 않는다</b> - 시신을 남기는 보스가 그것이다. 흩어지는 연출은 사망 이벤트가 따로 맡으므로 그대로 돈다.")]
     [field: SerializeField] public float despawnDelay { get; private set; } = 3f;
+
+    [Tooltip("쓰러진 몸을 일으키는 데 걸리는 시간(초). 쓰러지는 클립을 이만큼에 걸쳐 거꾸로 훑는다. " +
+             "느리게 둘수록 무겁게 일어선다.")]
+    [field: SerializeField, Min(0.01f)] public float riseTime { get; private set; } = 3f;
 
     [Header("Combat View")]
     [Tooltip("싸우는 동안의 화면. 깨어날 때 이쪽으로 바꾸고, 죽으면 들어오기 전으로 되돌린다. " +
@@ -142,6 +147,30 @@ public class BossManager : EntityManager
     /// 방어와 같은 자리에 두어 판정이 한 줄에 모이게 한다.
     /// </summary>
     public bool staggerImmune { get; set; }
+
+    #region Rise - 연출이 시신을 일으킨다
+
+    /// <summary>
+    /// 쓰러진 몸을 일으키라는 표시. <b>연출이 밖에서 부른다</b> - UnityEvent에 그대로 물릴 수 있다.
+    ///
+    /// 표시만 남기고 판단하지 않는다. 지금 일으킬 수 있는 상태인지, 어느 상태로 갈지는
+    /// <see cref="BossRoot"/>가 안다. 여기서 상태를 직접 바꾸면 매니저가 FSM의 전이를 쥐게 되어
+    /// 상태기계가 자기 전이의 주인이 아니게 된다.
+    /// </summary>
+    bool _riseRequested;
+
+    public void RequestRise() { _riseRequested = true; }
+
+    /// <summary>표시를 가져가며 지운다. 한 번의 호출에 한 번만 일어난다.</summary>
+    public bool ConsumeRise()
+    {
+        if (!_riseRequested) return false;
+
+        _riseRequested = false;
+        return true;
+    }
+
+    #endregion
 
     public bool CanStagger => !guarding && !staggerImmune && Time.time >= _staggerReadyTime;
     public bool ReactionReady => Time.time >= _reactionReadyTime;

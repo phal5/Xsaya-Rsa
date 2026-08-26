@@ -39,8 +39,20 @@ public class Boss_Dead : BaseEntityState<BossManager>
         _despawnAt = Time.time + manager.despawnDelay;
     }
 
+    /// <summary>
+    /// 소멸 시각이 됐는지 본다.
+    ///
+    /// <b>0 이하는 "지우지 않는다"는 뜻이다.</b> 시신을 남기는 보스가 그것이고, 값 하나가 곧 의도가 된다 —
+    /// 큰 수를 적어두는 방식은 언젠가 지워지는 데다 왜 그 수인지가 값에 남지 않는다.
+    /// Boss_Throwable의 회수 시간이나 겨누는 시간이 0을 같은 뜻으로 쓰는 것과 같은 규약이다.
+    ///
+    /// 사라지는 <b>모습</b>은 여기서 만들지 않는다. 그건 사망 이벤트에 물린 Disintegrate의 몫이고,
+    /// 여기는 다 흩어진 껍데기를 거두는 일만 한다. 그래서 남기기로 해도 흩어지는 연출은 그대로 돈다.
+    /// </summary>
     public override void UpdateState()
     {
+        if (manager.despawnDelay <= 0f) return;
+
         if (Time.time < _despawnAt) return;
 
         Object.Destroy(manager.gameObject);

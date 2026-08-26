@@ -41,6 +41,17 @@ public class BossRoot : FiniteStateMachine
 
     public override void Transitions()
     {
+        // <b>일으키는 것이 먼저다.</b>
+        //
+        // 죽었는지는 보지 않는다. 예전에는 "쓰러진 보스에게만 뜻이 있다"며 isDead를 함께 봤는데,
+        // 그 조건이 안 맞으면 요청을 <b>소리 없이 삼켰다</b> - 부르는 쪽에서는 아무 일도 일어나지 않고
+        // 왜 안 되는지도 알 수 없다. 언제 일으킬지는 부르는 연출이 안다.
+        if (_boss != null && _boss.ConsumeRise())
+        {
+            TransitTo<Boss_Rise>();
+            return;
+        }
+
         if (!_hitRequested) return;
         _hitRequested = false;
 
