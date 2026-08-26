@@ -214,7 +214,13 @@ public class SceneDirector : MonoBehaviour
     /// 도착한 뒤 누운 자리에서 시작할지. 부활이 참이고 관문 통과가 거짓이다.
     /// 이 씬이 이미 올라와 있으면 조작을 부르는 쪽이 돌려주므로 여기서는 쓰이지 않는다.
     /// </param>
-    public bool Go(string scene, Vector3 place, Quaternion facing, bool rest = false)
+    /// <param name="mode">
+    /// Additive면 지금까지처럼 배경만 갈아끼운다 — 캐릭터·UI는 그대로 남는다. 스테이지 사이 이동이 이쪽이다.
+    /// Single이면 지금 올라온 모든 씬(이 오브젝트가 있는 캐릭터 씬까지)을 내리고 지정한 씬 하나만 남긴다 —
+    /// 다른 스테이지로 가는 게 아니라 <b>게임 세션 자체를 나가는 것</b>이다. 타이틀로 돌아갈 때가 이쪽이다.
+    /// 이 경우 자리·방향·부활 여부는 쓰이지 않는다 — 캐릭터가 이 전환과 함께 사라지기 때문이다.
+    /// </param>
+    public bool Go(string scene, Vector3 place, Quaternion facing, bool rest = false, LoadSceneMode mode = LoadSceneMode.Additive)
     {
         if (_character == null || _root == null)
         {
@@ -227,6 +233,21 @@ public class SceneDirector : MonoBehaviour
         if (string.IsNullOrEmpty(scene))
         {
             Debug.LogError($"[{name}] 목적지 씬 이름이 비어 있습니다.", this);
+            return true;
+        }
+
+        if (mode == LoadSceneMode.Single)
+        {
+            if (!InBuildSettings(scene))
+            {
+                Debug.LogError($"[{name}] '{scene}'이 Build Settings에 없어 부를 수 없습니다. " +
+                               "File > Build Profiles의 씬 목록에 넣어야 경로로 불러올 수 있습니다.", this);
+                return true;
+            }
+
+            // 코루틴도 커튼도 없다. 이 오브젝트가 있는 씬을 포함해 전부 내려가므로,
+            // 여기서 뭔가를 더 하려 들면 그 코드가 도는 중에 자기 자신이 사라진다.
+            SceneManager.LoadScene(scene, LoadSceneMode.Single);
             return true;
         }
 

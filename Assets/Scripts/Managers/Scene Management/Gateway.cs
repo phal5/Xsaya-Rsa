@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 스테이지와 스테이지를 잇는 관문. 닿으면 적어둔 씬의 적어둔 자리로 넘어간다.
@@ -23,13 +24,20 @@ public class Gateway : MonoBehaviour
     [HideInInspector]
     [SerializeField] string _scene;
 
+    [Header("Mode")]
+    [Tooltip("Additive면 배경만 갈아끼운다 — 캐릭터·UI는 그대로 남는 보통의 스테이지 이동이다. " +
+             "Single이면 지금 올라온 모든 씬(캐릭터·UI 포함)을 내리고 이 씬 하나만 남긴다 — " +
+             "다른 스테이지가 아니라 타이틀처럼 게임 세션 자체를 나가는 목적지일 때 쓴다. " +
+             "이 경우 아래 도착 자리·방향은 쓰이지 않는다 — 캐릭터가 이 전환과 함께 사라지기 때문이다.")]
+    [SerializeField] LoadSceneMode _mode = LoadSceneMode.Additive;
+
     [Header("Arrival")]
-    [Tooltip("도착해서 설 자리. 저쪽 씬의 월드 좌표다.")]
+    [Tooltip("도착해서 설 자리. 저쪽 씬의 월드 좌표다. Single 모드에서는 쓰이지 않는다.")]
     [SerializeField] Vector3 _place;
 
     // 위 도착 지점의 Z는 평면을 정하지 않는다. 2D 평면은 z=0 하나이고, 도착해 2D로 돌아오는
     // 순간 몸이 그쪽으로 눌린다.
-    [Tooltip("도착해서 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. (0,0,1)이면 +Z를 본다.")]
+    [Tooltip("도착해서 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. (0,0,1)이면 +Z를 본다. Single 모드에서는 쓰이지 않는다.")]
     [SerializeField] Vector3 _facing = new Vector3(0f, 0f, 1f);
 
     [Header("Dialogue")]
@@ -49,6 +57,9 @@ public class Gateway : MonoBehaviour
     /// </summary>
     void OnDrawGizmosSelected()
     {
+        // Single 모드는 도착 자리가 없다 — 캐릭터가 이 전환과 함께 사라지므로 그릴 것이 없다.
+        if (_mode == LoadSceneMode.Single) return;
+
         Gizmos.color = new Color(0.3f, 0.9f, 0.4f);
         Gizmos.DrawWireSphere(_place, 0.5f);
         Gizmos.DrawLine(transform.position, _place);
@@ -117,7 +128,7 @@ public class Gateway : MonoBehaviour
             return;
         }
 
-        SceneDirector.instance.Go(_scene, _place, Facing);
+        SceneDirector.instance.Go(_scene, _place, Facing, mode: _mode);
     }
 
     /// <summary>

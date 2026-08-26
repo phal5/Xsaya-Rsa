@@ -148,6 +148,16 @@ public class BossManager : EntityManager
     /// </summary>
     public bool staggerImmune { get; set; }
 
+    /// <summary>
+    /// 지금 스킬을 시전 중인지. 준비 구간에 들어서면 참이 되고 그 스킬이 끝나거나 끊기면 거짓이 된다.
+    ///
+    /// <see cref="Boss_SkillBase"/>가 자기 Enter/Exit에서 세운다. 스킬은 한 번에 하나만 돌기 때문에
+    /// 깃발 하나로 족하고, 끊겨 나가는 경우에도 Exit이 반드시 지나므로 켜진 채로 남지 않는다.
+    ///
+    /// 연출이 "지금 뭔가 나온다"를 알아야 할 때 쓴다 - 어떤 스킬인지까지는 여기서 말하지 않는다.
+    /// </summary>
+    public bool casting { get; set; }
+
     #region Rise - 연출이 시신을 일으킨다
 
     /// <summary>

@@ -193,6 +193,8 @@ public abstract class Boss_SkillBase : ComponentEntityState<BossManager>
 
         if (manager.rootMotion != null) manager.rootMotion.Active = _useRootMotion;
 
+        manager.casting = true;
+
         ApplyPoise();
         OnWindup();
     }
@@ -228,6 +230,9 @@ public abstract class Boss_SkillBase : ComponentEntityState<BossManager>
 
         // 경직 면역은 반드시 되돌린다. 남기면 보스가 영영 안 끊긴다.
         manager.staggerImmune = false;
+
+        // 시전 표시도 같은 이유로 반드시 내린다. 끊겨 나가는 길도 여기를 지난다.
+        manager.casting = false;
 
         // 배속도 되돌린다. 남기면 다음 동작이 이 스킬의 배속으로 돈다.
         manager.SetSkillSpeed(1f);
