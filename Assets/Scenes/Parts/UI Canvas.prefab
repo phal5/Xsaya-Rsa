@@ -661,10 +661,10 @@ RectTransform:
   - {fileID: 2540436735097802479}
   m_Father: {fileID: 6211896296019183690}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2439599669140893940
 MonoBehaviour:
@@ -890,10 +890,10 @@ RectTransform:
   - {fileID: 1504931201382119387}
   m_Father: {fileID: 6211896296019183690}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8914837835749997110
 MonoBehaviour:
@@ -1306,8 +1306,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b0fa435f3539cd84c89f8e57ee42adec, type: 2}
-  m_sharedMaterial: {fileID: -6405510635608925569, guid: b0fa435f3539cd84c89f8e57ee42adec, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 16de2880d12765648ad36bb28c433fde, type: 2}
+  m_sharedMaterial: {fileID: -8336343522527106037, guid: 16de2880d12765648ad36bb28c433fde, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1889,8 +1889,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b0fa435f3539cd84c89f8e57ee42adec, type: 2}
-  m_sharedMaterial: {fileID: -6405510635608925569, guid: b0fa435f3539cd84c89f8e57ee42adec, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 16de2880d12765648ad36bb28c433fde, type: 2}
+  m_sharedMaterial: {fileID: -8336343522527106037, guid: 16de2880d12765648ad36bb28c433fde, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2454,7 +2454,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: -915, y: -100}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &3182756516906531435
 MonoBehaviour:
@@ -2620,10 +2620,10 @@ RectTransform:
   - {fileID: 169615833082303728}
   m_Father: {fileID: 6211896296019183690}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6691491518474974783
 MonoBehaviour:
@@ -3719,8 +3719,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b0fa435f3539cd84c89f8e57ee42adec, type: 2}
-  m_sharedMaterial: {fileID: -6405510635608925569, guid: b0fa435f3539cd84c89f8e57ee42adec, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 16de2880d12765648ad36bb28c433fde, type: 2}
+  m_sharedMaterial: {fileID: -8336343522527106037, guid: 16de2880d12765648ad36bb28c433fde, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4146,6 +4146,7 @@ MonoBehaviour:
   - {fileID: 4160312017288404131}
   - {fileID: 8521158512398111345}
   - {fileID: 6085697672099704531}
+  - {fileID: 4526079481429061084}
 --- !u!1 &8596590216758411532
 GameObject:
   m_ObjectHideFlags: 0
@@ -4700,11 +4701,36 @@ MonoBehaviour:
         m_CallState: 2
   onForceClose:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 4526079481429061084}
+        m_TargetAssemblyTypeName: UIGroupFader, Assembly-CSharp
+        m_MethodName: FadeOut
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 18847955132401555}
+        m_TargetAssemblyTypeName: UIGroupFader, Assembly-CSharp
+        m_MethodName: FadeOut
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   speaker: {fileID: 3742836019852433164}
   dialogue: {fileID: 8783234928313510291}
   midScreen: {fileID: 8070989906880258265}
   _book:
+    _rewind: 0
     _pages: []
     _pageEvents: []
 --- !u!114 &4462860201953358856

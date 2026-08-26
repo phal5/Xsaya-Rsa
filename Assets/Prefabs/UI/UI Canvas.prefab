@@ -3975,6 +3975,7 @@ MonoBehaviour:
   - {fileID: 435675804047765160}
   - {fileID: 7561377506212729125}
   - {fileID: 8504367583805390724}
+  - {fileID: 1243867900045028610}
 --- !u!1 &6632659804856811132
 GameObject:
   m_ObjectHideFlags: 0
@@ -4189,6 +4190,7 @@ MonoBehaviour:
   dialogue: {fileID: 2436368470085359415}
   midScreen: {fileID: 2006348854971472841}
   _book:
+    _rewind: 0
     _pages: []
     _pageEvents: []
 --- !u!114 &3729839873865480485
