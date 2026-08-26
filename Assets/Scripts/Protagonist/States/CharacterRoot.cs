@@ -103,6 +103,19 @@ public class CharacterRoot : FiniteStateMachine
         TransitTo<Character_Rest>();
     }
 
+    /// <summary>
+    /// 가사 상태로 쓰러뜨린다. 연출이 <see cref="CharacterCue"/>를 거쳐 부른다.
+    ///
+    /// <b>죽음과 갈리는 지점은 체력이다.</b> 이쪽은 체력을 건드리지 않으므로 아래 Dead 조건에
+    /// 걸리지 않고, 그래서 부활 시계도 돌지 않는다. 실제로 죽여야 하면 체력을 비우면 된다 -
+    /// 그러면 다음 갱신에 이 머신이 스스로 Character_Down으로 끌고 간다.
+    /// </summary>
+    public void ToFaint()
+    {
+        if (_currentStateType == typeof(Character_Faint)) return;
+        TransitTo<Character_Faint>();
+    }
+
     /// <summary>메뉴·대화가 열릴 때 부른다. 닫을 때 ToControl()을 불러야 풀린다.</summary>
     public void ToUI()
     {
