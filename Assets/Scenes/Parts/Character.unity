@@ -567,6 +567,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7287668904403106428, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: <JumpSpeed>k__BackingField
+      value: 5.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7287668904403106428, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: <RiseTwist>k__BackingField.x
       value: 7
       objectReference: {fileID: 0}

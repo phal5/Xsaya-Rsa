@@ -10,6 +10,13 @@ public class Character_Interact : BaseCharacterState
 {
     float _endTime;
 
+    /// <summary>
+    /// 이 상태는 이어서 하지 않는다. 대사가 열리면 조작이 UI로 넘어가고, 대사가 끝나 돌아올 때
+    /// 재개가 Enter를 다시 부르면 <b>같은 대상에게 말을 한 번 더 건다</b> —
+    /// 상점에서 산 직후 거절 대사가 끝없이 다시 뜨던 것이 그것이었다.
+    /// </summary>
+    public override bool ResumesOnReturn => false;
+
     public override void Enter()
     {
         _endTime = Time.time + characterManager.InteractTime;

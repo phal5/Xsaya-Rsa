@@ -48,8 +48,12 @@ public class FlipBook : MonoBehaviour
         {
             dialogue.text = speaker.text = string.Empty;
             midScreen.SetText(string.Empty);
-            onDialogueNull.Invoke();
+
+            // <b>거두고 나서 알린다.</b> SetBook이 "여는 것을 먼저 알린다"인 것과 짝이다.
+            // 순서가 뒤바뀌면, 이 알림을 듣고 새 책을 연 쪽의 책을 뒤이은 RemoveBook이 지운다 —
+            // 화면에는 그 대사가 떠 있는데 _book은 비어, Next가 첫 줄에서 돌아나가 영영 안 넘어간다.
             RemoveBook();
+            onDialogueNull.Invoke();
             return;
         }
         Page page = nullablePage.Value;

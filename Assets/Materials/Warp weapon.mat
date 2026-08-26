@@ -156,7 +156,7 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _T: 0
+    - _T: 0.040999997
     - _TessMaxDist: 100
     - _TessMinDist: 20
     - _Tessellation: 16

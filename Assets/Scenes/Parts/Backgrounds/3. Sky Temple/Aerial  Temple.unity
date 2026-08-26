@@ -878,6 +878,34 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[0].FooterText
+      value: "\uC218\uC721\uC758 \uC7AC\uB97C \uAC00\uC9C4 \uC7A0\uB97C \uC5BB\uC744
+        \uAC83\uC744 \uCC9C\uBA85\uD558\uC2DC\uB098,"
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[1].FooterText
+      value: "\uC0AC\uC81C\uB4E4\uC774 \uC5B4\uB9AC\uC11D\uC5B4 \uB300\uC2E0 \uADF8
+        \uC790\uB9E4\uB97C \uC190\uC5D0 \uB123\uC73C\uC2EC\uC774\uB2C8,"
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[2].FooterText
+      value: "\uC774\uB984 \uC5C6\uB294 \uC2E0\uAED8\uC11C \uC0AC\uC81C\uB4E4\uC744
+        \uBC8C\uD558\uC0AC"
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[3].FooterText
+      value: "\uAE30\uACC4\uC758 \uBD88\uC644\uC804\uD55C \uBAB8\uC5D0 \uADF8\uB4E4\uC758
+        \uBA38\uB9AC\uB97C \uAC00\uB450\uC168\uB178\uB77C."
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[3].MidScreenText
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 6706964704888883083, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
       propertyPath: m_LocalScale.y
       value: 3.2016

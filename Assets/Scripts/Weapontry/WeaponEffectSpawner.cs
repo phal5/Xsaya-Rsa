@@ -99,6 +99,31 @@ public class WeaponEffectSpawner : MonoBehaviour
             followWeapon ? where : null);
 
         Destroy(spawned, lifetime > 0f ? lifetime : LengthOf(spawned));
+
+        _spawned = spawned;
+    }
+
+    /// <summary>마지막으로 세운 것. 그만 뿌리라고 이를 대상이다.</summary>
+    GameObject _spawned;
+
+    /// <summary>
+    /// 뿌리던 것을 그만 뿌린다. <b>이미 나온 알갱이는 제 수명대로 사라진다</b> — 뚝 끊지 않는다.
+    /// 오래 끄는 이펙트를 도중에 거둬야 하는 쪽이 쓴다.
+    ///
+    /// 치우는 일은 여기서 하지 않는다. <see cref="Spawn"/>이 걸어둔 Destroy가 그대로 맡으므로
+    /// 방출만 멈추면 된다 — 여기서 또 지우면 같은 것을 두 곳에서 치우게 된다.
+    ///
+    /// 마지막 하나만 안다. 겹쳐 뿌리는 이펙트까지 거두려면 목록이 필요한데,
+    /// 지금 이걸 쓰는 쪽은 한 번에 하나만 세운다.
+    /// </summary>
+    public void Stop()
+    {
+        if (_spawned == null) return;
+
+        foreach (ParticleSystem part in _spawned.GetComponentsInChildren<ParticleSystem>(true))
+            part.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+        _spawned = null;
     }
 
     /// <summary>

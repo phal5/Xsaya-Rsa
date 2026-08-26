@@ -12734,6 +12734,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae9e4f79ca521dd409cc942e16d3684a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Stage
+  _startIn2D: 1
 --- !u!1001 &219027280
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -53042,6 +53043,8 @@ MonoBehaviour:
   offset3DWorld: {x: 0, y: 1.5, z: 0}
   offset3DLocal: {x: 0, y: 0, z: -5}
   rotationDamping3D: 10
+  pitchMax3D: 89
+  pitchMin3D: -89
   transitionSpeed: 1.2
   transitionCurve:
     serializedVersion: 2
@@ -125166,6 +125169,36 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _place.x
+      value: -16.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _place.y
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _facing.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _facing.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[0].MidScreenText
+      value: "\uADF8\uACF3\uC740 \uBD80\uD328\uD558\uC5EC \uAECD\uB370\uAE30\uB9CC
+        \uB0A8\uC740 \uB098\uC758 \uC721\uC2E0\uC774\uB2C8,"
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[1].MidScreenText
+      value: "\uC774\uB984 \uC5C6\uB294 \uC790\uC758 \uBA85\uB839\uC744 \uBFCC\uB9AC\uCE58\uACE0
+        \uB098\uC5D0\uAC8C\uB85C \uC624\uB77C."
+      objectReference: {fileID: 0}
     - target: {fileID: 6706964704888883083, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 36.31

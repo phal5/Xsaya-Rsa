@@ -989,7 +989,7 @@ MonoBehaviour:
       frames: 0
       start: 13
   <StunTime>k__BackingField: 0.4
-  <RespawnDelay>k__BackingField: 2
+  <RespawnDelay>k__BackingField: 2.5
   <WallTurnSpeed>k__BackingField: 360
   <RiseState>k__BackingField: Rise
   <RiseSpeedParameter>k__BackingField: RiseSpeed

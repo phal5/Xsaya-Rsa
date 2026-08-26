@@ -40,6 +40,10 @@ public class Character_Controlled : FiniteStateMachine
         _healRequested = false;
         Execution?.Discard();
 
+        // 이어서 하면 안 되는 자리였다면 이동으로 돌려보낸다. 그러지 않으면 base.Enter()가
+        // 떠날 때의 상태를 그대로 다시 열어, 그 Enter가 하던 일을 한 번 더 한다.
+        if (_state is BaseCharacterState resumed && !resumed.ResumesOnReturn) ToLocomotion();
+
         base.Enter();
     }
 
