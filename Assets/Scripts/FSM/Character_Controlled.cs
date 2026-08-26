@@ -15,6 +15,7 @@ public class Character_Controlled : FiniteStateMachine
     // 입력 콜백이 세우고 Transitions()가 소비한다.
     bool _interactRequested;
     bool _dodgeRequested;
+    bool _healRequested;
 
     // 상호작용 입력은 축 전환(Ground↔Airborne)과 무관해야 한다.
     // Enter/Exit에 묶으면 축이 바뀔 때마다 붙었다 떨어져 입력을 흘린다.
@@ -36,6 +37,7 @@ public class Character_Controlled : FiniteStateMachine
     {
         _interactRequested = false;
         _dodgeRequested = false;
+        _healRequested = false;
         Execution?.Discard();
 
         base.Enter();
@@ -60,6 +62,7 @@ public class Character_Controlled : FiniteStateMachine
 
         InputManager.instance.move_interact.action.performed += OnInteract;
         InputManager.instance.move_dash.action.performed += OnDodge;
+        InputManager.instance.move_heal.action.performed += OnHeal;
         _subscribed = true;
     }
 
@@ -69,6 +72,7 @@ public class Character_Controlled : FiniteStateMachine
 
         InputManager.instance.move_interact.action.performed -= OnInteract;
         InputManager.instance.move_dash.action.performed -= OnDodge;
+        InputManager.instance.move_heal.action.performed -= OnHeal;
         _subscribed = false;
     }
 
@@ -80,6 +84,11 @@ public class Character_Controlled : FiniteStateMachine
     void OnDodge(UnityEngine.InputSystem.InputAction.CallbackContext _)
     {
         _dodgeRequested = true;
+    }
+
+    void OnHeal(UnityEngine.InputSystem.InputAction.CallbackContext _)
+    {
+        _healRequested = true;
     }
 
     /// <summary>
@@ -104,6 +113,13 @@ public class Character_Controlled : FiniteStateMachine
         {
             _interactRequested = false;
             ToInteract();
+            return;
+        }
+
+        if (_healRequested)
+        {
+            _healRequested = false;
+            ToHeal();
             return;
         }
 
@@ -222,12 +238,17 @@ public class Character_Controlled : FiniteStateMachine
         return true;
     }
 
-    // Heal / Swap은 아직 전용 입력 액션이 없다.
+    // Swap은 아직 전용 입력 액션이 없다.
     // KeyInvoke 컴포넌트나 UI 버튼의 UnityEvent에서 이 메서드를 직접 부르면 된다.
 
+    /// <summary>
+    /// 회복을 건다. <b>지상 축에서만 들어간다</b> — 회복은 땅 위에서만 걸리므로,
+    /// 다른 축에서 받아주면 들어가자마자 되돌아 나오는 길이 하나 생긴다.
+    /// 매달린 채로 눌렀을 때 그 길은 턱을 놓는 것으로 보인다.
+    /// </summary>
     public void ToHeal()
     {
-        if (_currentStateType == typeof(Character_Heal)) return;
+        if (_currentStateType != typeof(Character_Ground)) return;
 
         // 남은 횟수 판정은 Character_Heal.Enter()가 소모와 함께 한다. 여기서 미리 보지 않는다.
         TransitTo<Character_Heal>();

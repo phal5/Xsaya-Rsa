@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -65,6 +65,16 @@ public class FlipBook : MonoBehaviour
         if (_book == book) return;
         RemoveBook();
         _book = book;
+
+        // <b>연다는 것은 첫 장부터라는 뜻이다.</b> 페이지 커서는 책이 들고 있고 닫을 때 되돌아가지
+        // 않으므로, 되감지 않으면 한 번 다 본 책은 두 번째부터 열자마자 닫힌다 — 대사는 안 나오고
+        // 조작만 한 번 잠겼다 풀린다. 상점처럼 되풀이해 여는 자리에서 그것이 곧 벙어리가 되는 길이다.
+        //
+        // GoToPage(-1)은 GetPage()의 범위 가드에 걸려 <b>페이지 이벤트를 발동시키지 않는다.</b>
+        // 커서만 제자리로 돌아가고, 첫 장은 바로 아래 Next()가 연다.
+        //
+        // 한 번만 열려야 하는 자리는 이 커서가 아니라 InteractableEvent의 _once가 맡는다.
+        book?.GoToPage(-1);
 
         // <b>여는 것을 먼저 알린다.</b> Next()가 앞서면 페이지가 없는 책에서 순서가 뒤집힌다 —
         // Next()가 onDialogueNull로 먼저 닫고, 뒤이은 onSetBook이 다시 여는 꼴이 되어

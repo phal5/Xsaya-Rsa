@@ -3,35 +3,21 @@ using UnityEngine;
 /// <summary>
 /// 플레이어 몸의 Z 정렬과 잠금. 2D로 돌아올 때 평면 위에 세우고, 그 자리에 얼린다.
 ///
-/// <b>평면은 몸이 마지막으로 놓인 자리가 정한다.</b> 체크포인트든 관문이든 스테이지에 들어오는 길은
-/// 전부 <see cref="SceneDirector.Place"/>를 지나고, 그 지점의 Z가 곧 그 무대에서 놀 평면이다.
-/// 그래서 여기에는 저작할 값이 없다 — 스폰 지점에 이미 적혀 있고, 여기 또 두면 둘이 갈라진다.
+/// <b>평면은 z = 0 하나다.</b> 저작할 값이 아니라 세계의 규약이다 —
+/// 무대의 놀이 평면도, 스폰 지점도, 관문의 도착 지점도 전부 그 위에 놓인다.
 ///
-/// 처음 등장은 Place를 지나지 않으므로 그때는 몸이 놓여 있던 Z가 그대로 평면이 된다.
+/// 한때는 스폰 지점의 Z를 평면으로 삼았다. 그러면 무대마다 평면이 갈리는데,
+/// 실제로 -20 / 0.4 / 0 세 값이 나왔고 2D로 돌아올 때마다 몸이 그 자리로 끌려갔다.
+/// 스폰 지점이 평면 위에 정확히 놓여 있어야만 맞는 규칙이었던 셈이라, 규칙 쪽을 없앴다.
+/// 스폰이 평면을 벗어나 있어도 2D로 돌아오는 순간 여기서 제자리로 눌린다.
 /// </summary>
 public class Dimensional : MonoBehaviour
 {
+    /// <summary>2D로 놀 때 몸이 서는 평면.</summary>
+    const float Plane = 0f;
+
     [SerializeField] Rigidbody _own;
     [SerializeField] Rigidbody _external;
-
-    [Tooltip("지금 무대의 2D 평면. 스폰 지점이 정하므로 손으로 고칠 자리가 아니다 — 보기용이다.")]
-    [SerializeField] float _planeZ;
-
-    void Awake()
-    {
-        _planeZ = _own.transform.position.z;
-    }
-
-    /// <summary>
-    /// 평면을 새로 정한다. 몸을 그 자리에 놓는 쪽이 함께 부른다.
-    ///
-    /// 옮기는 것과 평면을 정하는 것을 갈라놓으면, 옮겨진 뒤 2D로 돌아오는 순간
-    /// 옛 평면으로 끌려간다 — 무대마다 평면이 다른데 기준만 하나 남는 것이다.
-    /// </summary>
-    public void SetPlane(float z)
-    {
-        _planeZ = z;
-    }
 
     public void LockZ(bool _lock)
     {
@@ -65,7 +51,7 @@ public class Dimensional : MonoBehaviour
     void Flatten(Rigidbody body)
     {
         Vector3 position = body.position;
-        position.z = _planeZ;
+        position.z = Plane;
 
         body.position = position;
         body.transform.position = position;

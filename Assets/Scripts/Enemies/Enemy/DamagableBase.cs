@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 
 public class DamagableBase : MonoBehaviour, IDamageable
@@ -88,5 +88,20 @@ public class DamagableBase : MonoBehaviour, IDamageable
     public void RemoveDamageListener(UnityAction<float> call)
     {
         onDamage.RemoveListener(call);
+    }
+
+    /// <summary>
+    /// 죽는 순간을 듣는다. 피격 쪽과 짝을 맞춘 것으로, 인스펙터에 꽂는 대신 코드에서 붙일 때 쓴다.
+    ///
+    /// <see cref="Die"/>가 파괴보다 <b>먼저</b> 알리므로, 리스너는 아직 살아 있는 오브젝트를 본다.
+    /// </summary>
+    public void AddDeathListener(UnityAction call)
+    {
+        onDeath.AddListener(call);
+    }
+
+    public void RemoveDeathListener(UnityAction call)
+    {
+        onDeath.RemoveListener(call);
     }
 }

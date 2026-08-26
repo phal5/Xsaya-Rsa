@@ -27,7 +27,8 @@ public class Gateway : MonoBehaviour
     [Tooltip("도착해서 설 자리. 저쪽 씬의 월드 좌표다.")]
     [SerializeField] Vector3 _place;
 
-    // 위 도착 지점의 Z가 곧 그 무대의 2D 평면이 된다. 도착해 2D로 돌아올 때 몸이 서는 자리다.
+    // 위 도착 지점의 Z는 평면을 정하지 않는다. 2D 평면은 z=0 하나이고, 도착해 2D로 돌아오는
+    // 순간 몸이 그쪽으로 눌린다.
     [Tooltip("도착해서 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. (0,0,1)이면 +Z를 본다.")]
     [SerializeField] Vector3 _facing = new Vector3(0f, 0f, 1f);
 

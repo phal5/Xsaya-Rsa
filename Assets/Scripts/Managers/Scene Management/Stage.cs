@@ -28,6 +28,12 @@ public class Stage : MonoBehaviour
     /// </summary>
     public static Stage Current { get; private set; }
 
+    [Tooltip("이 스테이지에 들어올 때(부활·관문) 2D로 시작할지. 3D 전투가 기본인 스테이지면 끈다.")]
+    [SerializeField] bool _startIn2D = true;
+
+    /// <summary>이 스테이지의 시작 화면 차원. <see cref="SceneDirector"/>가 자리를 놓은 뒤 읽는다.</summary>
+    public bool StartIn2D => _startIn2D;
+
     /// <summary>
     /// 등록은 Awake다. 무대가 올라왔다는 사실은 액티브 씬을 실제로 가져가기 전부터 참이고,
     /// 묻는 쪽이 언제 물어도 답이 있어야 한다.

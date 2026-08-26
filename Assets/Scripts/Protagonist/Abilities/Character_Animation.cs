@@ -235,6 +235,33 @@ public class Character_Animation : MonoBehaviour
     }
 
     /// <summary>
+    /// 자세를 <b>지금 이 자리에서</b> 세운다. 섞지 않고, 애니메이터가 다음에 돌기를 기다리지도 않는다.
+    ///
+    /// <see cref="Play"/>·<see cref="PlayFrom"/>는 <b>부탁</b>이다 — 유니티는 그 요청을 적어두었다가
+    /// 다음 평가 때 반영한다. 그 "다음"이 오지 않는 자리가 있다. 시간 배속을 0으로 눌러 둔 채
+    /// 자세를 거는 연출이 그렇고, 그런 곳에서는 요청만 남고 화면에는 <b>직전 자세가 그대로 서 있다.</b>
+    /// 누워 있어야 할 주인공이 선 채로 얼어붙는 것이 그것이다.
+    ///
+    /// 여기서는 걸고 나서 <see cref="Animator.Update"/>를 0으로 한 번 돌린다.
+    /// 그 한 줄이 "다음에 반영해다오"를 "지금 반영했다"로 바꾼다.
+    ///
+    /// 섞이지 않으므로 <b>이어지는 동작에는 쓰지 않는다.</b> 앞뒤가 끊겨 보인다.
+    /// 쓸 자리는 첫 자세를 세우는 곳 — 이미 끊겨 있는 자리다.
+    /// </summary>
+    public void Snap(string state, float normalizedTime = 0f)
+    {
+        if (_animator == null || string.IsNullOrEmpty(state)) return;
+
+        _current = state;
+
+        Drop();
+
+        Warn(state);
+        _animator.Play(state, 0, normalizedTime);
+        _animator.Update(0f);
+    }
+
+    /// <summary>
     /// 애니메이터가 붙은 오브젝트. 그림이 놓이는 자리이고, <b>몸이 아니다.</b>
     ///
     /// 연출이 그림만 옮겨야 할 때가 있다. 몸을 옮기면 물리와 판정이 함께 따라가지만,

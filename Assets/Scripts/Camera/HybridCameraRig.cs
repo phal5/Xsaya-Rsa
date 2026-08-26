@@ -29,6 +29,14 @@ public class HybridCameraRig : MonoBehaviour
     [SerializeField] private Vector3 offset3DWorld = new Vector3(0f, 1.5f, 0f);
     [SerializeField] private Vector3 offset3DLocal = new Vector3(0f, 0f, -5f);
     [SerializeField] private float rotationDamping3D = 10f;
+
+    [Tooltip("가장 많이 <b>내려다볼</b> 수 있는 각도. 유니티 X축은 양수가 아래다.")]
+    [SerializeField, Range(-89f, 89f)] private float pitchMax3D = 89f;
+
+    [Tooltip("가장 많이 <b>올려다볼</b> 수 있는 각도. 음수가 위다. 공중 보스처럼 대상이 높이 뜨면 " +
+             "카메라가 한없이 젖혀지는데, 그 한계를 여기서 잡는다.")]
+    [SerializeField, Range(-89f, 89f)] private float pitchMin3D = -89f;
+
     private Quaternion targetRotation3D = Quaternion.identity;
 
     [Header("Transition Settings")]
@@ -141,11 +149,35 @@ public class HybridCameraRig : MonoBehaviour
         // Calculate ideal rotation without applying damping yet, 
         // because during a transition we need the absolute mathematical target
         Quaternion idealRot = (direction != Vector3.zero) ? 
-            Quaternion.LookRotation(direction) : targetRotation3D;
+            Clamped(direction) : targetRotation3D;
 
         Vector3 idealPos = rotationCenter + (idealRot * offset3DLocal);
 
         return (idealPos, idealRot);
+    }
+
+    /// <summary>
+    /// 바라볼 방향을 <b>수평각과 상하각으로 갈라</b> 상하만 한계 안에 가둔다.
+    ///
+    /// 회전을 만들어놓고 오일러로 되돌려 자르지 않는다. 쿼터니언에서 뽑은 오일러는 같은 회전을
+    /// 여러 조합으로 표현할 수 있어, 위를 많이 볼 때 X가 아니라 Y·Z가 뒤집히는 쪽으로 나온다 —
+    /// 그 값을 자르면 화면이 옆으로 돌아간다. 방향 벡터에서 직접 재면 그런 갈림이 없다.
+    ///
+    /// 한계를 벌려두면(±89) LookRotation과 같은 결과라, 쓰지 않는 동안의 동작은 그대로다.
+    /// </summary>
+    private Quaternion Clamped(Vector3 direction)
+    {
+        float horizontal = new Vector3(direction.x, 0f, direction.z).magnitude;
+
+        // 대상이 바로 위나 바로 아래면 수평각을 잴 수 없다. 그때는 보던 쪽을 그대로 둔다.
+        float yaw = horizontal > 0.0001f
+            ? Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg
+            : targetRotation3D.eulerAngles.y;
+
+        float pitch = -Mathf.Atan2(direction.y, horizontal) * Mathf.Rad2Deg;
+        pitch = Mathf.Clamp(pitch, pitchMin3D, pitchMax3D);
+
+        return Quaternion.Euler(pitch, yaw, 0f);
     }
 
     #endregion
@@ -187,4 +219,14 @@ public class HybridCameraRig : MonoBehaviour
     // --- Public API ---
 
     public void ToggleMode(bool to2DMode) { is2DMode = to2DMode; }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // 뒤집힌 채로 두면 Clamp가 늘 하한만 돌려줘, 카메라가 한 각도에 붙박인다.
+        if (pitchMin3D > pitchMax3D)
+            Debug.LogWarning($"[{name}] 3D 상하각의 하한({pitchMin3D})이 상한({pitchMax3D})보다 큽니다. " +
+                             "이대로면 카메라가 한 각도에 붙박입니다.", this);
+    }
+#endif
 }

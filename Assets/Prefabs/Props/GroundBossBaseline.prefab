@@ -298,6 +298,12 @@ MonoBehaviour:
   <weapon>k__BackingField: {fileID: 7566618481607919751}
   <animator>k__BackingField: {fileID: 3977638620759769719}
   <rootMotion>k__BackingField: {fileID: 2683357236284056465}
+  onCombatStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onCombatEnd:
+    m_PersistentCalls:
+      m_Calls: []
   <awakeRadius>k__BackingField: 12
   <meleeRadius>k__BackingField: 3.5
   <retreatRadius>k__BackingField: 1
@@ -325,6 +331,7 @@ MonoBehaviour:
   <staggerTrigger>k__BackingField: Stagger
   <deathTrigger>k__BackingField: Death
   <despawnDelay>k__BackingField: 2.9
+  <combatView>k__BackingField: 2
   <bossId>k__BackingField: Ochyra
   <deathFallTimeout>k__BackingField: 3
   <skillSpeedParameter>k__BackingField: SkillSpeed
@@ -846,6 +853,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8574889116734252210}
   - component: {fileID: 1812724447854620649}
+  - component: {fileID: 4903140874078317399}
   m_Layer: 0
   m_Name: Skill
   m_TagString: Untagged
@@ -892,7 +900,44 @@ MonoBehaviour:
   - {fileID: 963146187289152172}
   - {fileID: 5444878745586749532}
   - {fileID: 8373427311331761191}
+  - {fileID: 4903140874078317399}
   _currentStateName: 
+--- !u!114 &4903140874078317399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7342691302237822525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c5d97a9abe04c54cb528092eab0c101, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Boss_Recite
+  _profile:
+    name: Recite
+    windupTime: 0
+    activeTime: 0
+    recoveryTime: 0.3
+    cooldown: 12
+    damage: 0
+    range: 8
+    minRange: 0
+    animatorTrigger: 
+  _clip: {fileID: 0}
+  _conditionScript: {fileID: 0}
+  _conditionTypeName: 
+  _useRootMotion: 0
+  _useVelocity: 0
+  _superArmor: 0
+  _clipStartFrame: 0
+  _clipEndFrame: 0
+  _blendTime: 0.12
+  _fitToDuration: 1
+  _frameRate: 30
+  _hitWindows: []
+  _animationCues: []
+  _books: []
 --- !u!1 &8603132603019287756
 GameObject:
   m_ObjectHideFlags: 0

@@ -587,6 +587,55 @@ Transform:
   - {fileID: 859437910319693291}
   m_Father: {fileID: 16660612209478460}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &887210549918754398
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4684876925036391294}
+  - component: {fileID: 7629648392603451326}
+  m_Layer: 0
+  m_Name: HealAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4684876925036391294
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 887210549918754398}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.75, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4379228598764830530}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7629648392603451326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 887210549918754398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8170869aea2be479b4dc3300c52900, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponEffectSpawner
+  effect: {fileID: 439682714516546187, guid: 6e2d5c22d6c4c9d4a8ff0ed264bec010, type: 3}
+  spawnPoint: {fileID: 0}
+  followWeapon: 1
+  lifetime: 5.1333337
+  effectEnabled: 1
 --- !u!1 &1004664146916925282
 GameObject:
   m_ObjectHideFlags: 0
@@ -947,13 +996,19 @@ MonoBehaviour:
   <RiseTime>k__BackingField: 5.3333335
   <RiseRamp>k__BackingField: 2
   <RiseOffset>k__BackingField: {x: -0.5, y: 0.8, z: 1}
-  <RiseTwist>k__BackingField: {x: 0, y: 90, z: 0}
-  <RestFacing>k__BackingField: {x: 0, y: 0, z: -1}
+  <RiseTwist>k__BackingField: {x: 0, y: 180, z: 0}
+  <RiseTurnFrame>k__BackingField: 117
+  <RiseFrameRate>k__BackingField: 30
   <RiseSettle>k__BackingField: 0.6
   <HealChargeMax>k__BackingField: 3
   <HealAmount>k__BackingField: 40
-  <HealTime>k__BackingField: 1.2
+  <HealTime>k__BackingField: 5.1333337
   <HealSpeed>k__BackingField: 1.5
+  <HealState>k__BackingField: Heal
+  <HealBlend>k__BackingField: 0.5
+  <HealFrame>k__BackingField: 47
+  <HealFrameRate>k__BackingField: 30
+  <HealEffect>k__BackingField: {fileID: 7629648392603451326}
   <SwapTime>k__BackingField: 0.5
   <InteractTime>k__BackingField: 0.3
   <GroundCaster>k__BackingField: {fileID: 3194146052685183880}
@@ -4643,6 +4698,7 @@ MonoBehaviour:
     end: 25
     holdStart: 1.5
     effect: {fileID: 0}
+    anchor: {fileID: 0}
     effectPlace: {x: -0.37774587, y: -0.110058725, z: 0.61005497}
     effectFacing: {x: 52.63369, y: 64.10143, z: 206.07938}
   - state: Slash 2
@@ -4652,6 +4708,7 @@ MonoBehaviour:
     end: 18
     holdStart: 1.5
     effect: {fileID: 0}
+    anchor: {fileID: 0}
     effectPlace: {x: -0.18726985, y: -0.20641622, z: 0.9619912}
     effectFacing: {x: 76.01651, y: 351.28317, z: 101.823524}
   - state: Slash 3
@@ -4661,6 +4718,7 @@ MonoBehaviour:
     end: 28
     holdStart: 1.5
     effect: {fileID: 0}
+    anchor: {fileID: 0}
     effectPlace: {x: -0.47728285, y: -0.120172784, z: 0.47698703}
     effectFacing: {x: 314.51746, y: 290.8693, z: 221.61893}
   _frameRate: 30
@@ -5161,6 +5219,7 @@ Transform:
   - {fileID: 5656428297867416718}
   - {fileID: 4406525909478101504}
   - {fileID: 3928422882605178425}
+  - {fileID: 4684876925036391294}
   m_Father: {fileID: 5689676112456754952}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!136 &7243969750857547376
@@ -6025,7 +6084,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Dimensional
   _own: {fileID: 4497841181015544793}
   _external: {fileID: 7105664321761075555}
-  _originalZ: 0
+  _planeZ: 0
 --- !u!1 &8942072118336034522
 GameObject:
   m_ObjectHideFlags: 0

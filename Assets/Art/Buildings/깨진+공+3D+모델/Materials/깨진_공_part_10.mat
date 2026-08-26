@@ -44,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LightAlbedo:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 2ff1a2bcf115dfa4b96ff80d0bf4fb5c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal:
@@ -87,13 +87,13 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     - _ZWriteControl: 0
-    - _lightThreshold: 1.08
-    - _threshold: 0.91
+    - _lightThreshold: 0.5
+    - _threshold: 0.12
     m_Colors:
     - _Albedo_Clamp: {r: 0, g: 0, b: 0, a: 0}
     - _Albedo_Remap: {r: 0, g: 0, b: 0, a: 0}
-    - _Color: {r: 0.742, g: 0.742, b: 0.742, a: 1}
-    - _LightColor: {r: 0.566, g: 0.604, b: 0.333, a: 1}
+    - _Color: {r: 0.66, g: 0.66, b: 0.66, a: 1}
+    - _LightColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShadedColor: {r: 0.239, g: 0.239, b: 0.239, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

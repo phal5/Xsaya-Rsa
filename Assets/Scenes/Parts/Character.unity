@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000004, guid: 52cf2deda5258bd4a861d8c27e23f9a4, type: 2}
+  m_LightingDataAsset: {fileID: 112000004, guid: 0f9f6f6bd8a67a6419ad9fad13014d9b, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -202,11 +202,11 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.1
-  far clip plane: 5000
-  field of view: 112.8
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60.000004
   orthographic: 0
-  orthographic size: 10
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -230,8 +230,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 499199916}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.15307197, y: 0, z: 0, w: 0.9882151}
-  m_LocalPosition: {x: 0, y: 4.3, z: -7}
+  m_LocalRotation: {x: 0.082199454, y: 0, z: 0, w: 0.99661595}
+  m_LocalPosition: {x: 0, y: 1.75, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -387,6 +387,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Managers
       objectReference: {fileID: 0}
+    - target: {fileID: 6964550388378484398, guid: 602c1357c11560f459194d910f230f32, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7331603633654483453, guid: 602c1357c11560f459194d910f230f32, type: 3}
       propertyPath: <Root>k__BackingField
       value: 
@@ -415,6 +419,10 @@ PrefabInstance:
       propertyPath: <playerDamagable>k__BackingField
       value: 
       objectReference: {fileID: 1989354502}
+    - target: {fileID: 8152297381157566722, guid: 602c1357c11560f459194d910f230f32, type: 3}
+      propertyPath: move_heal
+      value: 
+      objectReference: {fileID: -2650845156183943325, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     - target: {fileID: 8152297381157566722, guid: 602c1357c11560f459194d910f230f32, type: 3}
       propertyPath: move_raise
       value: 
@@ -481,6 +489,10 @@ PrefabInstance:
     - target: {fileID: 1342385371154573008, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: m_Name
       value: Protagonist
+      objectReference: {fileID: 0}
+    - target: {fileID: 1342385371154573008, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4379228598764830530, guid: 8544061f06e2dc448a94c2209b9dd634, type: 3}
       propertyPath: m_LocalPosition.x

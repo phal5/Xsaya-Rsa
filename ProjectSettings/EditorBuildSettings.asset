@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Title/Title.unity
+    guid: 0852f895674281e4b883611db1f220ea
+  - enabled: 1
     path: Assets/Scenes/Parts/Character.unity
     guid: 625e49858190e544abb48e624a97a4f5
   - enabled: 1
@@ -26,6 +29,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Parts/Backgrounds/5. Ochyra Shop/Ochyra Shop.unity
     guid: ae4cb4034b6c38c448ae58ce928efe73
+  - enabled: 1
+    path: Assets/Scenes/Parts/Backgrounds/Boss Fights/Ochyra/Ochyra.unity
+    guid: f5e880c2845b4d74e8207ddd1b5b295c
+  - enabled: 1
+    path: Assets/Scenes/Parts/Backgrounds/Boss Fights/Semprea/Semprea.unity
+    guid: 8748917fb2c2df549888a4d099c90911
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

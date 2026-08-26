@@ -297,6 +297,12 @@ MonoBehaviour:
   <weapon>k__BackingField: {fileID: 7566618481607919751}
   <animator>k__BackingField: {fileID: 3977638620759769719}
   <rootMotion>k__BackingField: {fileID: 2683357236284056465}
+  onCombatStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onCombatEnd:
+    m_PersistentCalls:
+      m_Calls: []
   <awakeRadius>k__BackingField: 12
   <meleeRadius>k__BackingField: 3.5
   <retreatRadius>k__BackingField: 1
@@ -324,6 +330,7 @@ MonoBehaviour:
   <staggerTrigger>k__BackingField: Stagger
   <deathTrigger>k__BackingField: Death
   <despawnDelay>k__BackingField: 2.9
+  <combatView>k__BackingField: 2
   <bossId>k__BackingField: Ochyra_Ch11
   <deathFallTimeout>k__BackingField: 3
   <skillSpeedParameter>k__BackingField: SkillSpeed

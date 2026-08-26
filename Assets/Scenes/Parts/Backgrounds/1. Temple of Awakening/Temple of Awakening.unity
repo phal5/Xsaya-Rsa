@@ -1010,6 +1010,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae9e4f79ca521dd409cc942e16d3684a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Stage
+  _startIn2D: 1
 --- !u!1001 &13471517
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -192727,8 +192728,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2260f6067d5093b46add869277dfdce6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gateway
-  _sceneAsset: {fileID: 102900000, guid: f66669c5d690380428d9b2f037991c26, type: 3}
-  _scene: Floating Gardens
+  _sceneAsset: {fileID: 102900000, guid: d1a5d400d8bc56744bd4ef144caaf26f, type: 3}
+  _scene: Cave
   _place: {x: 0, y: 0.75, z: 0}
   _facing: {x: 0, y: 0, z: -1}
   _book:
@@ -224164,6 +224165,8 @@ MonoBehaviour:
   offset3DWorld: {x: 0, y: 0.5, z: 0}
   offset3DLocal: {x: 0, y: 0, z: -1.7}
   rotationDamping3D: 10
+  pitchMax3D: 89
+  pitchMin3D: -89
   transitionSpeed: 1.2
   transitionCurve:
     serializedVersion: 2

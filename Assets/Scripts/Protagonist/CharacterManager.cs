@@ -71,10 +71,32 @@ public class CharacterManager : EntityManager
     [Tooltip("최대 회복 횟수. 시작 시 이만큼 채워진다.")]
     [field: SerializeField] public int HealChargeMax { get; private set; } = 3;
     [field: SerializeField] public float HealAmount { get; private set; } = 40f;
-    [Tooltip("회복 동작이 걸리는 시간. 이 동안 조작을 잃는다.")]
-    [field: SerializeField] public float HealTime { get; private set; } = 1.2f;
+    [Tooltip("회복 동작이 걸리는 시간. 이 동안 조작을 잃는다. <b>회복이 걸리는 프레임보다 길어야 한다</b> - " +
+             "짧으면 회복이 터지기 전에 상태가 끝나 횟수만 사라진다. " +
+             "클립 길이와 맞추면 동작이 끝까지 재생되고, 회복 이후의 나머지가 그대로 후딜이 된다.")]
+    [field: SerializeField] public float HealTime { get; private set; } = 5.1333f;
     [Tooltip("회복 동작 중의 이동 속도. 지상 속도보다 느리게 둔다.")]
     [field: SerializeField] public float HealSpeed { get; private set; } = 1.5f;
+
+    [Tooltip("컨트롤러의 상태 이름.")]
+    [field: SerializeField] public string HealState { get; private set; } = "Heal";
+
+    [Tooltip("회복 동작으로 섞여 들어가는 시간(초). 섞이는 <b>동안 클립은 이미 돌아간다</b> - " +
+             "아래 프레임은 이 시간이 끝난 뒤가 아니라 동작에 들어선 순간부터 센다.")]
+    [field: SerializeField, Min(0f)] public float HealBlend { get; private set; } = 0.5f;
+
+    [Tooltip("체력이 오르는 <b>클립 프레임</b>. Rise·Swing과 같은 이유로 초가 아니라 프레임으로 적는다 - " +
+             "클립을 프레임 단위로 들여다보며 고르므로, 초로 환산해 두면 볼 때마다 다시 나눠야 한다.")]
+    [field: SerializeField, Min(0f)] public float HealFrame { get; private set; } = 47f;
+
+    [Tooltip("위 프레임이 기준으로 삼는 프레임레이트.")]
+    [field: SerializeField, Min(1f)] public float HealFrameRate { get; private set; } = 30f;
+
+    /// <summary>체력이 오르는 시각(초). 동작에 들어선 순간부터 잰다.</summary>
+    public float HealMoment => HealFrameRate <= 0f ? 0f : HealFrame / HealFrameRate;
+
+    [Tooltip("회복 동작에 함께 세울 연출. 비워두면 아무것도 서지 않는다.")]
+    [field: SerializeField] public WeaponEffectSpawner HealEffect { get; private set; }
 
     [Header("Swap")]
     [field: SerializeField] public float SwapTime { get; private set; } = 0.5f;
@@ -160,6 +182,21 @@ public class CharacterManager : EntityManager
         if (HealCharges <= 0) return false;
 
         HealCharges--;
+        return true;
+    }
+
+    /// <summary>
+    /// 회복 횟수를 하나 돌려준다. <b>이미 꽉 찼으면 아무것도 하지 않는다.</b>
+    ///
+    /// 검사와 증가가 한 연산인 것은 <see cref="ConsumeHealCharge"/>와 같은 이유다 —
+    /// 나눠 두면 둘 중 하나를 잊은 자리가 생기고, 그건 최대치를 넘긴 칸으로 조용히 드러난다.
+    /// </summary>
+    /// <returns>실제로 늘었는지. 거짓이면 이미 꽉 차 있었다는 뜻이다.</returns>
+    public bool GrantHealCharge()
+    {
+        if (HealCharges >= HealChargeMax) return false;
+
+        HealCharges++;
         return true;
     }
 

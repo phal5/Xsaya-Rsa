@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -103,7 +103,20 @@ public class SceneDirector : MonoBehaviour
         // <b>첫 등장의 방향도 여기서 정한다.</b> 부활은 Place()가 이 값을 몸에 싣는데,
         // 첫 등장은 Go()를 거치지 않아 그 길이 없다. 예전에는 Character_Rest가 제 값으로
         // 따로 돌려세웠고, 그래서 체크포인트가 적어둔 방향이 그 자리에서 덮여 사라졌다.
-        if (_character != null && _character.Body != null) _character.Body.rotation = _restFacing;
+        //
+        // <b>물리 자세와 Transform 둘 다에 적는다.</b> Rigidbody.rotation만 적으면 그림은 다음
+        // 시뮬레이션 스텝까지 씬에 저장된 각도로 남는데, 바로 이어 들어오는 Character_Rest가
+        // 시간 상한을 0으로 눌러 그 스텝을 영영 오지 않게 만든다. 그래서 누워 있는 내내 옛 각도로
+        // 보이다가, 일어나며 시간이 풀리는 첫 프레임에 한꺼번에 돌아간다.
+        if (_character != null && _character.Body != null)
+        {
+            _character.Body.rotation = _restFacing;
+            _character.Body.transform.rotation = _restFacing;
+        }
+
+        // 화면 차원도 같은 사정이다 — 첫 등장은 Go()를 거치지 않으므로 Restore2D를 직접 부른다.
+        // 지금 올라와 있는 스테이지(Stage.Current)가 정한 값을 그대로 따른다.
+        Restore2D();
     }
 
     /// <summary>
@@ -336,11 +349,9 @@ public class SceneDirector : MonoBehaviour
     {
         _character.Movement.Pin(place);
 
-        // <b>이 지점의 Z가 곧 이 무대의 2D 평면이다.</b> 옮기는 것과 평면을 정하는 것을 갈라놓으면,
-        // 바로 아래 Restore2D가 옛 평면으로 몸을 도로 끌고 간다.
-        if (PlayerManager.instance != null && PlayerManager.instance.dimension != null)
-            PlayerManager.instance.dimension.SetPlane(place.z);
-
+        // 평면을 여기서 정하지 않는다. 스폰 지점의 Z를 평면으로 삼았더니 무대마다 -20 / 0.4 / 0으로
+        // 갈렸고, 그 값이 곧 2D로 돌아올 때 몸이 끌려가는 자리가 되었다. 평면은 z=0 하나다.
+        //
         // 각도도 Pin과 같은 이유로 둘 다 적는다 - Rigidbody.rotation만 적으면 그림은 다음
         // 시뮬레이션 스텝까지 옛 각도로 남고, 시간이 멎은 구간에서는 그 스텝이 오지 않는다.
         _character.Body.rotation = facing;
@@ -351,9 +362,19 @@ public class SceneDirector : MonoBehaviour
     /// 전투에서 3D로 열려 있었더라도 다시 세워질 때는 2D로 돌아온다.
     /// <b>지금 등록되어 있는 리그</b>를 돌려놓으므로, 부르는 시점이 곧 대상이다.
     /// </summary>
+    /// <summary>
+    /// 화면 차원을 이 스테이지가 정한 시작 모드로 되돌린다.
+    ///
+    /// <b>전투에서 3D로 열려 있었는지와 무관하게 스테이지가 정한 값을 따른다.</b> 값은
+    /// Stage에 있다 — 어느 스테이지가 3D로 시작해야 하는지는 씬마다 다르고, 아는 것은 그 씬뿐이다.
+    /// 무대가 없으면(비정상적인 경로거나 아직 못 잡았을 때) 2D를 기본으로 둔다.
+    /// </summary>
     void Restore2D()
     {
-        if (PlayerManager.instance != null) PlayerManager.instance.Set2D(true);
+        if (PlayerManager.instance == null) return;
+
+        bool startIn2D = Stage.Current == null || Stage.Current.StartIn2D;
+        PlayerManager.instance.Set2D(startIn2D);
     }
 
     /// <summary>

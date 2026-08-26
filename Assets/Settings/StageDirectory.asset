@@ -17,11 +17,23 @@ MonoBehaviour:
     _scene: Temple of Awakening
     _displayName: "\uC2E0\uC804"
   - _sceneAsset: {fileID: 102900000, guid: f66669c5d690380428d9b2f037991c26, type: 3}
-    _scene: the Shrine
+    _scene: Floating Gardens
     _displayName: "\uACF5\uC911 \uC815\uC6D0"
   - _sceneAsset: {fileID: 102900000, guid: 674021b448aa5524f820363216bc0ce2, type: 3}
-    _scene: Floating shrine
-    _displayName: "\uB192\uC740 \uACF3\uC758 \uC0AC\uC6D0"
+    _scene: Aerial  Temple
+    _displayName: "\uC0AC\uC6D0 \uC21C\uB840\uC9C0"
   - _sceneAsset: {fileID: 102900000, guid: d1a5d400d8bc56744bd4ef144caaf26f, type: 3}
     _scene: Cave
     _displayName: "\uBD80\uD328\uD55C \uACF5\uB3D9"
+  - _sceneAsset: {fileID: 102900000, guid: ae4cb4034b6c38c448ae58ce928efe73, type: 3}
+    _scene: Ochyra Shop
+    _displayName: "\uC0C1\uC810"
+  - _sceneAsset: {fileID: 102900000, guid: f5e880c2845b4d74e8207ddd1b5b295c, type: 3}
+    _scene: Ochyra
+    _displayName: "\uBAA8\uD615 \uC815\uC6D0"
+  - _sceneAsset: {fileID: 102900000, guid: 8748917fb2c2df549888a4d099c90911, type: 3}
+    _scene: Semprea
+    _displayName: "\uD2C8\uC0C8\uC758 \uC0AC\uC6D0"
+  - _sceneAsset: {fileID: 102900000, guid: 43f50f1908b447247b9d19734c276ac7, type: 3}
+    _scene: Old Cribs
+    _displayName: "\uC694\uB78C\uB3C4\uC2DC"

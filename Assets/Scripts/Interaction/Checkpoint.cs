@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 쉬어가는 자리. 말을 걸면 플레이어가 다음에 여기서 일어난다.
@@ -25,7 +25,7 @@ using UnityEngine;
 public class Checkpoint : InteractableEvent
 {
     [Tooltip("스폰 지점. 이 오브젝트의 <b>로컬</b> 좌표계 기준 오프셋이다 - 오브젝트를 돌리거나 옮기면 함께 따라온다. " +
-             "<b>여기서 나온 Z가 곧 그 무대의 2D 평면이 된다</b> - 일어난 뒤 몸이 그 Z 위에서 논다.")]
+             "Z는 신경 쓰지 않아도 된다 - 2D 평면은 z=0 하나이고, 2D로 돌아오는 순간 몸이 그쪽으로 눌린다.")]
     [SerializeField] Vector3 _offset = Vector3.zero;
 
     [Tooltip("일어나서 볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. 말을 건 각도와 무관하게 항상 이쪽을 본다.")]
@@ -55,6 +55,14 @@ public class Checkpoint : InteractableEvent
             SceneDirector.instance.SetCheckpoint(gameObject.scene.name, transform.TransformPoint(_offset), Facing, _riseOffset);
         else
             Debug.LogError($"[{name}] SceneDirector가 없어 쉬어간 자리를 적지 못했습니다.", this);
+
+        // 쉬어가면 회복 횟수가 찬다. 자리를 적는 것과 한 묶음이라 여기 둔다 —
+        // 플레이어가 "여기서 다시 시작한다"고 정하는 순간이 곧 자원이 되돌아오는 순간이다.
+        CharacterManager character = PlayerManager.instance != null && PlayerManager.instance.player != null
+            ? PlayerManager.instance.player.root.GetComponentInChildren<CharacterManager>(true)
+            : null;
+
+        if (character != null) character.RefillHealCharges();
 
         // character를 쓰지 않는다 — base.Interact()도 받기만 하고 참조하지 않는다.
         base.Interact(null);

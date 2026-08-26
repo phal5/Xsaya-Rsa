@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -58,8 +58,20 @@ public class Character_Rest : BaseCharacterState
         _turning = false;
         _raiseRequested = false;
 
+        // <b>자세부터 세우고 나서 시간을 멈춘다.</b> 순서가 뒤바뀌면 자세가 서지 않는다 —
+        // 애니메이터에 거는 것은 부탁이고, 그 부탁은 애니메이터가 <b>다음에 돌 때</b> 반영된다.
+        // 배속을 먼저 0으로 눌러버리면 그 "다음"이 오지 않아 직전 자세가 그대로 남는다.
+        // 부활 직후 주인공이 누워 있지 않고 선 채로 얼어붙던 것이 그것이다.
+        characterManager.Animation.SetUnscaled(true);
+        characterManager.Animation.SetFloat(characterManager.RiseSpeedParameter, 0f);
+        characterManager.Animation.Snap(characterManager.RiseState);
+
         // 세상을 멈춘다. 배속 칸은 HPbar가 매 프레임 쥐고 있으므로 상한만 누른다.
         TimeManager.SetCeiling(0f);
+
+        // 다시 일어나는 자리에서는 회복 횟수도 함께 찬다.
+        // 이 상태로 들어오는 길은 최초 로딩과 부활 둘뿐이고, 둘 다 "처음부터 시작하는" 순간이다.
+        characterManager.RefillHealCharges();
 
         // <b>몸의 자리는 건드리지 않는다.</b> 몸이 놓인 자리는 스테이지가 정한 것이고,
         // 그것을 옮기면 Protagonist 대비 오프셋이 뭉개진다. 떼어 놓는 것은 그림뿐이다.
@@ -81,17 +93,6 @@ public class Character_Rest : BaseCharacterState
             mesh.localPosition = _base + _offset;
             mesh.localRotation = _baseTurn * _twist;
         }
-
-        characterManager.Animation.SetUnscaled(true);
-
-        // 배속 0으로 눌러 첫 프레임 — 누운 자세 — 에 세워 둔다.
-        //
-        // <b>Play가 아니라 PlayFrom이다.</b> Play는 이름만 보고 같으면 돌아나가는데,
-        // 이미 한 번 일어선 뒤라면 애니메이터는 이름은 그대로 Rise인 채로 클립의 끝 —
-        // 일어선 자세 — 에 서 있다. 그 위에 배속 0을 얹으면 선 자세로 얼어붙는다.
-        // 되감는 일을 아무도 하지 않는 것이 문제였으므로, 시작 지점을 직접 준다.
-        characterManager.Animation.SetFloat(characterManager.RiseSpeedParameter, 0f);
-        characterManager.Animation.PlayFrom(characterManager.RiseState, 0f);
 
         Subscribe();
     }
