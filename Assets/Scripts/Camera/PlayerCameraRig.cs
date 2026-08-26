@@ -31,18 +31,20 @@ public class PlayerCameraRig : HybridCameraRig
     /// </summary>
     bool Resolve()
     {
-        if (character != null && targeter != null && _registered) return true;
+        if (character != null && _registered) return true;
 
         PlayerManager manager = PlayerManager.instance;
         if (manager == null) return false;
 
         if (character == null) character = manager.player;
+
+        // 타겟터는 없어도 된다. 2D의 끌림 보정에만 쓰이고, 그쪽이 스스로 널을 본다.
         if (targeter == null) targeter = manager.targeter;
 
         // 2D/3D 전환이 이 리그로 오게 한다. 스테이지가 바뀌면 새 리그가 그 자리를 이어받는다.
         manager.UseCameraRig(this);
         _registered = true;
 
-        return character != null && targeter != null;
+        return character != null;
     }
 }

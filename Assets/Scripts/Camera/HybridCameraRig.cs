@@ -12,7 +12,9 @@ public class HybridCameraRig : MonoBehaviour
     [Header("Core References")]
     [Tooltip("따라다닐 대상. 플레이어를 따라가는 리그는 PlayerCameraRig가 실행 중에 채운다.")]
     [SerializeField] protected Transform character;
-    [Tooltip("바라볼 대상을 고르는 쪽. 3D 모드의 회전이 여기서 나온다.")]
+    [Tooltip("자동 조준. <b>3D 모드의 회전이 여기서 나온다</b> - 3D를 쓰는 무대에서는 반드시 꽂아야 한다. " +
+             "2D는 적이 가까우면 화면이 그쪽으로 조금 끌리는 보정에만 쓴다. " +
+             "비어 있어도 카메라가 멎지는 않는다 - 2D는 보정 없이, 3D는 들고 있던 각도로 돈다.")]
     [SerializeField] protected AutoTarget targeter;
 
     [Header("State")]
@@ -55,7 +57,9 @@ public class HybridCameraRig : MonoBehaviour
     /// <summary>대상을 어디서 얻느냐만 갈리므로, 물려받는 쪽은 여기 앞에 한 줄을 더한다.</summary>
     protected virtual void LateUpdate()
     {
-        if (character == null || targeter == null) return;
+        // <b>타겟터는 없어도 된다.</b> 예전에는 여기서 함께 막아, 자동 조준이 비면 카메라가 통째로 멎었다.
+        // 지금 그것을 보는 곳은 2D의 끌림 보정 하나뿐이고, 그쪽이 스스로 널을 본다.
+        if (character == null) return;
 
         if (TargetTransitionWeight() != transitionRate)
         {
@@ -125,7 +129,7 @@ public class HybridCameraRig : MonoBehaviour
         Vector3 zOffset = offset2D.z * camForward;
         Vector3 flatOffsetPos = character.position + flatOffset;
 
-        Transform target = targeter._targetTransform;
+        Transform target = targeter != null ? targeter._targetTransform : null;
         if (target != null)
         {
             Vector3 disparity = (character.position - target.position);
@@ -139,9 +143,15 @@ public class HybridCameraRig : MonoBehaviour
         return (idealPos, idealRot);
     }
 
+    /// <summary>
+    /// <b>회전은 자동 조준이 고른 대상에서 나온다.</b> 3D를 쓰는 무대에서는 그것이 비지 않아야 한다.
+    ///
+    /// 그래도 비었을 때 멎지는 않는다 — 들고 있던 각도를 그대로 쓴다. 예전에는 LateUpdate가
+    /// 타겟터를 요구해 자동 조준이 없으면 카메라가 통째로 멎었는데, 그건 없어도 되는 의존이었다.
+    /// </summary>
     private (Vector3 pos, Quaternion rot) GetIdeal3DState()
     {
-        Transform target = targeter._targetTransform;
+        Transform target = targeter != null ? targeter._targetTransform : null;
 
         Vector3 rotationCenter = character.position + offset3DWorld;
         Vector3 direction = target != null ? (target.position - rotationCenter) : Vector3.zero;
