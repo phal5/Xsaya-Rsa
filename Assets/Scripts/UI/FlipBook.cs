@@ -24,8 +24,8 @@ public class FlipBook : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) { Instance = this; }
-        else Debug.LogError($"Duplicate instance of FlipBook found attached to {gameObject.name}.");
+        if (Instance != null) Debug.LogError($"Duplicate instance of FlipBook found attached to {gameObject.name}.");
+        Instance = this;
     }
 
     private void OnDestroy()
@@ -66,15 +66,13 @@ public class FlipBook : MonoBehaviour
         RemoveBook();
         _book = book;
 
-        // <b>연다는 것은 첫 장부터라는 뜻이다.</b> 페이지 커서는 책이 들고 있고 닫을 때 되돌아가지
-        // 않으므로, 되감지 않으면 한 번 다 본 책은 두 번째부터 열자마자 닫힌다 — 대사는 안 나오고
-        // 조작만 한 번 잠겼다 풀린다. 상점처럼 되풀이해 여는 자리에서 그것이 곧 벙어리가 되는 길이다.
+        // 되감을지는 <b>책이 정한다.</b> 페이지 커서는 책이 들고 있고 닫을 때 되돌아가지 않아,
+        // 되감지 않는 책은 한 번 다 본 뒤로 열어도 곧장 닫힌다 — 그것이 한 번만 보여줄 서적의 동작이다.
+        // 상점처럼 되풀이해 여는 자리만 책 쪽에서 되감기를 켠다.
         //
-        // GoToPage(-1)은 GetPage()의 범위 가드에 걸려 <b>페이지 이벤트를 발동시키지 않는다.</b>
-        // 커서만 제자리로 돌아가고, 첫 장은 바로 아래 Next()가 연다.
-        //
-        // 한 번만 열려야 하는 자리는 이 커서가 아니라 InteractableEvent의 _once가 맡는다.
-        book?.GoToPage(-1);
+        // 여기서 조건을 보지 않는 이유는 입구가 하나가 아니어서다 — BookHolder로도 BookTrigger로도
+        // 열리는데, 판단을 여는 쪽에 두면 같은 책이 입구에 따라 다르게 열린다.
+        book?.Rewind();
 
         // <b>여는 것을 먼저 알린다.</b> Next()가 앞서면 페이지가 없는 책에서 순서가 뒤집힌다 —
         // Next()가 onDialogueNull로 먼저 닫고, 뒤이은 onSetBook이 다시 여는 꼴이 되어
@@ -143,6 +141,10 @@ public class Book
 {
 #nullable enable
 
+    [Tooltip("다시 열 때 첫 장부터 되감을지. <b>꺼두면 한 번 다 본 뒤로는 열어도 곧장 닫힌다</b> - " +
+             "한 번만 보여줄 서적이 그것이다. 상점처럼 되풀이해 여는 자리만 켠다.")]
+    [SerializeField] private bool _rewind;
+
     [SerializeField] private List<Page> _pages = new();
     [SerializeField] private List<PageEvent> _pageEvents = new();
     int page = -1;
@@ -158,6 +160,21 @@ public class Book
     /// 그 사이에 조작이 한 번 잠기고 풀려 화면이 깜빡인다. 그 창을 아예 만들지 않는 쪽이 낫다.
     /// </summary>
     public bool HasPages => _pages != null && _pages.Count > 0;
+
+    /// <summary>
+    /// 여는 김에 첫 장으로 되돌린다. <b><see cref="_rewind"/>를 켜둔 책만 되돌아간다</b> —
+    /// 끄고 둔 책은 그대로 두어, 한 번 다 본 뒤로는 열어도 곧장 닫히는 지금 동작을 지킨다.
+    ///
+    /// 되감을지를 여는 쪽이 아니라 책이 정하는 이유. 여는 입구가 하나가 아니다 —
+    /// <see cref="BookHolder"/>로도 열리고 <see cref="BookTrigger"/>로도 열리는데,
+    /// 그 둘에 각각 표시를 두면 같은 책이 입구에 따라 다르게 열린다.
+    /// </summary>
+    public void Rewind()
+    {
+        if (!_rewind) return;
+
+        page = -1;
+    }
 
     public Page? GetNextPage()
     {

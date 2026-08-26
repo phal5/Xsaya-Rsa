@@ -80,7 +80,7 @@ Material:
     - _Albedo_Clamp: {r: 0, g: 0, b: 0, a: 0}
     - _Albedo_Remap: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 0, g: 0, b: 0, a: 1}
-    - _LightColor: {r: 0.8113208, g: 0.7761372, b: 0.4477572, a: 1}
+    - _LightColor: {r: 0.1972677, g: 0.27658862, b: 0.2924528, a: 1}
     - _ShadedColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

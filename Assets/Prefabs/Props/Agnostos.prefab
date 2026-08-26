@@ -3484,6 +3484,7 @@ GameObject:
   - component: {fileID: 2288190833830000182}
   - component: {fileID: 3096493531891347187}
   - component: {fileID: 2299859263427620709}
+  - component: {fileID: 7799672168011653558}
   m_Layer: 7
   m_Name: Cage
   m_TagString: Untagged
@@ -3636,7 +3637,32 @@ MonoBehaviour:
       m_Calls: []
   onDeath:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1288793160508428008}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &7799672168011653558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3297442956706706203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177ff9cb8ada493459e6253e3be5bb51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Bounty
+  _amount: 1
 --- !u!1 &3377833652235976858
 GameObject:
   m_ObjectHideFlags: 0
@@ -4955,7 +4981,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 88
   m_CollisionDetection: 0
 --- !u!95 &2284236624043963725
 Animator:

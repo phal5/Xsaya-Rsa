@@ -6,7 +6,6 @@ public class InputManager : MonoBehaviour
 {
     //Move
     [field: SerializeField] public InputActionReference move_move;
-    [field: SerializeField] public InputActionReference move_look;
     [field: SerializeField] public InputActionReference move_jump;
     [field: SerializeField] public InputActionReference move_dash;
     [field: SerializeField] public InputActionReference move_skill;
@@ -21,7 +20,6 @@ public class InputManager : MonoBehaviour
     [field: SerializeField] public InputActionReference move_heal;
 
     public static Vector3 CharacterMove { get; private set; }
-    public static Vector2 CharacterLook { get; private set; }
     public static bool CharacterJump;
     public static bool CharacterDash;
     public static bool CharacterSkill;
@@ -62,7 +60,6 @@ public class InputManager : MonoBehaviour
     void Update()
     {
         CharacterMove = ToHorizontal(move_move.action.ReadValue<Vector2>());
-        CharacterLook = move_look.action.ReadValue<Vector2>();
     }
 
     private void LateUpdate()

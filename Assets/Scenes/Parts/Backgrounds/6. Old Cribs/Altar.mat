@@ -74,13 +74,13 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     - _ZWriteControl: 0
-    - _lightThreshold: 0.39
+    - _lightThreshold: 0.68
     - _threshold: 0.29
     m_Colors:
     - _Albedo_Clamp: {r: 0, g: 0, b: 0, a: 0}
     - _Albedo_Remap: {r: 0, g: 0, b: 0, a: 0}
-    - _Color: {r: 0.764151, g: 0.7231393, b: 0.50102353, a: 1}
-    - _LightColor: {r: 0.8666667, g: 0.7500113, b: 0.54509807, a: 1}
+    - _Color: {r: 0.4267533, g: 0.6603774, b: 0.65139186, a: 1}
+    - _LightColor: {r: 0.68485224, g: 0.8490566, b: 0.8044579, a: 1}
     - _ShadedColor: {r: 0.4339623, g: 0.39894795, b: 0.30090782, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

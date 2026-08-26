@@ -671,13 +671,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4065193361529556070}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.02780464, y: -0.040176723, z: 0.58062977, w: 0.8127004}
-  m_LocalPosition: {x: -0.002052878, y: 0.0010907826, z: 0.00014707184}
+  m_LocalRotation: {x: 0.18337415, y: 0.062419, z: 0.77730435, w: 0.59856147}
+  m_LocalPosition: {x: 0.002091, y: 0.001186, z: -0.000901}
   m_LocalScale: {x: 0.00012255987, y: 0.007966389, z: 0.00012255985}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9150222662865106757}
-  m_LocalEulerAnglesHint: {x: 5.27, y: -1.9, z: 71}
+  m_LocalEulerAnglesHint: {x: 7.036, y: 21.256, z: 106.126}
 --- !u!65 &3842335687244779715
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1172,10 +1172,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6877337423777550858, guid: 3068aa96f7b4dfa4680192a4a129e651, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 744ba146a66ed0c4eba47d24030d1492, type: 2}
+    - target: {fileID: -4736453442046988960, guid: 3068aa96f7b4dfa4680192a4a129e651, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 744ba146a66ed0c4eba47d24030d1492, type: 2}
+    - target: {fileID: -359980139465502742, guid: 3068aa96f7b4dfa4680192a4a129e651, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 744ba146a66ed0c4eba47d24030d1492, type: 2}
     - target: {fileID: 919132149155446097, guid: 3068aa96f7b4dfa4680192a4a129e651, type: 3}
       propertyPath: m_Name
       value: Ochyra
       objectReference: {fileID: 0}
+    - target: {fileID: 4530176819776609691, guid: 3068aa96f7b4dfa4680192a4a129e651, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 744ba146a66ed0c4eba47d24030d1492, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
