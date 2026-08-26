@@ -49,6 +49,25 @@ public class Character_Rest : BaseCharacterState
     // 입력 콜백이 세우고 갱신 주기가 소비한다.
     bool _raiseRequested;
 
+    /// <summary>
+    /// 그림의 제자리를 <b>한 번만</b> 재어 둔다.
+    ///
+    /// 들어올 때마다 다시 재면, 어긋난 채로 한 번 들어오는 순간 그 어긋난 자리가 새 기준이 되어
+    /// 되돌아갈 곳을 잃는다. 그 뒤로는 Exit이 아무리 제대로 돌아도 틀린 곳으로 돌아가고,
+    /// 어긋남이 판이 끝날 때까지 쌓인다.
+    ///
+    /// 한 번이면 족한 것은 이 값이 프리팹이 정한 상수이기 때문이다 —
+    /// 그림의 로컬 트랜스폼을 만지는 코드는 이 상태 하나뿐이다.
+    /// </summary>
+    public override void Bootstrap()
+    {
+        Transform mesh = characterManager.Animation.Mesh;
+        if (mesh == null) return;
+
+        _base = mesh.localPosition;
+        _baseTurn = mesh.localRotation;
+    }
+
     public override void Enter()
     {
         base.Enter();
@@ -79,9 +98,6 @@ public class Character_Rest : BaseCharacterState
 
         if (mesh != null)
         {
-            _base = mesh.localPosition;
-            _baseTurn = mesh.localRotation;
-
             // 떼어 놓는 거리는 <b>어디서 일어나느냐에 딸린다.</b> 자리마다 바닥과 제단이 다르므로
             // 체크포인트가 적어둔 값을 쓴다. director가 없는 판에서는 매니저에 적힌 값이 그 자리를 대신한다.
             _offset = SceneDirector.instance != null
