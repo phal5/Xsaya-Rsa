@@ -106,15 +106,25 @@ namespace DemoLauncher
             // %TEMP% 에 정리용 배치를 만들어 분리 실행한 뒤 런처는 즉시 종료한다.
             // 배치는 런처가 종료될 때까지 재시도하며 폴더를 삭제하고, 마지막에
             // 자기 자신(배치)까지 삭제한다.
+            //
+            // 삭제 대상 경로는 배치 본문에 직접 쓰지 않고 환경변수(TB_TARGET)로
+            // 넘긴다. cmd 는 배치 파일을 시스템 코드페이지(한글 윈도우=CP949)로
+            // 읽으므로, 경로에 한글이 있으면 파일에 박아넣은 문자열이 깨진다.
+            // 환경변수는 유니코드로 전달되어 한글 경로도 안전하다. 배치 본문은
+            // 순수 ASCII 만 유지한다.
             string bat = Path.Combine(Path.GetTempPath(),
                 "cleanup_" + Guid.NewGuid().ToString("N") + ".bat");
 
+            // 대상 폴더 자체는 남기고, 그 안의 내용(하위 폴더 + 파일)만 모두 지운다.
+            //  1) 하위 폴더들을 통째로 삭제  2) 최상위 파일들을 삭제
+            //  3) 폴더가 비었으면 종료, 아니면(실행 중인 런처 exe 등이 잠겨 있으면)
+            //     잠깐 대기 후 재시도. 런처가 종료되면 남은 exe 도 지워져 비워진다.
             string script =
                 "@echo off\r\n" +
-                "set \"TARGET=" + target + "\"\r\n" +
                 "for /L %%i in (1,1,60) do (\r\n" +
-                "  rmdir /s /q \"%TARGET%\" 2>nul\r\n" +
-                "  if not exist \"%TARGET%\" goto done\r\n" +
+                "  for /d %%D in (\"%TB_TARGET%\\*\") do rmdir /s /q \"%%D\" 2>nul\r\n" +
+                "  del /f /q \"%TB_TARGET%\\*\" 2>nul\r\n" +
+                "  dir /a /b \"%TB_TARGET%\" 2>nul | findstr \"^\" >nul || goto done\r\n" +
                 "  ping -n 2 127.0.0.1 >nul\r\n" +
                 ")\r\n" +
                 ":done\r\n" +
@@ -122,7 +132,7 @@ namespace DemoLauncher
 
             File.WriteAllText(bat, script, new UTF8Encoding(false));
 
-            Process.Start(new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
                 Arguments = "/c \"" + bat + "\"",
@@ -130,7 +140,9 @@ namespace DemoLauncher
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 WorkingDirectory = Path.GetTempPath(),
-            });
+            };
+            psi.EnvironmentVariables["TB_TARGET"] = target;
+            Process.Start(psi);
 
             reason = "";
             return true;

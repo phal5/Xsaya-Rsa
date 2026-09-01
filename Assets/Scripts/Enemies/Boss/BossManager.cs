@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -325,6 +326,69 @@ public class BossManager : EntityManager
         if (animator == null || string.IsNullOrEmpty(trigger)) return;
         animator.SetTrigger(trigger);
     }
+
+    #region Locomotion - 걷는 그림을 실제 이동에 맞춘다
+
+    [Header("Locomotion")]
+    [Tooltip("걷기·후퇴 상태의 Speed Multiplier에 물려둔 Float 파라미터 이름. 실제 이동 속도에 맞춰 다리 속도를 정한다.")]
+    [field: SerializeField] public string moveSpeedParameter { get; private set; } = "MoveSpeed";
+
+    [Tooltip("이보다 느리면 걷는 그림을 쓰지 않는다. 속도에 그대로 비례시키면 멈추기 직전에 애니메이션이 기어간다.")]
+    [field: SerializeField, Min(0f)] public float walkThreshold { get; private set; } = 0.1f;
+
+    /// <summary>
+    /// 이미 그 상태면 다시 걸지 않는다. <b>매 프레임 불러도 되게 하려고 있다.</b>
+    ///
+    /// 트리거는 전이가 가져갈 때까지 남으므로, 같은 것을 매 프레임 세우면 남은 하나가
+    /// 엉뚱한 순간에 소비되어 스킬 도중에 걷는 그림이 끼어든다. 지금 상태를 보고 거른다.
+    /// 트리거 이름과 상태 이름이 같다는 이 컨트롤러의 규약에 기대고 있다.
+    /// </summary>
+    public void PlayIfNot(string trigger)
+    {
+        if (animator == null || string.IsNullOrEmpty(trigger)) return;
+
+        if (animator.IsInTransition(0)) return;
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName(trigger)) return;
+
+        animator.SetTrigger(trigger);
+    }
+
+    /// <summary>
+    /// 걷는 그림의 배속을 실제 이동 속도에 맞춘다.
+    ///
+    /// 나누는 값은 <b>클립이 스스로 걷는 속도</b>다. 초를 적어두면 클립을 갈아끼울 때마다 같이
+    /// 고쳐야 하고, 잊은 쪽은 발이 미끄러지는 것으로 조용히 드러난다. 자산에 직접 묻는 편이 언제나 맞다.
+    ///
+    /// 섞이는 동안에는 들어오는 쪽 클립을 본다. 그러지 않으면 전이 중에 떠나는 클립의 보폭으로 재게 된다.
+    /// </summary>
+    public void SetMoveSpeed(float worldSpeed)
+    {
+        if (animator == null || string.IsNullOrEmpty(moveSpeedParameter)) return;
+
+        float stride = Stride();
+
+        animator.SetFloat(moveSpeedParameter, stride > 0.01f ? worldSpeed / stride : 1f);
+    }
+
+    /// <summary>
+    /// 지금 재생 중인 클립이 스스로 걷는 속도.
+    ///
+    /// 배열을 돌려주는 쪽이 아니라 <b>리스트를 채우는 쪽</b>을 쓴다. 매 프레임 도는 자리라
+    /// 배열판은 프레임마다 쓰레기를 남긴다. 리스트 하나를 재사용한다.
+    /// </summary>
+    float Stride()
+    {
+        if (animator.IsInTransition(0)) animator.GetNextAnimatorClipInfo(0, _clips);
+        else animator.GetCurrentAnimatorClipInfo(0, _clips);
+
+        if (_clips.Count == 0 || _clips[0].clip == null) return 0f;
+
+        return _clips[0].clip.averageSpeed.magnitude;
+    }
+
+    readonly List<AnimatorClipInfo> _clips = new List<AnimatorClipInfo>();
+
+    #endregion
 
     [Tooltip("모든 스킬 상태의 Speed Multiplier에 물려둔 Float 파라미터 이름. 스킬은 한 번에 하나만 돌아 하나면 족하다.")]
     [field: SerializeField] public string skillSpeedParameter { get; private set; } = "SkillSpeed";

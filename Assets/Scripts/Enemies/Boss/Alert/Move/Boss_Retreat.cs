@@ -8,17 +8,32 @@ using UnityEngine;
 /// </summary>
 public class Boss_Retreat : BaseEntityState<BossManager>
 {
-    public override void Enter()
-    {
-        manager.PlayAnimation(manager.retreatTrigger);
-    }
-
     public override void UpdateState()
     {
         if (manager.HasPlayer) Retreat();
         else manager.Stop();
 
+        Locomotion();
+
         Transitions();
+    }
+
+    /// <summary>
+    /// 물러나는 그림을 지금 내는 속도에 맞춘다. <see cref="Boss_Approach"/>와 같은 자리다.
+    /// 멈춰 있으면 물러나지 않는다.
+    /// </summary>
+    void Locomotion()
+    {
+        float speed = manager.HasPlayer ? manager.retreatSpeed : 0f;
+
+        if (speed < manager.walkThreshold)
+        {
+            manager.PlayIfNot(manager.idleTrigger);
+            return;
+        }
+
+        manager.PlayIfNot(manager.retreatTrigger);
+        manager.SetMoveSpeed(speed);
     }
 
     public override void Exit()

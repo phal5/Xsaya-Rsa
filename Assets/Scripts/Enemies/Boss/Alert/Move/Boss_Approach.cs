@@ -14,17 +14,34 @@ public class Boss_Approach : BaseEntityState<BossManager>
         manager.LookTowards(manager.Player);
     }
 
-    public override void Enter()
-    {
-        manager.PlayAnimation(manager.walkTrigger);
-    }
-
     public override void UpdateState()
     {
         if (manager.HasPlayer) Approach();
         else manager.Stop();
 
+        Locomotion();
+
         Transitions();
+    }
+
+    /// <summary>
+    /// 걷는 그림을 지금 내는 속도에 맞춘다. <b>매 프레임 본다</b> — 진입할 때 한 번만 걸어두면,
+    /// 그 한 번이 흘러가거나 도중에 멈춰 서도 되찾을 길이 없다.
+    ///
+    /// 멈춰 있으면 걷지 않는다. 속도에 그대로 비례시키면 멈추기 직전에 다리가 기어간다.
+    /// </summary>
+    void Locomotion()
+    {
+        float speed = manager.HasPlayer ? manager.approachSpeed : 0f;
+
+        if (speed < manager.walkThreshold)
+        {
+            manager.PlayIfNot(manager.idleTrigger);
+            return;
+        }
+
+        manager.PlayIfNot(manager.walkTrigger);
+        manager.SetMoveSpeed(speed);
     }
 
     public override void Exit()

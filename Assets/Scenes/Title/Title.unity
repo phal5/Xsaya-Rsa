@@ -549,6 +549,7 @@ GameObject:
   m_Component:
   - component: {fileID: 412730593}
   - component: {fileID: 412730592}
+  - component: {fileID: 412730594}
   m_Layer: 0
   m_Name: Scene Transit
   m_TagString: Untagged
@@ -591,7 +592,39 @@ MonoBehaviour:
     - MidScreenText: "\uB098\uC758 \uC544\uC774\uC57C, \uC77C\uC5B4\uB098 \uAC70\uB450\uC5B4\uB77C"
       FooterSpeaker: 
       FooterText: 
-    _pageEvents: []
+    _pageEvents:
+    - pageIndex: 0
+      action:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 412730594}
+            m_TargetAssemblyTypeName: TimedInvoke, Assembly-CSharp
+            m_MethodName: Begin
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+    - pageIndex: 1
+      action:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 412730594}
+            m_TargetAssemblyTypeName: TimedInvoke, Assembly-CSharp
+            m_MethodName: Begin
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
 --- !u!4 &412730593
 Transform:
   m_ObjectHideFlags: 0
@@ -607,6 +640,36 @@ Transform:
   m_Children: []
   m_Father: {fileID: 337466514}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &412730594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 412730591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a3f28c5e7f4c3d4daf03c8a538ec938, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimedInvoke
+  _delay: 3
+  _beginOnStart: 0
+  _unscaled: 1
+  _onElapsed:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1976544352}
+        m_TargetAssemblyTypeName: FlipBook, Assembly-CSharp
+        m_MethodName: Next
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &414794883
 GameObject:
   m_ObjectHideFlags: 0

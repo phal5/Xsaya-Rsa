@@ -34925,19 +34925,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: -0.016760472
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 0.9998596
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -34945,7 +34945,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 181.921
       objectReference: {fileID: 0}
     - target: {fileID: 4051608200893165733, guid: 6a9672a010c2921469ce8b9324e189bd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -57856,6 +57856,36 @@ PrefabInstance:
       propertyPath: _sceneAsset
       value: 
       objectReference: {fileID: 102900000, guid: 8748917fb2c2df549888a4d099c90911, type: 3}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.data[0].FooterText
+      value: "\uC624\uB77C, \uC774\uB984\uC870\uCC28 \uC5C6\uB294 \uC2E0\uC774\uC5EC,"
+      objectReference: {fileID: 0}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.data[1].FooterText
+      value: "\uADF8 \uC18C\uB140\uC640 \uB098, \uBAA9\uC228 \uB458\uC73C\uB85C \uC774\uACF3\uC5D0\uC11C
+        \uB108\uD76C \uC871\uC18D\uB4E4\uC744 \uB05D\uB0B4\uACE0"
+      objectReference: {fileID: 0}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.data[2].FooterText
+      value: "\uC0B4\uC544\uC788\uAE30\uC5D0 \uC8FD\uC744 \uC218 \uC788\uB294 \uAC83\uB4E4\uC758
+        \uC2DC\uB300\uB97C \uC5F4\uACA0\uB178\uB77C."
+      objectReference: {fileID: 0}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.data[0].FooterSpeaker
+      value: Semprea
+      objectReference: {fileID: 0}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.data[1].FooterSpeaker
+      value: Semprea
+      objectReference: {fileID: 0}
+    - target: {fileID: 9093626044537604155, guid: 096275ffdec6f744da11274cf8cdbbaa, type: 3}
+      propertyPath: _book._pages.Array.data[2].FooterSpeaker
+      value: Semprea
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
