@@ -28,6 +28,15 @@ public class LedgeDropTrace : MonoBehaviour
     /// </summary>
     const float SinkDepth = 0.35f;
 
+    /// <summary>
+    /// 한 스텝에 <b>수평으로</b> 이만큼 넘게 움직이면 순간이동으로 본다.
+    ///
+    /// 매달린 동안 수평은 클립이 주는 만큼만 간다. 30fps 클립의 한 물리 스텝 몫은 몇 cm이므로
+    /// 이보다 크면 한 번에 실린 것이다 - Follow()가 미뤄 쌓아둔 몫을 턱을 넘는 스텝에
+    /// 통째로 풀기 때문이고, 그 크기가 얼마인지를 여기서 잰다.
+    /// </summary>
+    const float JumpDistance = 0.1f;
+
     /// <summary>붙기 전 얼마나 거슬러 남길지. 대시가 들어오는 구간을 담아야 한다.</summary>
     const int Lead = 60;
 
@@ -58,6 +67,9 @@ public class LedgeDropTrace : MonoBehaviour
 
     /// <summary>이번 episode에서 가라앉는 것이 이미 잡혔는지. 표시는 한 번만 남긴다.</summary>
     bool _sinking;
+
+    /// <summary>순간이동이 몇 번 잡혔는지. 가라앉음과 달리 여러 번 날 수 있어 세어 둔다.</summary>
+    int _jumps;
 
     /// <summary>붙잡은 순간의 높이. 여기서 얼마나 내려갔는지로 판정한다.</summary>
     float _caughtY;
@@ -105,6 +117,21 @@ public class LedgeDropTrace : MonoBehaviour
                 _tail = Tail;
             }
 
+            // <b>한 스텝에 수평으로 크게 튄다.</b> 미뤄둔 몫이 한꺼번에 실리는 자리다.
+            if (onLedge && !releasing && _hasLast)
+            {
+                Vector3 flat = _body.position - _last;
+                flat.y = 0f;
+
+                if (flat.magnitude > JumpDistance)
+                {
+                    _jumps++;
+                    _episode.Add("        >>>>>> 한 스텝에 수평 " + flat.magnitude.ToString("F3")
+                                 + "m 이동 " + flat.ToString("F3") + " <<<<<<");
+                    if (_tail < Tail / 2) _tail = Tail / 2;
+                }
+            }
+
             if (_sinking) { if (--_tail <= 0) End(); }
             else if (onLedge) _tail = Tail;
             else if (--_tail <= 0) End();
@@ -120,6 +147,7 @@ public class LedgeDropTrace : MonoBehaviour
         _tail = Tail;
         _sinking = false;
         _caught = false;
+        _jumps = 0;
 
         _episode.Clear();
         _episode.AddRange(_lead);
@@ -134,7 +162,8 @@ public class LedgeDropTrace : MonoBehaviour
         StringBuilder sb = new StringBuilder();
         sb.AppendLine();
         sb.AppendLine("=========== 턱 episode " + _episodes + " (" + _episode.Count + "스텝) "
-                    + (_sinking ? "★ 가라앉음 잡힘" : "정상") + " ===========");
+                    + (_sinking ? "★ 가라앉음 잡힘" : "정상")
+                    + (_jumps > 0 ? "  ▲ 순간이동 " + _jumps + "회" : "") + " ===========");
         foreach (string l in _episode) sb.AppendLine(l);
 
         System.IO.File.AppendAllText(_path, sb.ToString());
@@ -179,9 +208,16 @@ public class LedgeDropTrace : MonoBehaviour
         // <b>붙잡은 뒤 목적지가 어디로 잡혀 있는지.</b> 이것이 아래로 잡혀 있으면 측정이 원인이고,
         // 위에 그대로 있으면 원인은 늘리기 배율 — 즉 어느 클립의 travel을 읽었느냐다.
         if (_ledge != null)
+        {
+            // 수평이 설 평면으로 수렴하는지. 벽 법선 위의 남은 거리이고, 다 오르면 0이어야 한다.
+            Vector3 normal = -(_ledge.Anchor.facing * Vector3.forward);
+            float toStand = Vector3.Dot(_ledge.Anchor.stand - p, normal);
+
             sb.Append(" | hang ").Append(_ledge.Anchor.hang.y.ToString("F3"))
               .Append(" stand ").Append(_ledge.Anchor.stand.y.ToString("F3"))
-              .Append(" (stand-rb ").Append((_ledge.Anchor.stand.y - p.y).ToString("F3")).Append(")");
+              .Append(" (up ").Append((_ledge.Anchor.stand.y - p.y).ToString("F3"))
+              .Append(" in ").Append(toStand.ToString("F3")).Append(")");
+        }
 
         sb.Append(" | ").Append(path);
 

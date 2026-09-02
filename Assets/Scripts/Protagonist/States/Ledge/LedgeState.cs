@@ -35,6 +35,9 @@ public abstract class LedgeState : BaseCharacterState
     /// <summary>걸어둔 클립이 끝났는지.</summary>
     protected bool Held => Time.time - _startedAt >= _holdFor;
 
+    /// <summary>이 구간이 <b>걸어달라고 한</b> 컨트롤러 상태. 애니메이터가 그것을 잡았는지 확인하는 데 쓴다.</summary>
+    string _clipState;
+
 
     /// <summary>클립을 걸고 그 길이만큼 이 구간에 머문다. 이름이 비어 있으면 걸지 않고 길이만 센다.</summary>
     protected void Begin(LedgeGrab.LedgeClip clip)
@@ -44,7 +47,7 @@ public abstract class LedgeState : BaseCharacterState
         _place = characterManager.Body.position;
         _fitted = false;
         _stretchUp = 1f;
-        _withheld = 0f;
+        _clipState = clip.state;
 
         if (!clip.IsSet) return;
 
@@ -96,39 +99,51 @@ public abstract class LedgeState : BaseCharacterState
     /// </summary>
     protected void Follow(Vector3 destination)
     {
-        Vector3 wall = Ledge.Anchor.facing * Vector3.forward;
-
         if (!_fitted) Fit(destination);
 
         Vector3 delta = characterManager.Animation.ConsumeRootMotion();
 
         _place += Vector3.up * (delta.y * _stretchUp);
 
-        // 턱을 넘기 전에는 앞으로 가지 않는다.
+        // <b>수평은 클립에서 받지 않는다.</b> 매달린 평면도 설 평면도 벽면에서 잡히므로
+        // 그 사이 거리는 자세당 상수다 — Braced는 wallOffset + standInset = 0.590,
+        // Freehang은 freeWallOffset + standInset = 0.352. 클립이 대신 잴 이유가 없다.
         //
-        // 오르는 동안 두 몸 다 물리에서 떼어 두므로, 파고들어도 밀어내 줄 것이 없다.
-        // 그런데 몸이 아직 턱보다 아래인 동안 앞으로 가는 것은 곧 절벽 면을 파고드는 것이다.
-        // 실제로 오르는 동작도 그렇지 않다 — 벽을 따라 올라가다 허리가 턱을 넘고 나서야 넘어온다.
+        // 예전에는 클립이 주는 앞으로를 턱 넘기 전까지 미뤄 쌓았다가 넘는 스텝에 통째로 풀었다.
+        // 총량은 맞았지만 <b>그 한 스텝이 반 미터를 넘는 순간이동</b>이었고, 클립이 주는 양이
+        // 매번 달라 서는 깊이도 함께 흔들렸다 — 실측으로 0.17에서 0.59까지 벌어졌다.
         //
-        // <b>총량은 여전히 클립이 정한다.</b> 미룬 몫은 버리지 않고 넘어선 뒤에 함께 실리므로,
-        // 어디에 서는지는 그대로고 가는 순서만 바뀐다.
-        float forward = Vector3.Dot(delta, wall);
+        // 파고들지 않는 이유는 그대로다. 턱을 넘기 전에는 진행도가 0이라 매달린 평면에 붙어 있고,
+        // 넘어선 뒤 남은 상승에 비례해서만 안으로 들어간다. 벽을 따라 올라가다 허리가 넘고 나서야
+        // 넘어오는 실제 동작과 같은 순서다.
+        //
+        // 더하지 않고 <b>매 스텝 정해 놓는다.</b> 쌓아 가면 그 합이 다시 클립에 딸리고,
+        // 오차가 남으면 서는 자리가 또 흔들린다. 옆(턱을 따라가는) 성분은 건드리지 않는다 —
+        // 2D 모드에서 그것이 곧 Z이고, 위치 대입은 FreezePositionZ를 무시하기 때문이다.
+        Vector3 normal = -(Ledge.Anchor.facing * Vector3.forward);
 
-        if (_place.y < destination.y - characterManager.FootOffset)
-        {
-            _withheld += forward;
-        }
-        else
-        {
-            _place += wall * (forward + _withheld);
-            _withheld = 0f;
-        }
+        float cross = destination.y - characterManager.FootOffset;
+
+        float t = destination.y <= cross
+            ? 1f
+            : Mathf.Clamp01((_place.y - cross) / (destination.y - cross));
+
+        float wanted = Mathf.Lerp(Vector3.Dot(Ledge.Anchor.hang, normal),
+                                  Vector3.Dot(destination, normal), t);
+
+        // <b>모아 가되 한 번에 끌어오지 않는다.</b> 문 자리는 어디서 뛰었는지에 따라 매번 다르고,
+        // 오르기 입력을 미리 눌러두면 붙잡기 구간이 통째로 건너뛰어져 Settle()이 그 차이를
+        // 좁힐 기회를 못 얻는다 — 실측으로 0.386m가 등반 첫 스텝에 한꺼번에 지워졌다.
+        //
+        // 속도는 Settle()이 쓰는 것과 같은 값이다. "앵커로 모아 가는 속도"의 주인은 하나여야 한다.
+        // 오르는 동안 필요한 몫(약 0.016/스텝)보다 충분히 커서 목표를 따라가는 데는 지장이 없다.
+        float current = Vector3.Dot(_place, normal);
+        float next = Mathf.MoveTowards(current, wanted, Grab.settleSpeed * Time.fixedDeltaTime);
+
+        _place += normal * (next - current);
 
         characterManager.Movement.Pin(_place);
     }
-
-    /// <summary>턱을 넘기 전까지 미뤄둔 앞으로 가는 몫.</summary>
-    float _withheld;
 
     /// <summary>얼마나 늘려 걸지. <b>클립이 주는 총량</b> 대 <b>가야 할 총량</b>의 비다.</summary>
     float _stretchUp = 1f;
@@ -151,23 +166,28 @@ public abstract class LedgeState : BaseCharacterState
     /// </summary>
     void Fit(Vector3 destination)
     {
+        // <b>애니메이터가 우리가 건 클립을 실제로 잡았는지 먼저 본다.</b>
+        //
+        // Begin()의 Play는 <b>부탁</b>이고, 애니메이터는 렌더 프레임당 한 번만 돈다.
+        // 프레임이 낮으면 한 프레임에 물리 스텝이 여럿 도는데, 그 사이 애니메이터는 한 번도 돌지 않아
+        // 아직 <b>직전 클립에 서 있다</b> — 전환도 시작 전이라 IsInTransition조차 거짓이다.
+        // 그때 travel을 물으면 직전 클립의 값을 <b>자신 있게</b> 돌려준다.
+        //
+        // 붙잡기 클립들은 travel.y가 모두 음수다(-0.36 ~ -1.91). 올라서기 클립은 양수다(+1.26, +1.92).
+        // 그 음수로 배율을 내면 부호가 뒤집혀, 올라서기가 그대로 <b>내려가기</b>가 된다.
+        // 두 몸은 그 동안 키네마틱이고 Pin은 위치를 직접 쓰므로 바닥도 막지 못한다 —
+        // 실측으로 붙잡은 자리에서 6.78m를 뚫고 내려갔다. 두 번 다 같은 거리였다.
+        //
+        // 아래 TryClipTravel의 "대답이 없으면 다음 프레임에 다시 묻는다"는 <b>틀린 대답</b>까지는
+        // 거르지 못한다. 그래서 대답을 받기 전에, 답할 자격이 있는지를 여기서 묻는다.
+        if (string.IsNullOrEmpty(_clipState)) return;
+        if (!characterManager.Animation.IsPlaying(_clipState, out _)) return;
+
         if (!characterManager.Animation.TryClipTravel(out Vector3 travel)) return;
 
         _fitted = true;
 
         // 주는 것이 없으면 늘릴 것도 없다. 0으로 나누지 않으려는 것이 아니라, 늘려봐야 0이라서다.
         _stretchUp = Mathf.Abs(travel.y) > 0.001f ? (destination.y - _place.y) / travel.y : 1f;
-
-        // 수평은 <b>물는 순간 기록해 둔 턱</b>에서 시작한다.
-        //
-        // 클립이 앞으로 주는 양은 상수다. 그러니 서는 깊이는 오직 어디서 시작했느냐가 정하는데,
-        // 몸이 있던 자리에서 시작하면 그 자리가 매번 다르다 — 모아 가기가 끝났으면 기록된 자리이고
-        // 진입 중에 눌렀으면 아직 문 자리다. 같은 조작이 어떤 때는 깊이 들어가고 어떤 때는
-        // 가장자리에 걸치던 것이 이것이다.
-        //
-        // 높이와 옆은 건드리지 않는다. 높이는 늘리기가 맞추고, 옆은 2D 평면이라 그대로 두어야 한다.
-        Vector3 normal = -(Ledge.Anchor.facing * Vector3.forward);
-
-        _place += normal * Vector3.Dot(Ledge.Anchor.hang - _place, normal);
     }
 }

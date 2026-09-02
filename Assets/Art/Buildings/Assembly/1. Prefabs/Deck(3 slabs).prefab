@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 7886133159495144735}
   - component: {fileID: 7004015786925830463}
   - component: {fileID: 3496636396723174564}
-  - component: {fileID: 2644588026781942700}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -91,28 +90,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2644588026781942700
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 176360128688058671}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &471968743886332093
 GameObject:
   m_ObjectHideFlags: 0
@@ -124,7 +101,6 @@ GameObject:
   - component: {fileID: 2942742798455424177}
   - component: {fileID: 4576411618034883099}
   - component: {fileID: 4322610523011172188}
-  - component: {fileID: 8947211905511496718}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -204,28 +180,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8947211905511496718
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 471968743886332093}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &669135350567102545
 GameObject:
   m_ObjectHideFlags: 0
@@ -327,7 +281,6 @@ GameObject:
   - component: {fileID: 6409453274958763009}
   - component: {fileID: 3523094766216778809}
   - component: {fileID: 6719459795410552608}
-  - component: {fileID: 4568685098750944109}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -407,28 +360,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &4568685098750944109
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1210131928900533144}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &1533861070968547792
 GameObject:
   m_ObjectHideFlags: 0
@@ -440,7 +371,6 @@ GameObject:
   - component: {fileID: 4660314330052852550}
   - component: {fileID: 5121925052121343337}
   - component: {fileID: 526374871665080524}
-  - component: {fileID: 5684140709454171588}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -520,28 +450,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5684140709454171588
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1533861070968547792}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &1767330687474012118
 GameObject:
   m_ObjectHideFlags: 0
@@ -553,7 +461,6 @@ GameObject:
   - component: {fileID: 4434370733863586387}
   - component: {fileID: 356979562515032050}
   - component: {fileID: 2506830672836905583}
-  - component: {fileID: 3699236168969049565}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -633,28 +540,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3699236168969049565
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1767330687474012118}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &1770269932963278229
 GameObject:
   m_ObjectHideFlags: 0
@@ -756,7 +641,6 @@ GameObject:
   - component: {fileID: 2882933844232808568}
   - component: {fileID: 2411101991200594713}
   - component: {fileID: 4606105503982449248}
-  - component: {fileID: 3747196458392978841}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -836,28 +720,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &3747196458392978841
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2194915973966560989}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &2219229230142331793
 GameObject:
   m_ObjectHideFlags: 0
@@ -959,7 +821,6 @@ GameObject:
   - component: {fileID: 8108839214435076009}
   - component: {fileID: 2755657032513733588}
   - component: {fileID: 2477051995595804160}
-  - component: {fileID: 2970840021771365074}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -1039,28 +900,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2970840021771365074
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2653445684170559715}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &2860460237383709747
 GameObject:
   m_ObjectHideFlags: 0
@@ -1072,7 +911,6 @@ GameObject:
   - component: {fileID: 724193863234805381}
   - component: {fileID: 8794785884763110260}
   - component: {fileID: 3773854930331486696}
-  - component: {fileID: 7820247046283933886}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -1152,28 +990,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &7820247046283933886
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2860460237383709747}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &3037200752895244154
 GameObject:
   m_ObjectHideFlags: 0
@@ -1659,7 +1475,6 @@ GameObject:
   - component: {fileID: 493661150197044094}
   - component: {fileID: 4244517868841862583}
   - component: {fileID: 3404210222705964435}
-  - component: {fileID: 5742504740191075934}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -1739,28 +1554,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5742504740191075934
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5081358720049752128}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &5240392346780428834
 GameObject:
   m_ObjectHideFlags: 0
@@ -1998,7 +1791,6 @@ GameObject:
   - component: {fileID: 2339144050845738352}
   - component: {fileID: 6545478937746802811}
   - component: {fileID: 806068454008739212}
-  - component: {fileID: 1358057088674790218}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -2078,28 +1870,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &1358057088674790218
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5619441932544262984}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &5717707358377559999
 GameObject:
   m_ObjectHideFlags: 0
@@ -2517,7 +2287,6 @@ GameObject:
   - component: {fileID: 2021116250411745132}
   - component: {fileID: 6312263897756630906}
   - component: {fileID: 4983719988714736122}
-  - component: {fileID: 6416756701867866061}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -2597,28 +2366,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6416756701867866061
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6268826718741566846}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &6696575811447020156
 GameObject:
   m_ObjectHideFlags: 0
@@ -2810,7 +2557,6 @@ GameObject:
   - component: {fileID: 9102779753952724574}
   - component: {fileID: 9068185435749011228}
   - component: {fileID: 2670126839827024511}
-  - component: {fileID: 8724788259569124515}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -2890,28 +2636,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8724788259569124515
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7325064701112621060}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &7842699981535711811
 GameObject:
   m_ObjectHideFlags: 0
@@ -2923,7 +2647,6 @@ GameObject:
   - component: {fileID: 8343844242999058471}
   - component: {fileID: 9212655002004364635}
   - component: {fileID: 5260724632439061681}
-  - component: {fileID: 8188510359230606691}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -3003,28 +2726,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8188510359230606691
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7842699981535711811}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &7943387347840749652
 GameObject:
   m_ObjectHideFlags: 0
@@ -3036,7 +2737,6 @@ GameObject:
   - component: {fileID: 8923853003124605402}
   - component: {fileID: 2096494603347439292}
   - component: {fileID: 3366186933544376435}
-  - component: {fileID: 4127654066991595482}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -3116,28 +2816,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &4127654066991595482
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7943387347840749652}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
 --- !u!1 &9076605257130823842
 GameObject:
   m_ObjectHideFlags: 0
@@ -3149,7 +2827,6 @@ GameObject:
   - component: {fileID: 721637859320659072}
   - component: {fileID: 890329510386133009}
   - component: {fileID: 7144229152990442888}
-  - component: {fileID: 5610385189698056784}
   m_Layer: 0
   m_Name: ancient_stone_frame_3d_model
   m_TagString: Untagged
@@ -3229,25 +2906,3 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5610385189698056784
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9076605257130823842}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -3708573100281725920, guid: 6b45455f5688d444b8b9c604c10da774, type: 3}
