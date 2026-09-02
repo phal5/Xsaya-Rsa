@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 무는 순간의 진입 동작. <b>클립이 몸을 옮기고 손은 턱에 남는다.</b>
@@ -13,19 +13,33 @@ public class Ledge_Catch : LedgeState
 {
     bool _converting;
 
+    /// <summary>
+    /// 위에서 내려오는 구간인지. <b>이 경우만 수평을 목표에서 되짚는다.</b>
+    ///
+    /// 공중에서 무는 경우는 시작 자리가 매번 달라 되짚을 출발점이 없다 —
+    /// 그쪽은 지금처럼 목표를 향해 등속으로 다가가는 편이 맞다.
+    /// </summary>
+    bool _descending;
+
     public override void Enter()
     {
         base.Enter();
 
         _converting = false;
 
-        Begin(Ledge.CatchClip());
+        LedgeGrab.LedgeClip clip = Ledge.CatchClip();
+
+        _descending = clip.IsSet && clip.state == Grab.dropToFree.state;
+
+        Begin(clip);
     }
 
     public override void FixedUpdateState()
     {
         // 문 자리에서 매달릴 자리로 모아 간다. 한 번에 옮기면 그만큼 튄다.
-        Settle();
+        if (_descending) SettleDown();
+        else Settle();
+
         Transitions();
     }
 
@@ -56,6 +70,9 @@ public class Ledge_Catch : LedgeState
         if (!_converting && Ledge.BracingPending && Grab.freeToBraced.IsSet)
         {
             _converting = true;
+
+            // 자세 전환은 내려오는 구간이 아니다. 되짚을 출발점도 이미 지났다.
+            _descending = false;
 
             Ledge.Brace();
             Begin(Grab.freeToBraced);

@@ -32,6 +32,9 @@ public abstract class LedgeState : BaseCharacterState
     /// </summary>
     Vector3 _place;
 
+    /// <summary>이 구간에 들어선 자리. 수평을 목표에서 되짚을 때 출발점이 된다.</summary>
+    Vector3 _entry;
+
     /// <summary>걸어둔 클립이 끝났는지.</summary>
     protected bool Held => Time.time - _startedAt >= _holdFor;
 
@@ -45,6 +48,7 @@ public abstract class LedgeState : BaseCharacterState
         _startedAt = Time.time;
         _holdFor = Grab.Seconds(clip);
         _place = characterManager.Body.position;
+        _entry = _place;
         _fitted = false;
         _stretchUp = 1f;
         _clipState = clip.state;
@@ -70,6 +74,40 @@ public abstract class LedgeState : BaseCharacterState
         characterManager.Animation.ConsumeRootMotion();
 
         _place = Vector3.MoveTowards(_place, Ledge.Anchor.hang, Grab.settleSpeed * Time.fixedDeltaTime);
+        characterManager.Movement.Pin(_place);
+    }
+
+    /// <summary>
+    /// 위에서 내려와 매달릴 때의 자리. <b>수평을 목표에서 되짚는다.</b>
+    ///
+    /// <see cref="Settle"/>은 목표를 향해 정해진 속도로 곧장 다가간다. 위에서 내려오는 경우는
+    /// 시작 자리가 턱 위이고 매달릴 자리는 벽 바깥이라, 그 등속 이동이 <b>수평과 높이를 따로 끝낸다</b> —
+    /// 수평이 먼저 닿으면 남은 높이만 내려가고, 높이가 먼저 닿으면 매달린 채 옆으로 밀려간다.
+    ///
+    /// 여기서는 수평을 <b>내려온 비율</b>로 정한다. 목표 평면과 들어선 평면을 양 끝으로 잡고
+    /// 높이가 간 만큼만 들어가므로, 둘이 언제나 함께 도착한다. 모서리를 돌아 내려오는 모양이 된다.
+    ///
+    /// 높이는 <see cref="Settle"/>과 같다 — 그쪽은 이미 맞게 돌고 있어 건드릴 이유가 없다.
+    /// 옆(턱을 따라가는) 성분도 그대로 둔다. 2D 모드에서 그것이 곧 Z다.
+    /// </summary>
+    protected void SettleDown()
+    {
+        characterManager.Animation.ConsumeRootMotion();
+
+        Vector3 target = Ledge.Anchor.hang;
+
+        float y = Mathf.MoveTowards(_place.y, target.y, Grab.settleSpeed * Time.fixedDeltaTime);
+
+        float span = _entry.y - target.y;
+        float t = Mathf.Abs(span) < 0.001f ? 1f : Mathf.Clamp01((_entry.y - y) / span);
+
+        Vector3 normal = -(Ledge.Anchor.facing * Vector3.forward);
+
+        float wanted = Mathf.Lerp(Vector3.Dot(_entry, normal), Vector3.Dot(target, normal), t);
+
+        _place.y = y;
+        _place += normal * (wanted - Vector3.Dot(_place, normal));
+
         characterManager.Movement.Pin(_place);
     }
 
