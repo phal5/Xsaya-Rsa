@@ -19,4 +19,9 @@ public class HPbar : MonoBehaviour
         // 정지 중에는 Time.timeScale이 0이다. 표시는 체력이 정한 배속을 그대로 읽는다.
         _text.text = (Mathf.Floor(TimeManager.Scale * 10) * 0.1f).ToString();
     }
+
+    void OnDisable()
+    {
+        TimeManager.SetScale(TimeManager.DefaultScale);
+    }
 }
