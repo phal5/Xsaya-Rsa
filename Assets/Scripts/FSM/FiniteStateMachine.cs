@@ -160,16 +160,15 @@ public class FiniteStateMachine : MonoBehaviour, IState
         return state;
     }
 
+    /// <summary>
+    /// 초기 상태 타입을 문자열에서 되찾는다. MonoScript는 에디터 전용이라 빌드에 없다.
+    ///
+    /// 저장된 값이 <see cref="Type.AssemblyQualifiedName"/>이라 네임스페이스나 어셈블리가 바뀌면
+    /// 그대로는 못 찾는다. 그 경우까지 <see cref="SerializedType"/>이 감당한다.
+    /// </summary>
     private Type ResolveInitialStateType()
     {
-        // Check the string instead of the MonoScript!
-        if (string.IsNullOrEmpty(_initialStateTypeName)) return null;
-
-        Type named = Type.GetType(_initialStateTypeName);
-        if (named == null)
-            Debug.LogError($"[{gameObject.name}] 초기 상태 타입을 찾을 수 없습니다: {_initialStateTypeName}");
-
-        return named;
+        return SerializedType.Resolve(_initialStateTypeName, typeof(IState), this);
     }
 
     #endregion
