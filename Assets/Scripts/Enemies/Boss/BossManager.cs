@@ -26,6 +26,22 @@ public enum BossCombatView
 /// </summary>
 public class BossManager : EntityManager
 {
+    /// <summary>
+    /// 지금 무대에 서 있는 보스. <b>찾아 나서지 않고 스스로 등록한다.</b>
+    /// </summary>
+    public static BossManager Current { get; private set; }
+
+    void Awake()
+    {
+        Current = this;
+    }
+
+    void OnDestroy()
+    {
+        // 이미 다음 보스가 등록했으면 그것을 지우지 않는다.
+        if (Current == this) Current = null;
+    }
+
     [Header("References")]
     [field: SerializeField] public Transform character { get; private set; }
     [Tooltip("상태들이 실제로 호출하는 이동 계층. 점프/접지 판정도 여기 있다.")]

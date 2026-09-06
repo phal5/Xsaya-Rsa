@@ -547,7 +547,7 @@ public class Boss_Throwable : MonoBehaviour, IDamageable
         {
             if (_thrower != null) return _thrower;
 
-            BossManager boss = FindAnyObjectByType<BossManager>();
+            BossManager boss = BossManager.Current;
             return boss != null ? boss.character : null;
         }
     }
