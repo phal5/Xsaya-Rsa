@@ -41,6 +41,9 @@ public class MaterialFloatTransition : MonoBehaviour
     private Coroutine transitionCoroutine;
     private float currentValue;
 
+    private float authoredValue;
+    private bool hasAuthored;
+
     public Material TargetMaterial
     {
         get => targetMaterial;
@@ -70,6 +73,28 @@ public class MaterialFloatTransition : MonoBehaviour
     {
         ResolveTargetMaterial();
         InitProperty();
+        Capture();
+    }
+
+    /// <summary>
+    /// Captures current value the matrial holds.
+    /// </summary>
+    private void Capture()
+    {
+        if (targetMaterial == null || !targetMaterial.HasProperty(propertyId)) return;
+
+        authoredValue = targetMaterial.GetFloat(propertyId);
+        hasAuthored = true;
+    }
+
+    /// <summary>
+    /// Returns manipulated value to value captured by Capture().
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (!hasAuthored || targetMaterial == null) return;
+
+        targetMaterial.SetFloat(propertyId, authoredValue);
     }
 
     private void OnValidate()
