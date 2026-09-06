@@ -6,7 +6,8 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 /// <summary>
-/// 정해진 날이 지나면 스스로를 지우는 빌드. 시연용·심사용처럼 <b>기한이 있는 사본</b>을 돌릴 때 쓴다.
+/// 정해진 날이 지나면 스스로를 지우는 빌드. 쓰자니 매우 부끄럽지만... 졸업작품 설정 상 게임 세계의 붕괴가 현실의 빌드 삭제로 이어진다.
+/// 이 기능을 활용해 빌드한 게 아니라면 스스로 삭제는 작동하지 않는다.
 ///
 /// <b>바깥에 두는 검사기가 아니라 빌드 안에 심는다.</b> 실행 파일 옆에 배치 파일을 동봉하는 방식은
 /// 그 배치를 눌렀을 때만 걸린다 — 플레이어가 exe를 직접 실행하면 아무 일도 일어나지 않고,
@@ -146,6 +147,23 @@ public static class BuildExpiry
             if (string.Equals(Path.GetFullPath(special).TrimEnd(Path.DirectorySeparatorChar), path,
                               StringComparison.OrdinalIgnoreCase)) return false;
         }
+
+        // 사용자 프로필 <b>바로 아래</b>는 거부한다.
+        //
+        // Downloads·Music·Videos처럼 Environment.SpecialFolder에 이름이 없는 셸 폴더가 그 자리에 있어,
+        // 위의 열거로는 표현되지 않는다. 받은 압축을 "여기에 풀기"로 Downloads에 그대로 풀면
+        // 그 폴더가 곧 빌드 폴더가 되고, 아래 검사(_Data + exe)를 통과해 폴더째 지워진다 —
+        // 무관한 다운로드까지 함께 사라진다.
+        // 
+        // 누가 게임 폴더를 압축 해제 후 내용물을 굳이 다 꺼내 놓겠느냐마는... 혹시 모른다.
+        //
+        // 일단 임시방편이지만, 사용자 프로필 바로 아래에 둔 빌드는 스스로 지우지 못한다. 지우지 못하는 것이
+        // 남의 것을 지우는 것보다 낫다 — 배포할 때는 전용 폴더에서 꺼내지 말 것을 강조하자. 기한이 지나면 지워지는 것도 표시해 두자.
+        string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (!string.IsNullOrEmpty(profile) &&
+            string.Equals(Path.GetFullPath(profile).TrimEnd(Path.DirectorySeparatorChar),
+                          root.Parent.FullName.TrimEnd(Path.DirectorySeparatorChar),
+                          StringComparison.OrdinalIgnoreCase)) return false;
 
         // 유니티 빌드의 모습을 하고 있어야 한다
         if (root.Name.EndsWith(".app", StringComparison.OrdinalIgnoreCase)) return true;
