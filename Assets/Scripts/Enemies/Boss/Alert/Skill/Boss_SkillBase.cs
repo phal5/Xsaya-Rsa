@@ -162,14 +162,9 @@ public abstract class Boss_SkillBase : ComponentEntityState<BossManager>
         if (_conditionResolved) return;
         _conditionResolved = true;
 
-        if (string.IsNullOrEmpty(_conditionTypeName)) return;
-
-        System.Type type = System.Type.GetType(_conditionTypeName);
-        if (type == null)
-        {
-            Debug.LogError($"[{name}] 조건 타입을 찾을 수 없습니다: {_conditionTypeName}", this);
-            return;
-        }
+        // 저장된 값은 AssemblyQualifiedName이라 네임스페이스가 바뀌면 그대로는 못 찾는다.
+        System.Type type = SerializedType.Resolve(_conditionTypeName, typeof(ISkillCondition), this);
+        if (type == null) return;
 
         _condition = System.Activator.CreateInstance(type) as ISkillCondition;
     }
