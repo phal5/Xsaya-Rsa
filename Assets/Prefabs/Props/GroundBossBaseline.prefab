@@ -60,7 +60,7 @@ GameObject:
   - component: {fileID: 410842262492956835}
   - component: {fileID: 7859147143579785848}
   m_Layer: 0
-  m_Name: QuickSlash
+  m_Name: PommelStrike
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -100,13 +100,13 @@ MonoBehaviour:
     recoveryTime: 0.37
     cooldown: 2
     damage: 20
-    range: 2.5
+    range: 1
     minRange: 0
     animatorTrigger: QuickSlash
   _clip: {fileID: -203655887218126122, guid: 97ed32c6e1fd8f040a7902e3c6cf47a4, type: 3}
   _conditionScript: {fileID: 0}
   _conditionTypeName: 
-  _useRootMotion: 0
+  _useRootMotion: 1
   _useVelocity: 0
   _superArmor: 2
   _clipStartFrame: 0
@@ -115,11 +115,12 @@ MonoBehaviour:
   _fitToDuration: 1
   _frameRate: 30
   _hitWindows:
-  - start: 4
+  - start: 11
     end: 16
   _animationCues: []
-  _aimOnWindup: 1
-  _trackDuringWindup: 0
+  _aimWindows:
+  - start: 0
+    end: 0
   _stopOnActivate: 1
 --- !u!1 &1701633796472095452
 GameObject:
@@ -331,9 +332,12 @@ MonoBehaviour:
   <staggerTrigger>k__BackingField: Stagger
   <deathTrigger>k__BackingField: Death
   <despawnDelay>k__BackingField: 0
+  <riseTime>k__BackingField: 3
   <combatView>k__BackingField: 2
   <bossId>k__BackingField: Ochyra
   <deathFallTimeout>k__BackingField: 3
+  <moveSpeedParameter>k__BackingField: MoveSpeed
+  <walkThreshold>k__BackingField: 0.1
   <skillSpeedParameter>k__BackingField: SkillSpeed
 --- !u!114 &206875754087739941
 MonoBehaviour:
@@ -423,11 +427,11 @@ MonoBehaviour:
   _clip: {fileID: -203655887218126122, guid: d503a623b659a584fa5c4f398bad2704, type: 3}
   _conditionScript: {fileID: 0}
   _conditionTypeName: 
-  _useRootMotion: 0
+  _useRootMotion: 1
   _useVelocity: 0
   _superArmor: 1
-  _clipStartFrame: 0
-  _clipEndFrame: 0
+  _clipStartFrame: 11
+  _clipEndFrame: 25
   _blendTime: 0.12
   _fitToDuration: 1
   _frameRate: 30
@@ -435,8 +439,9 @@ MonoBehaviour:
   - start: 16
     end: 28
   _animationCues: []
-  _aimOnWindup: 1
-  _trackDuringWindup: 0
+  _aimWindows:
+  - start: 0
+    end: 0
   _stopOnActivate: 1
 --- !u!1 &3069819996006584898
 GameObject:
@@ -840,8 +845,9 @@ MonoBehaviour:
   - start: 31
     end: 43
   _animationCues: []
-  _aimOnWindup: 1
-  _trackDuringWindup: 1
+  _aimWindows:
+  - start: 0
+    end: 0
   _stopOnActivate: 0
 --- !u!1 &7342691302237822525
 GameObject:
@@ -989,13 +995,13 @@ MonoBehaviour:
     recoveryTime: 0.73
     cooldown: 6
     damage: 30
-    range: 2.8
+    range: 5
     minRange: 0
     animatorTrigger: DelayedSlash
   _clip: {fileID: -203655887218126122, guid: 9b531baa0d64d374fb8c4cdd966edb89, type: 3}
   _conditionScript: {fileID: 0}
   _conditionTypeName: 
-  _useRootMotion: 0
+  _useRootMotion: 1
   _useVelocity: 0
   _superArmor: 2
   _clipStartFrame: 0
@@ -1007,8 +1013,9 @@ MonoBehaviour:
   - start: 21
     end: 29
   _animationCues: []
-  _aimOnWindup: 1
-  _trackDuringWindup: 1
+  _aimWindows:
+  - start: 0
+    end: 0
   _stopOnActivate: 1
 --- !u!1 &8892499574134151321
 GameObject:
@@ -1252,6 +1259,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RootMotionRelay
   _movement: {fileID: 2977458793867595075}
   _active: 0
+  _returnSpeed: 360
 --- !u!4 &9150222662865106757 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -39355867500984231, guid: 3068aa96f7b4dfa4680192a4a129e651, type: 3}

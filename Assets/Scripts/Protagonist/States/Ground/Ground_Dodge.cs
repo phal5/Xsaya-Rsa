@@ -17,6 +17,18 @@ public class Ground_Dodge : BaseCharacterState
         Vector3 input = InputManager.CharacterMove;
         _direction = input.sqrMagnitude > 0.01f ? input.normalized : characterManager.FacingAsInput();
 
+        // 한 장짜리 자세를 세운다. 섞는 시간을 따로 주는 이유는 DashBlend의 툴팁에 있다.
+        // 되돌리는 것은 이 상태가 할 일이 아니다 — 끝나면 Idle·Move가, 발판을 벗어나면 공중 축이 제 자세를 건다.
+        characterManager.Animation.Play(characterManager.DashState, characterManager.DashBlend);
+
+        // 지나온 길을 남긴다. 먼저 비우는 이유는, 앞선 회피의 꼬리가 아직 남아 있으면
+        // 그 끝에서 여기까지를 한 줄로 이어 그어 버리기 때문이다.
+        if (characterManager.DashTrail != null)
+        {
+            characterManager.DashTrail.Clear();
+            characterManager.DashTrail.emitting = true;
+        }
+
         // 대시 지속 동안은 궤도를 무시한다. 수직 속도도 지워 낭떠러지로 대시해도 떨어지지 않는다.
         characterManager.Movement.SetGravity(false);
         characterManager.Movement.SetSamplerYVelocity(0f);
@@ -39,6 +51,9 @@ public class Ground_Dodge : BaseCharacterState
         characterManager.Movement.SetGravity(true);
 
         // 중간에 끊겼든 끝났든 무적은 반드시 해제한다.
+        // 뿌리기만 멈춘다. 이미 남긴 자리는 걷지 않는다 — 트레일 수명대로 스스로 잦아드는 것이 곧 연출이다.
+        if (characterManager.DashTrail != null) characterManager.DashTrail.emitting = false;
+
         if (characterManager.Damagable != null) characterManager.Damagable.Invulnerable = false;
     }
 

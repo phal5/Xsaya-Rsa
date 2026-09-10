@@ -8,6 +8,9 @@
 // 순차로 드러나는 것은 파티클 나이를 받아서 한다. 파티클 시스템 렌더러의 Custom Vertex Streams에
 // AgePercent가 UV 다음에 꽂혀 있어야 TEXCOORD0.z로 들어온다. 빠져 있으면 z가 0으로 고정되어
 // 아무것도 드러나지 않는다 — 이펙트가 통째로 안 보이면 여기부터 본다.
+//
+// 나이 스트림이 없는 메시(트레일)는 _UseAge를 끈다. 그러면 처음부터 다 드러난 것으로 치고,
+// 사라지는 것은 정점 알파가 맡는다 — 회피 트레일(M_DodgeDistortion)이 그렇게 쓴다.
 Shader "Custom/SlashDistortion"
 {
     Properties
@@ -20,6 +23,7 @@ Shader "Custom/SlashDistortion"
         _RevealTime ("드러나는 데 쓰는 수명 비율", Range(0.05, 1)) = 0.4
         _RevealSoftness ("드러나는 경계 무르기", Range(0.001, 0.5)) = 0.08
         _RevealFlip ("반대쪽부터 드러내기", Range(0, 1)) = 0
+        [ToggleUI] _UseAge ("파티클 나이로 드러내기 (트레일은 끈다)", Float) = 1
     }
 
     SubShader
@@ -71,6 +75,7 @@ Shader "Custom/SlashDistortion"
                 float _RevealTime;
                 float _RevealSoftness;
                 float _RevealFlip;
+                float _UseAge;
             CBUFFER_END
 
             Varyings Vertex(Attributes input)
@@ -91,7 +96,10 @@ Shader "Custom/SlashDistortion"
                 // 얇은 끝(U=0)에서 넓은 끝(U=1)으로 쓸어 드러낸다. 아직 오지 않은 자리는
                 // 반투명하게 두지 않고 아예 버린다 — 남겨두면 호 전체가 옅게 미리 보여서
                 // 순차로 그어지는 것이 아니라 통째로 나타났다 진해지는 것으로 읽힌다.
-                float head = saturate(input.uv.z / max(_RevealTime, 1e-4));
+                // 나이 스트림이 없으면 z가 0으로 들어와 아래 clip이 전부를 버린다. 그런 메시는
+                // 나이를 쓰지 않고 다 드러난 것으로 친다 — 슬래시는 켜 둔 채라 전과 같다.
+                float age = lerp(1.0, input.uv.z, _UseAge);
+                float head = saturate(age / max(_RevealTime, 1e-4));
                 float along = lerp(input.uv.x, 1.0 - input.uv.x, _RevealFlip);
                 float edge = head * (1.0 + _RevealSoftness) - along;
 

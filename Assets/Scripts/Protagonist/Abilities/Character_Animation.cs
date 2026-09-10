@@ -284,6 +284,33 @@ public class Character_Animation : MonoBehaviour
             : AnimatorUpdateMode.Normal;
     }
 
+    bool _frozen;
+    float _speedBeforeFreeze = 1f;
+
+    /// <summary>
+    /// 그림을 그 자리에 세운다. <b>주인공만</b> 멈춘다 — 시간 배속을 누르면 세상이 함께 멎는다.
+    /// 풀면 멈추기 직전의 속도로 돌아간다.
+    ///
+    /// 같은 쪽으로 두 번 불러도 한 번만 먹는다. 멈춘 채 다시 멈추면 0을 "직전 속도"로 적어,
+    /// 풀어도 멈춘 채 남는다.
+    /// </summary>
+    public void Freeze(bool frozen)
+    {
+        if (_animator == null || _frozen == frozen) return;
+
+        _frozen = frozen;
+
+        if (frozen)
+        {
+            _speedBeforeFreeze = _animator.speed;
+            _animator.speed = 0f;
+        }
+        else
+        {
+            _animator.speed = _speedBeforeFreeze;
+        }
+    }
+
     public void SetFloat(string parameter, float value)
     {
         if (_animator == null || string.IsNullOrEmpty(parameter)) return;

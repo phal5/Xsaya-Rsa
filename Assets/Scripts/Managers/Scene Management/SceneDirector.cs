@@ -31,7 +31,7 @@ public class SceneDirector : MonoBehaviour
 
     [Header("Initial Rest")]
 #if UNITY_EDITOR
-    [Tooltip("처음 부활 지점이 놓인 씬. 비워두면 시작할 때 올라와 있던 무대를 쓴다.")]
+    [Tooltip("처음 부활 지점이 놓인 씬. 비워두면 첫 부활만 못 한다 — 자리와 방향은 그대로 선다.")]
     [SerializeField] UnityEditor.SceneAsset _initialSceneAsset;
 #endif
 
@@ -39,10 +39,10 @@ public class SceneDirector : MonoBehaviour
     [HideInInspector]
     [SerializeField] string _initialScene;
 
-    [Tooltip("한 번도 쉬어가기 전에 죽었을 때 설 자리.")]
+    [Tooltip("첫 등장과, 한 번도 쉬어가기 전에 죽었을 때 설 자리.")]
     [SerializeField] Vector3 _initialPlace = new Vector3(0f, 0.75f, 0f);
 
-    [Tooltip("그때 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다.")]
+    [Tooltip("그때 바라볼 <b>방향</b>. 회전각이 아니라 방향 벡터다. 씬에 저장된 몸의 각도는 이 값으로 덮인다.")]
     [SerializeField] Vector3 _initialFacing = new Vector3(1f, 0f, 0f);
 
 #if UNITY_EDITOR
@@ -63,36 +63,35 @@ public class SceneDirector : MonoBehaviour
     }
 
     /// <summary>
-    /// 아직 아무 데도 쉬어가지 않은 처음 상태를 채운다.
+    /// 아직 아무 데도 쉬어가지 않은 처음 상태를 채우고, <b>첫 등장의 자리와 방향을 세운다.</b>
     ///
-    /// 씬을 적어두면 그것을 쓰고, 비워두면 시작할 때 올라와 있던 무대를 쓴다.
-    /// 비워두는 쪽이 안전한 기본값이다 — 무엇을 열어놓고 Play하든 갈 곳이 있고, 어긋날 자리가 없다.
-    /// 적어두는 쪽은 <b>처음 부활 지점이 특정 스테이지에 있을 때</b> 쓴다.
+    /// <b>여기가 첫 등장의 주인이다.</b> 부활은 <see cref="Go"/>가 <see cref="Place"/>를 거쳐
+    /// 자리와 방향을 몸에 싣는데, 첫 등장은 그 길을 지나지 않는다. 그래서 같은 Place를 여기서 부른다 —
+    /// 스폰과 첫 부활이 한 값에서 나와야 둘이 어긋날 자리가 없다.
+    /// 씬에 저장된 몸의 트랜스폼은 여기서 덮인다. 같은 뜻을 두 군데 적어두면 언젠가 한쪽만 고친다.
     ///
-    /// Awake가 아니라 Start다. 무대의 등록이 Awake에서 이뤄지므로 그보다 늦어야 한다.
+    /// <b>무대를 묻지 않는다.</b> 예전에는 씬 이름을 비워두면 <see cref="Stage.Current"/>에서 주워왔는데,
+    /// 그것이 이 자리를 <b>로드 순서에 매달았다</b>. 타이틀에서 들어오면 배경은 캐릭터 씬보다 늦게
+    /// 올라오므로 그때 무대는 없고, 아래 전부를 건너뛰어 방향이 통째로 적용되지 않았다 —
+    /// 인스펙터의 Initial Facing을 무엇으로 바꾸든 화면이 그대로였던 것이 그것이다.
+    /// 주워온 이름은 옳지도 않다. 자리는 특정 무대의 좌표인데 아무 무대에나 갖다 붙이는 셈이다.
+    ///
+    /// 씬 이름이 없으면 <b>첫 부활만</b> 못 한다. 자리도 방향도 절대값이라 그와 무관하게 선다.
+    ///
+    /// Awake가 아니라 Start다. 몸의 부품들이 Awake에서 자리를 잡으므로 그보다 늦어야 한다.
     /// </summary>
     void Start()
     {
-        // 아직 아무 데도 쉬어가지 않았을 때의 값. 인스펙터에 따로 두지 않는다 —
-        // 매니저에 이미 적혀 있고, 같은 값이 두 군데 있으면 어느 쪽이 진짜인지 물어야 한다.
-        // 무대를 못 잡고 아래에서 돌아 나가더라도 이 값은 서 있어야 하므로 먼저 채운다.
-        if (_character != null) _restOffset = _character.RiseOffset;
-
-        string scene = _initialScene;
-
-        if (string.IsNullOrEmpty(scene))
+        if (_character == null)
         {
-            if (Stage.Current == null)
-            {
-                Debug.LogWarning($"[{name}] 시작 시 무대가 없어 초기 부활 지점을 잡지 못했습니다. " +
-                                 "쉬어가기 전에 죽으면 쓰러진 자리에서 그대로 일어납니다.", this);
-                return;
-            }
-
-            scene = Stage.Current.gameObject.scene.name;
+            Debug.LogError($"[{name}] 옮길 대상이 꽂혀 있지 않아 첫 등장을 세우지 못했습니다.", this);
+            return;
         }
 
-        _restScene = scene;
+        // 일어나는 동안 그림을 몸에서 떼어 놓을 거리. 인스펙터에 따로 두지 않는다 —
+        // 매니저에 이미 적혀 있고, 같은 값이 두 군데 있으면 어느 쪽이 진짜인지 물어야 한다.
+        _restOffset = _character.RiseOffset;
+
         _restPlace = _initialPlace;
 
         // 방향 벡터를 회전으로 바꾼다. 0 벡터는 LookRotation이 받지 못하므로 정면으로 둔다.
@@ -100,19 +99,13 @@ public class SceneDirector : MonoBehaviour
             ? Quaternion.identity
             : Quaternion.LookRotation(_initialFacing.normalized);
 
-        // <b>첫 등장의 방향도 여기서 정한다.</b> 부활은 Place()가 이 값을 몸에 싣는데,
-        // 첫 등장은 Go()를 거치지 않아 그 길이 없다. 예전에는 Character_Rest가 제 값으로
-        // 따로 돌려세웠고, 그래서 체크포인트가 적어둔 방향이 그 자리에서 덮여 사라졌다.
-        //
-        // <b>물리 자세와 Transform 둘 다에 적는다.</b> Rigidbody.rotation만 적으면 그림은 다음
-        // 시뮬레이션 스텝까지 씬에 저장된 각도로 남는데, 바로 이어 들어오는 Character_Rest가
-        // 시간 상한을 0으로 눌러 그 스텝을 영영 오지 않게 만든다. 그래서 누워 있는 내내 옛 각도로
-        // 보이다가, 일어나며 시간이 풀리는 첫 프레임에 한꺼번에 돌아간다.
-        if (_character != null && _character.Body != null)
-        {
-            _character.Body.rotation = _restFacing;
-            _character.Body.transform.rotation = _restFacing;
-        }
+        if (string.IsNullOrEmpty(_initialScene))
+            Debug.LogWarning($"[{name}] 처음 부활 지점의 씬이 비어 있습니다. " +
+                             "쉬어가기 전에 죽으면 쓰러진 자리에서 그대로 일어납니다.", this);
+        else
+            _restScene = _initialScene;
+
+        Place(_restPlace, _restFacing);
 
         // 화면 차원도 같은 사정이다 — 첫 등장은 Go()를 거치지 않으므로 Restore2D를 직접 부른다.
         // 지금 올라와 있는 스테이지(Stage.Current)가 정한 값을 그대로 따른다.
@@ -317,6 +310,14 @@ public class SceneDirector : MonoBehaviour
         // <b>동기 로드다.</b> 비동기로 걸면 로드가 끝날 때까지 프레임이 계속 돌고,
         // 그동안 물리는 발판 없는 세상에서 스텝을 밟는다. 동기는 프레임 끝에 한 번에 통합되므로
         // 그 창이 아예 생기지 않는다 — 대신 그만큼 화면이 멈춘다. 어차피 조작을 거둔 구간이라 그 편이 낫다.
+        // <b>부활이면 누운 상태로 여기서 들여보낸다.</b> 커튼이 걷힌 뒤에 들여보내면, 걷히는 동안에는 그 상태가
+        // 세우는 것들 — 누운 자세, 몸에서 떼어 놓은 그림(RiseOffset), 비틀림(RiseTwist) — 이 하나도 서 있지 않다.
+        // 사망 클립의 마지막 자세가 제자리에 선 채로 보이다가, 걷힌 뒤에 한꺼번에 튄다.
+        //
+        // 커튼 아래서 들여보내면 걷힐 때 이미 다 서 있다. 시간을 멈추는 것도 함께 오지만 커튼은 벽시계로 돈다.
+        // 기상 입력은 전환이 끝날 때까지 Character_Rest가 스스로 막는다.
+        if (rest) _root.ToRest();
+
         SceneManager.LoadScene(scene, LoadSceneMode.Additive);
 
         // <b>통합 전에 놓는다.</b> 새 리그는 태어나자마자 첫 LateUpdate에서 플레이어를 찾는데,
@@ -353,8 +354,8 @@ public class SceneDirector : MonoBehaviour
         // 조작을 돌려주기 전에 푼다. 순서가 바뀌면 한 프레임 동안 관문을 다시 밟을 수 있다.
         Busy = false;
 
-        if (rest) _root.ToRest();
-        else _root.ToControl();
+        // 부활은 커튼 아래서 이미 누운 상태로 들어갔다.
+        if (!rest) _root.ToControl();
     }
 
     /// <summary>

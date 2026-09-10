@@ -125,7 +125,13 @@ public class Character_Airborne : FiniteStateMachine
         _resumedAt = eased ? Time.time : Time.time - Character.Jump.easeInTime;
     }
 
-    void BeginJumpAnimation()
+    /// <summary>
+    /// 점프 클립을 지금 속도에 맞는 지점부터 건다. 오르는 중이면 도약 자세로, 아니면 추종 구간부터.
+    ///
+    /// 공개인 이유는 <see cref="Airborne_Dodge"/>다. 이 축은 남의 클립이 돌면 손대지 않으므로,
+    /// 클립을 가져갔던 하위 상태가 끝날 때 여기로 돌려줘야 한다.
+    /// </summary>
+    public void BeginJumpAnimation()
     {
         JumpAnimation jump = Character.Jump;
 

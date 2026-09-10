@@ -82,8 +82,11 @@ public class Character_Rest : BaseCharacterState
         // 배속을 먼저 0으로 눌러버리면 그 "다음"이 오지 않아 직전 자세가 그대로 남는다.
         // 부활 직후 주인공이 누워 있지 않고 선 채로 얼어붙던 것이 그것이다.
         characterManager.Animation.SetUnscaled(true);
+        // <b>기상 클립의 첫 프레임이 아니라 따로 구운 누운 자세를 세운다.</b>
+        // 그래야 누운 모습을 기상 동작과 무관하게 만질 수 있다 —
+        // 클립은 character-laid 프리팹에서 굽는다(Tools ▸ Xsaya).
         characterManager.Animation.SetFloat(characterManager.RiseSpeedParameter, 0f);
-        characterManager.Animation.Snap(characterManager.RiseState);
+        characterManager.Animation.Snap(characterManager.LaidState);
 
         // 세상을 멈춘다. 배속 칸은 HPbar가 매 프레임 쥐고 있으므로 상한만 누른다.
         TimeManager.SetCeiling(0f);
@@ -121,6 +124,15 @@ public class Character_Rest : BaseCharacterState
     {
         if (!_rising)
         {
+            // <b>커튼이 덮여 있는 동안에는 일어나지 않는다.</b> 부활은 이 상태를 커튼 아래서 먼저 들여보내므로,
+            // 그 사이 누른 키로 일어서기 시작하면 걷히기 전에 기상이 지나가 버리고,
+            // 끝나며 돌려주는 조작이 아직 중력이 꺼진 몸에 닿는다. 누른 것은 버린다 — 걷힌 뒤에 다시 누른다.
+            if (Covered())
+            {
+                _raiseRequested = false;
+                return;
+            }
+
             if (Consume(ref _raiseRequested)) Begin();
             return;
         }
@@ -165,6 +177,13 @@ public class Character_Rest : BaseCharacterState
         _startedAt = Time.unscaledTime;
 
         characterManager.Animation.SetFloat(characterManager.RiseSpeedParameter, 1f);
+
+        // <b>누운 자세에서 기상 동작으로 건너온다.</b> 예전에는 기상 클립을 배속 0으로 세워 둔 채였으므로
+        // 배속만 올리면 그대로 이어졌지만, 이제는 자세가 서로 다른 두 상태라 섞어야 한다.
+        //
+        // 시작 지점을 0으로 <b>명시해서</b> 건다. 지난번에 일어선 뒤라면 그 상태의 시간이
+        // 클립 끝에 남아 있어, 어디서부터 트는지를 맡겨두면 일어선 자세로 섞여 들어간다.
+        characterManager.Animation.PlayFrom(characterManager.RiseState, 0f, characterManager.LaidBlend);
     }
 
     /// <summary>일어나는 동안 시간을 되돌린다. 상한만 올리므로 체력이 정한 배속은 그대로 살아 있다.</summary>
@@ -232,6 +251,9 @@ public class Character_Rest : BaseCharacterState
     {
         if (fsm is CharacterRoot root) root.ToControl();
     }
+
+    /// <summary>전환이 아직 도는 중인지. 그동안은 커튼이 덮여 있고 몸의 중력도 꺼져 있다.</summary>
+    static bool Covered() => SceneDirector.instance != null && SceneDirector.instance.Busy;
 
     static bool Consume(ref bool flag)
     {

@@ -4,7 +4,7 @@ public class PauseGame : MonoBehaviour
 {
     private void OnEnable()
     {
-        TimeManager.Stop();
+        TimeManager.Pause();
     }
 
     private void OnDisable()

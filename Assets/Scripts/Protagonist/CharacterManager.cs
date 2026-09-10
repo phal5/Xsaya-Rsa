@@ -22,6 +22,18 @@ public class CharacterManager : EntityManager
     [field: SerializeField] public float DashSpeed { get; private set; }
     [Tooltip("회피(Dodge)가 지속되는 시간.")]
     [field: SerializeField] public float DashTime { get; private set; } = 0.2f;
+
+    [Tooltip("회피 동안 세워 둘 <b>대시 자세</b>의 컨트롤러 상태. character-dash 프리팹에서 구운 한 프레임짜리 클립이다 " +
+             "(Tools ▸ Xsaya). 지상·공중 회피가 함께 쓴다.")]
+    [field: SerializeField] public string DashState { get; private set; } = "Dash";
+
+    [Tooltip("대시 자세로 섞여 들어가는 시간(초). 회피는 DashTime만큼만 지속되므로 <b>그보다 한참 짧아야</b> " +
+             "자세가 온전히 선다 - 기본 전환 시간(0.1초)이면 0.2초짜리 회피의 절반을 섞는 데 쓴다.")]
+    [field: SerializeField, Min(0f)] public float DashBlend { get; private set; } = 0.05f;
+
+    [Tooltip("회피가 지나온 길을 <b>왜곡</b>으로 남기는 트레일. 회피 동안만 뿌리고, 남긴 자리는 트레일 수명대로 잦아든다. " +
+             "비워두면 아무것도 남기지 않는다.")]
+    [field: SerializeField] public TrailRenderer DashTrail { get; private set; }
     [Header("Vertical Speed")]
     [field:SerializeField] public float JumpSpeed { get; private set; }
     [field: SerializeField] public JumpAnimation Jump { get; private set; } = new JumpAnimation();
@@ -41,6 +53,15 @@ public class CharacterManager : EntityManager
 
     [Tooltip("그 상태의 Speed에 물린 파라미터. 누워 기다리는 동안 0으로 눌러 세운다.")]
     [field: SerializeField] public string RiseSpeedParameter { get; private set; } = "RiseSpeed";
+
+    [Tooltip("일어나기를 기다리는 동안의 <b>누운 자세</b>. character-laid 프리팹에서 구운 한 프레임짜리 클립이다. " +
+             "기상 클립의 첫 프레임을 세워 두는 것으로 대신할 수도 있지만, 그러면 누운 모습을 " +
+             "기상 동작이 정하게 되어 따로 만질 수가 없다.")]
+    [field: SerializeField] public string LaidState { get; private set; } = "Laid";
+
+    [Tooltip("누운 자세에서 기상 동작으로 섞이는 시간(초). <b>두 자세가 다른 만큼 필요하다</b> - " +
+             "0으로 두면 일어나기 시작하는 순간 자세가 튄다.")]
+    [field: SerializeField, Min(0f)] public float LaidBlend { get; private set; } = 0.25f;
 
     [Tooltip("일어나는 데 걸리는 시간(초). 클립 길이와 맞춘다.")]
     [field: SerializeField] public float RiseTime { get; private set; } = 5.33f;
