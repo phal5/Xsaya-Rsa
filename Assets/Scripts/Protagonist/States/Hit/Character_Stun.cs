@@ -1,6 +1,12 @@
 using UnityEngine;
 
-/// <summary>피격 경직. 잠시 조작을 잃었다가 복귀한다.</summary>
+/// <summary>
+/// 피격 경직. 잠시 조작을 잃었다가 복귀한다.
+///
+/// 두 곳에서 쓴다 — 피격(<see cref="Character_Hit"/>, 끝나면 조작으로)과 대사 중 피격
+/// (<see cref="Character_UI"/>, 끝나면 대사로). 그래서 부모를 가정하지 않고 <see cref="IStunOwner"/>에게 알린다.
+/// 끝난 뒤 어디로 갈지는 부모가 안다.
+/// </summary>
 public class Character_Stun : BaseCharacterState
 {
     float _endTime;
@@ -25,6 +31,6 @@ public class Character_Stun : BaseCharacterState
     {
         if (Time.time < _endTime) return;
 
-        if (fsm is Character_Hit hit) hit.Complete();
+        if (fsm is IStunOwner owner) owner.Complete();
     }
 }

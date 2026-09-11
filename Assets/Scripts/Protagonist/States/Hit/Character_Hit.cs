@@ -9,7 +9,7 @@ using UnityEngine;
 ///
 /// Initial State는 쓰지 않는다. 진입 시 Enter가 직접 고른다.
 /// </summary>
-public class Character_Hit : FiniteStateMachine
+public class Character_Hit : FiniteStateMachine, IStunOwner
 {
     CharacterManager Character => manager as CharacterManager;
 

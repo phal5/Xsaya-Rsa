@@ -9,7 +9,7 @@ using UnityEngine;
 /// 때린 주체가 없는 죽음(낙사·함정)도 같은 자리로 들어와야 하기 때문이다.
 ///
 /// Initial State  : Character_Controlled
-/// ComponentStates: Character_Controlled, Character_Hit
+/// ComponentStates: Character_Controlled, Character_Hit, Character_UI
 /// </summary>
 public class CharacterRoot : FiniteStateMachine
 {
@@ -71,6 +71,14 @@ public class CharacterRoot : FiniteStateMachine
         if (!_hitRequested) return;
         _hitRequested = false;
 
+        // 대사 중이면 그 안에서 경직한다. 끝나면 대사로 돌아가야 하므로 조작 머신으로 끌어내지 않는다 —
+        // 예전에는 여기서 Character_Hit으로 보내, 경직이 끝나는 순간 대사가 떠 있는 채로 조작이 돌아왔다.
+        if (_state is Character_UI ui)
+        {
+            ui.Stagger();
+            return;
+        }
+
         // 이미 피격 계열 안이면 겹쳐 들어가지 않는다.
         if (_currentStateType == typeof(Character_Hit)) return;
 
@@ -120,6 +128,25 @@ public class CharacterRoot : FiniteStateMachine
     public void ToUI()
     {
         if (_currentStateType == typeof(Character_UI)) return;
+
+        // 씬 전환 중에는 대사가 조작을 가져가지 않는다. 전환이 끝나며 스스로 정할 최종 상태에 맡긴다 —
+        // 여기서 넘기면 전환 상태가 끊겨, 무적과 멈춤이 전환 도중에 풀린다.
+        if (_currentStateType == typeof(Character_Transit)) return;
+
         TransitTo<Character_UI>();
+    }
+
+    /// <summary>
+    /// 씬 전환에 들어간다. <see cref="SceneDirector"/>가 부른다. 이 동안에는 맞지도 죽지도 않는다.
+    ///
+    /// 들어가기 직전에 세워진 피격 표시는 버린다. 전환 중에는 새로 세워질 일이 없지만,
+    /// 남아 있던 것이 전환이 끝난 뒤 엉뚱한 때 경직으로 터진다.
+    /// </summary>
+    public void ToTransit()
+    {
+        _hitRequested = false;
+
+        if (_currentStateType == typeof(Character_Transit)) return;
+        TransitTo<Character_Transit>();
     }
 }
