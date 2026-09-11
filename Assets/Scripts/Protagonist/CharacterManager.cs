@@ -990,8 +990,16 @@ public class LedgeGrab
     /// <summary>마주보고 있다고 볼 최소 정렬도. 1이면 정면만, 0이면 스치는 면까지 받는다.</summary>
     const float FacingTolerance = 0.5f;
 
-    /// <summary>가장자리 아래 벽면을 찾을 깊이. 얕게 둔다.</summary>
-    const float EdgeFaceDepth = 0.25f;
+    /// <summary>
+    /// 가장자리 아래 벽면을 찾을 깊이. 훑기로 잰 윗면 높이에서 이만큼 내려가 앞을 본다.
+    ///
+    /// <b>얇은 발판의 두께보다 얕아야 한다.</b> 예전 값 0.25는 두께 0.126m인 팔레트 밑을 그대로 지나가,
+    /// 그 발판에서만 턱을 잡지 못했다. 윗면 바로 밑의 면이 곧 손이 걸리는 턱이므로 얕을수록 그 면을 잰다.
+    /// 면에 접하지 않을 여유(SurfaceSkin)보다는 깊게 둔다 — 윗면을 스쳐 법선이 위로 나오는 것을 피한다.
+    ///
+    /// 플로팅 가든의 발판 전부로 0.25와 견줘 봤을 때 잃은 턱도, 자리나 방향이 달라진 턱도 없었다.
+    /// </summary>
+    const float EdgeFaceDepth = 0.05f;
 
     /// <summary>
     /// 발을 디딜 벽면이 있는지. Braced와 Freehang을 가르는 유일한 판정이다.

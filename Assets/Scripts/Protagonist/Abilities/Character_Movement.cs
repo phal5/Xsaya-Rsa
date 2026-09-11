@@ -31,6 +31,10 @@ public class Character_Movement : MonoBehaviour, IMovement
 
     private void FixedUpdate()
     {
+        // 멈춰 둔 동안에는 아무것도 셈하지 않는다. 몸은 떼어져 있어 실리지도 않지만, 셈 자체가 돌면
+        // Mutual의 걸음 속도가 목표를 향해 줄어들어 풀었을 때 이어받을 것이 새어 나간다.
+        if (_frozen) return;
+
         if (_singular) Singular();
         else Mutual();
     }
@@ -220,6 +224,45 @@ public class Character_Movement : MonoBehaviour, IMovement
         _own.position = position;
         _own.transform.position = position;
         SetBodyVelocity(Vector3.zero);
+
+        // 멈춰 둔 동안이라면 적어 둔 속도도 버린다. 자리를 직접 정한 쪽이 있으면 멈추기 전의 속도는
+        // 더 이상 그 자리의 것이 아니다 — 씬 전환이 새 자리에 놓은 몸에 떠나온 자리의 낙하 속도를 실으면
+        // 도착하자마자 튕겨 나간다.
+        _frozenOwn = Vector3.zero;
+        _frozenExternal = Vector3.zero;
+    }
+
+    bool _frozen;
+    Vector3 _frozenOwn;
+    Vector3 _frozenExternal;
+
+    /// <summary>
+    /// 몸을 그 자리에 세운다. 두 몸을 떼어내고(<see cref="Detach"/>) 멈춘 순간의 속도를 적어 둔다.
+    /// 풀면 다시 붙인 <b>뒤에</b> 그 속도를 싣는다 — 떼어낸 동안에는 속도를 실을 수 없다.
+    /// 공중에서 멈췄다면 떨어지던 그대로 이어서 떨어진다.
+    ///
+    /// 떼어내는 것이라 밀려나지도 떨어지지도 않는다. 트리거는 그대로 겹치므로 낙사 볼륨 같은 것은
+    /// 멈춘 동안에도 닿는다 — 대사 중에도 죽을 수 있어야 하는 연출이 있다.
+    ///
+    /// 같은 쪽으로 두 번 불러도 한 번만 먹는다. 멈춘 채 다시 멈추면 0을 "멈춘 순간의 속도"로 적는다.
+    /// </summary>
+    public void Freeze(bool frozen)
+    {
+        if (_frozen == frozen) return;
+
+        _frozen = frozen;
+
+        if (frozen)
+        {
+            _frozenOwn = _own.linearVelocity;
+            _frozenExternal = _external.linearVelocity;
+            Detach(true);
+            return;
+        }
+
+        Detach(false);
+        SetBodyVelocity(_frozenOwn);
+        SetSampler(_frozenExternal);
     }
 
     public void SetSamplerYVelocity(float velocity)
