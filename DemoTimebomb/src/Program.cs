@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -16,9 +18,33 @@ namespace DemoLauncher
         //  설정 — 여기만 수정하면 됩니다
         // ════════════════════════════════════════════════════════════════
 
-        // 이 시각(PC 로컬 시간)을 지나서 실행하면 데모 폴더 전체가 삭제됩니다.
-        static readonly DateTime Expiry =
-            new DateTime(2026, 9, 9, 23, 59, 59, DateTimeKind.Local);
+        // 만료 시각(PC 로컬 시간). 값은 빌드 시 컴파일러가 어셈블리에 심는다:
+        //   dotnet publish -p:ExpiryLocal=2026-09-25T23:59:59
+        // 유니티 빌드 후처리(Assets/Editor/DemoTimebombPostBuild.cs)가 매 빌드마다
+        // "빌드일 + 14일"을 이 속성으로 넘겨 exe 안에 박아 넣는다. 손으로 고칠
+        // 필요가 없다. 값을 못 읽으면 안전상 만료하지 않는다(먼 미래).
+        static readonly DateTime Expiry = ResolveExpiry();
+
+        static DateTime ResolveExpiry()
+        {
+            try
+            {
+                foreach (var a in Assembly.GetExecutingAssembly()
+                             .GetCustomAttributes<AssemblyMetadataAttribute>())
+                {
+                    if (a.Key == "ExpiryLocal" &&
+                        DateTime.TryParseExact(a.Value, "yyyy-MM-ddTHH:mm:ss",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                    {
+                        return DateTime.SpecifyKind(dt, DateTimeKind.Local);
+                    }
+                }
+            }
+            catch { /* 무시하고 안전한 기본값으로 */ }
+
+            // 만료일을 확정할 수 없으면 절대 지우지 않는다.
+            return new DateTime(2099, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        }
 
         // 런처와 같은 폴더 안에서, 실제 유니티 빌드가 들어있는 하위 폴더 이름
         const string GameSubdir = "Game";

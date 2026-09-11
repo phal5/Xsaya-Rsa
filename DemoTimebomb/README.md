@@ -5,20 +5,26 @@
 남고 그 안이 빈 상태가 됩니다. 만료 전에는 하위 `Game` 폴더의 실제 게임을
 대신 실행해 줍니다.
 
-- 현재 만료일: **2026-09-09 23:59:59** (PC 로컬 시간)
-- 산출물: `dist/Xsaya-Rsa.exe` (self-contained 단일 파일, 대상 PC에 .NET 설치 불필요)
+- 만료일은 **유니티 빌드 때 "빌드일 + 14일"로 자동 계산되어 exe 안에 컴파일**됩니다.
+  (텍스트로 열어 고칠 수 없음. 일수는 `Assets/Editor/DemoTimebombPostBuild.cs` 의
+  `ExpiryDays` 상수로 조정)
+- 런처는 self-contained 단일 파일이라 대상 PC에 .NET 설치가 필요 없습니다.
 
 ---
 
-## 1. 배포 폴더 구성
+## 1. 사용법 — 그냥 평소처럼 유니티에서 Windows 빌드하면 끝
 
-유니티를 **평소대로 빌드**한 뒤, 아래 구조로 재배치해서 압축·제출하세요.
-핵심은 **실제 유니티 빌드를 `Game/` 하위 폴더로 넣고, 런처를 최상단에 두는 것**입니다.
+`Assets/Editor/DemoTimebombPostBuild.cs` 후처리 훅이 빌드 완료 직후 자동으로:
+
+1. 런처를 **빌드일 + 14일** 만료일로 컴파일(`dotnet publish`)하고
+2. 유니티 산출물을 `Game/` 하위로 옮긴 뒤, 런처를 빌드 최상단에 배치
+
+즉 별도 조작 없이 아래 구조가 자동으로 만들어집니다:
 
 ```
-Xsaya-Rsa_Demo/              ← 이 폴더 전체가 만료 시 삭제됨 (심사자에게 주는 폴더)
-├─ Xsaya-Rsa.exe             ← 이 런처 (dist/Xsaya-Rsa.exe 를 복사)
-└─ Game/                     ← 유니티 빌드 산출물을 통째로 이동
+build/                       ← 만료 시 이 폴더의 "내용물"이 비워짐 (폴더는 남음)
+├─ Xsaya-Rsa.exe             ← 런처 (심사자가 실행) — 만료일이 exe에 박혀 있음
+└─ Game/                     ← 유니티 빌드 산출물 전체
    ├─ Xsaya-Rsa.exe          (진짜 게임)
    ├─ UnityPlayer.dll
    ├─ Xsaya-Rsa_Data/
@@ -27,27 +33,39 @@ Xsaya-Rsa_Demo/              ← 이 폴더 전체가 만료 시 삭제됨 (심�
 
 심사자는 최상단 `Xsaya-Rsa.exe`(런처)를 실행합니다.
 - 만료 전 → `Game/Xsaya-Rsa.exe` 실행 (평범하게 게임 구동)
-- 만료 후 → 안내창 표시 후 `Xsaya-Rsa_Demo/` 폴더의 **내용물을 전부 비움**
+- 만료 후 → 안내창 표시 후 이 폴더의 **내용물을 전부 비움**
   (폴더 자체는 남고, 런처 exe 포함 내부 항목이 모두 삭제됨)
 
-## 2. 만료일 변경 / 재빌드
+빌드 로그(Console)에 `[Timebomb] 자동 삭제 설치 완료. 만료일: ...` 이 찍히면 성공입니다.
+`dotnet` 이 없거나 런처 빌드가 실패하면 에러만 찍고 **보호 없는 일반 빌드로 남깁니다**
+(빌드 자체는 깨지지 않음).
 
-날짜를 바꾸려면 `src/Program.cs` 상단의 `Expiry` 값을 수정한 뒤 다시 빌드합니다.
+> 대상: **Windows 스탠드얼론**(StandaloneWindows64/Windows) 빌드에만 적용됩니다.
+> `dotnet` SDK 가 PATH 또는 `C:\Program Files\dotnet\` 에 있어야 합니다.
+
+## 2. 만료 일수 변경
+
+`Assets/Editor/DemoTimebombPostBuild.cs` 의 상수만 바꾸면 됩니다.
 
 ```csharp
-static readonly DateTime Expiry =
-    new DateTime(2026, 9, 9, 23, 59, 59, DateTimeKind.Local);
+const int ExpiryDays = 14;   // 빌드일 + N일
 ```
 
-빌드:
+만료일은 이 값으로 매 빌드마다 자동 재계산되므로, 소스에 날짜를 손으로 박을 필요가
+없습니다. 게임 실행 파일 이름/하위 폴더명을 바꾸려면 `src/Program.cs` 의
+`GameExe` / `GameSubdir` 상수를 함께 수정하세요.
+
+### 수동 빌드 (선택)
+
+후처리 없이 런처만 따로 만들려면:
 
 ```
-powershell -ExecutionPolicy Bypass -File build.ps1
+powershell -ExecutionPolicy Bypass -File build.ps1        # 기본: 만료 안 함(2099)
+dotnet publish src/DemoLauncher.csproj -c Release -o dist -p:ExpiryLocal=2026-09-25T23:59:59
 ```
 
-결과물은 `dist/Xsaya-Rsa.exe` 에 생성됩니다.
-게임 실행 파일 이름이 `Xsaya-Rsa.exe` 가 아니거나 하위 폴더명을 바꾸고 싶으면
-`Program.cs` 의 `GameExe` / `GameSubdir` 상수도 함께 수정하세요.
+`ExpiryLocal` 을 주지 않으면 안전을 위해 **먼 미래(2099-01-01)** 로 컴파일되어
+아무것도 지우지 않습니다.
 
 ## 3. 안전장치
 
@@ -82,9 +100,11 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 DemoTimebomb/
 ├─ src/
-│  ├─ Program.cs           런처 + 자동 정리 로직 (설정 상수 상단에 있음)
-│  └─ DemoLauncher.csproj  self-contained 단일 exe 빌드 설정
-├─ build.ps1               빌드 스크립트
-├─ dist/Xsaya-Rsa.exe      빌드 산출물 (배포용)
+│  ├─ Program.cs           런처 + 자동 정리 로직 (만료일은 exe에 컴파일됨)
+│  └─ DemoLauncher.csproj  self-contained 단일 exe 빌드 설정 (ExpiryLocal 주입)
+├─ build.ps1               수동 빌드 스크립트
+├─ dist/Xsaya-Rsa.exe      수동 빌드 산출물 (기본 만료 없음)
 └─ README.md               이 문서
+
+Assets/Editor/DemoTimebombPostBuild.cs   유니티 빌드 후처리 훅 (자동 설치)
 ```
