@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -51,9 +52,37 @@ public class KillVolume : MonoBehaviour
     /// </summary>
     void OnTriggerStay(Collider other) => Kill(other);
 
+    /// <summary>
+    /// 이미 죽인 대상. <b>나갈 때까지 다시 죽이지 않는다.</b>
+    ///
+    /// 머무는 동안 매 스텝 묻는 탓에, 죽었다 되살아난 몸이 아직 이 안에 있으면 한 번 더 죽인다.
+    /// 다른 씬의 체크포인트로 부활할 때가 그렇다 — 커튼이 덮이고 이 씬이 내려갈 때까지 몸은 죽은 자리에
+    /// 붙들려 있어, 되살아난 첫 스텝에 여기서 다시 죽고 사망이 두 번 돈다.
+    ///
+    /// 적는 것은 <b>실제로 죽었을 때</b>뿐이다. 무적에 걸려 흘러간 판정은 적지 않으므로,
+    /// 무적이 풀리면 안에서 죽인다는 위의 약속은 그대로다.
+    /// 체력을 볼 수 있는 대상(DamagableBase)만 적는다. 나머지는 지금처럼 매 스텝 묻는다.
+    /// </summary>
+    readonly HashSet<DamagableBase> _killed = new HashSet<DamagableBase>();
+
+    /// <summary>
+    /// 나가면 잊는다. 순간이동으로 빠져나가도(부활 자리로 옮겨질 때) 다음 스텝에 겹침이 끊겨 불린다.
+    /// 볼륨이 씬과 함께 내려가면 적어 둔 것도 함께 사라진다.
+    /// </summary>
+    void OnTriggerExit(Collider other)
+    {
+        if (other.TryGetComponent(out DamagableBase target)) _killed.Remove(target);
+    }
+
     void Kill(Collider other)
     {
-        if (other.TryGetComponent(out IDamageable target))
-            target.TakeDamage(float.PositiveInfinity);
+        if (!other.TryGetComponent(out IDamageable target)) return;
+
+        DamagableBase body = target as DamagableBase;
+        if (body != null && _killed.Contains(body)) return;
+
+        target.TakeDamage(float.PositiveInfinity);
+
+        if (body != null && body.CurrentHealth <= 0f) _killed.Add(body);
     }
 }
