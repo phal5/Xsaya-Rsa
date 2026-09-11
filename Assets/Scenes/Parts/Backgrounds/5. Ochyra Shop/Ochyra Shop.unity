@@ -47253,13 +47253,37 @@ PrefabInstance:
       propertyPath: m_Name
       value: Wall
       objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _place.x
+      value: 57.42
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _place.y
+      value: -5.220769
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pageEvents.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6371285689565951578, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: _book._pages.Array.data[0].FooterSpeaker
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6706964704888883083, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 6706964704888883083, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -3.5
       objectReference: {fileID: 0}
     - target: {fileID: 6706964704888883083, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 19.06
       objectReference: {fileID: 0}
     - target: {fileID: 6706964704888883083, guid: 19f177011bf8ba3479f638a7d6ade1f2, type: 3}
       propertyPath: m_LocalPosition.z
