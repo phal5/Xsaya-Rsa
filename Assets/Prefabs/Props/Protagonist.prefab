@@ -4311,6 +4311,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3886442309561623773}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 90}
+--- !u!1 &5900420904155377324
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2441112461992242620}
+  - component: {fileID: 322212894895221190}
+  m_Layer: 0
+  m_Name: UI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2441112461992242620
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5900420904155377324}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8265931828269588773}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &322212894895221190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5900420904155377324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad4cfdf80e37caa44b4fc22f10cf8c98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Character_UI
+  manager: {fileID: 7287668904403106428}
+  _initialStateScript: {fileID: 0}
+  _initialStateTypeName: 
+  _componentStates: []
+  _currentStateName: 
 --- !u!1 &6156752404711456480
 GameObject:
   m_ObjectHideFlags: 0
@@ -4955,6 +5004,7 @@ Transform:
   m_Children:
   - {fileID: 4657888860701201472}
   - {fileID: 6560785480883438182}
+  - {fileID: 2441112461992242620}
   m_Father: {fileID: 4379228598764830530}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4854455835229782934
@@ -4976,6 +5026,7 @@ MonoBehaviour:
   _componentStates:
   - {fileID: 8424567816976676742}
   - {fileID: 4674966036370345854}
+  - {fileID: 322212894895221190}
   _currentStateName: 
 --- !u!1 &7061901482208847199
 GameObject:
