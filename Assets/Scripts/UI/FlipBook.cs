@@ -112,19 +112,34 @@ public class FlipBook : MonoBehaviour
     }
 
     /// <summary>
-    /// 지금 열려 있는 책을 <b>못 다 본 채로</b> 닫는다. 그 책을 연 관문이 씬과 함께 사라졌을 때 쓴다.
-    ///
-    /// <see cref="Next"/>가 끝에 닿아 스스로 닫는 정상 경로와 갈리는 지점은 <b>조작 잠금</b>이다.
-    /// onDialogueNull은 ControlLock.Release도 함께 물고 있는데, 대사가 끊긴 것은 대개 사망처럼
-    /// 다른 경로가 이미 조작을 가져간 뒤라 — 여기서 그것까지 풀면 되찾아간 조작을 도로 빼앗는다.
-    /// 그래서 패널을 접는 연출만 <see cref="onForceClose"/>에 따로 물려 그쪽만 부른다.
+    /// 지금 열려 있는 책을 <b>그 책일 때만</b> 못 다 본 채로 닫는다. 그 책을 연 관문이 씬과 함께 사라졌을 때 쓴다.
     ///
     /// <b>다른 책이 이미 열려 있으면 아무것도 하지 않는다.</b> 부르는 쪽이 자기 책이 아직도
     /// 열려 있는지 매번 확인할 필요 없이, 늦게 도착한 호출이 남의 대사를 끊지 않도록 여기서 막는다.
+    /// 닫는 방식은 <see cref="Close"/>와 같다.
     /// </summary>
     public void ForceClose(Book book)
     {
         if (_book != book) return;
+
+        Close();
+    }
+
+    /// <summary>
+    /// 열려 있는 책을 <b>무엇이든</b> 못 다 본 채로 닫는다. 씬 전환이 시작될 때 부른다 —
+    /// 전환은 그 전에 열린 대사를 모두 끝낸다. 보스 대사 도중 쓰러져 부활하는 길이 그렇다.
+    ///
+    /// <see cref="Next"/>가 끝에 닿아 스스로 닫는 정상 경로와 갈리는 지점은 <b>조작 잠금</b>이다.
+    /// onDialogueNull은 ControlLock.Release도 함께 물고 있는데, 대사가 끊긴 것은 대개 사망처럼
+    /// 다른 경로가 이미 조작을 가져간 뒤라 — 여기서 그것까지 풀면 되찾아간 조작을 도로 빼앗는다.
+    /// 관문이 걸어둔 "대사가 끝나면 넘어간다"도 함께 깨운다. 그래서 패널을 접는 연출만
+    /// <see cref="onForceClose"/>에 따로 물려 그쪽만 부른다.
+    ///
+    /// 열린 책이 없으면 아무것도 하지 않는다.
+    /// </summary>
+    public void Close()
+    {
+        if (_book == null) return;
 
         dialogue.text = speaker.text = string.Empty;
         midScreen.SetText(string.Empty);
