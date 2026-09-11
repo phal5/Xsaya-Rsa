@@ -186,7 +186,13 @@ public class SceneDirector : MonoBehaviour
     /// </returns>
     public bool Respawn()
     {
-        if (string.IsNullOrEmpty(_restScene)) return true;
+        // 적어 둔 자리가 없으면 옮기지 않는다. 그래도 전환은 거친다 — 부활은 언제나 같은 문을 지난다.
+        if (string.IsNullOrEmpty(_restScene))
+        {
+            BeginTransit();
+            _root.ToRest();
+            return true;
+        }
 
         // 부활은 누운 자리에서 시작한다. 관문 통과와 갈리는 유일한 지점이라 여기서 표시를 넘긴다.
         return Go(_restScene, _restPlace, _restFacing, rest: true);
@@ -205,7 +211,7 @@ public class SceneDirector : MonoBehaviour
     /// </returns>
     /// <param name="rest">
     /// 도착한 뒤 누운 자리에서 시작할지. 부활이 참이고 관문 통과가 거짓이다.
-    /// 이 씬이 이미 올라와 있으면 조작을 부르는 쪽이 돌려주므로 여기서는 쓰이지 않는다.
+    /// 이 씬이 이미 올라와 있어도 참이면 전환 상태를 거쳐 누운 자리로 넘긴다.
     /// </param>
     /// <param name="mode">
     /// Additive면 지금까지처럼 배경만 갈아끼운다 — 캐릭터·UI는 그대로 남는다. 스테이지 사이 이동이 이쪽이다.
@@ -245,10 +251,22 @@ public class SceneDirector : MonoBehaviour
         }
 
         // 이미 올라와 있으면 부를 것이 없다. 같은 스테이지에서의 부활이 여기로 온다.
+        //
+        // <b>그래도 부활이면 전환 상태를 거친다.</b> 씬을 다시 부르지 않을 뿐, 열린 대사를 닫고
+        // 맞지도 죽지도 않는 채로 자리를 옮기는 일은 같다 — 거치지 않으면 보스 대사 도중 쓰러져
+        // 같은 스테이지에서 일어날 때 대사가 남는다. 커튼은 치지 않는다. 옮기고 눕히는 것까지 이 프레임에 끝난다.
+        //
+        // 관문은 거치지 않는다. 조작을 쥔 채 오는 길이라 닫고 나서 돌려줄 곳이 따로 없고,
+        // 대사 중에 부르는 순간이동이 있다면 그 대사를 강제로 닫게 된다.
         if (SceneManager.GetSceneByName(scene).isLoaded)
         {
+            if (rest) BeginTransit();
+
             Place(place, facing);
             Restore2D();
+
+            // 연 쪽이 닫는다. 누운 자리로 넘기면 전환 상태가 끝난다.
+            if (rest) _root.ToRest();
             return true;
         }
 
@@ -264,12 +282,30 @@ public class SceneDirector : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// 전환에 들어선다. <b>씬을 부르든 자리만 옮기든 같은 문이다.</b>
+    ///
+    /// 열려 있던 대사부터 닫는다. 전환은 그 전의 대사를 모두 끝낸다 — 보스 대사 도중 쓰러져 부활하면
+    /// 그 대사창과 페이지 이벤트가 따라온다. 관문의 대사는 정상이라면 이미 끝나 있어 여기 걸리지 않는다.
+    /// 캐릭터 상태(Character_Transit)가 아니라 여기서 닫는 것은, 상태들이 UI를 직접 부르지 않기 때문이다 —
+    /// UI가 캐릭터를 부르는 길(ControlLock)만 있다. 커튼을 다루는 이곳이 대사창도 다룬다.
+    ///
+    /// 그다음 전환 상태로 넘긴다. 이 동안에는 맞지도 죽지도 않는다 — 대사(Character_UI)와 다른 점이 그것이다.
+    /// 닫는 것은 연 쪽의 몫이다. 부활이면 누운 자리로, 관문이면 조작으로 넘기며 끝난다.
+    /// </summary>
+    void BeginTransit()
+    {
+        if (FlipBook.Instance != null) FlipBook.Instance.Close();
+
+        _root.ToTransit();
+    }
+
     IEnumerator Transit(string scene, Vector3 place, Quaternion facing, bool rest)
     {
         Busy = true;
 
         // 조작을 먼저 거둔다. 지상·공중 축이 멎어야 발판이 사라진 것을 낙하로 읽지 않는다.
-        _root.ToUI();
+        BeginTransit();
 
         // 몸을 붙든다. 중력이 꺼져 있고 두 몸의 속도가 0이면 쌓이는 것이 없어,
         // 매 프레임 다시 못박지 않아도 그 자리에 그대로 있는다.
@@ -346,8 +382,8 @@ public class SceneDirector : MonoBehaviour
         }
 
         // <b>커튼이 걷힌 뒤에 중력을 돌려준다.</b> 앞에서 돌려주면 커튼이 도는 1초 남짓 동안
-        // 몸의 수직을 아무도 소유하지 않는다 - 그 사이 루트는 Character_UI이고, 그 상태는
-        // 수평만 눌러둘 뿐 수직은 sampler와 중력의 몫이다. 붙들어 둔 덕에 이 사이가 비어도
+        // 몸의 수직을 아무도 소유하지 않는다 - 부활이면 루트는 커튼 아래서 이미
+        // Character_Rest로 넘어가 두 몸이 다시 붙어 있고, 그 상태는 수직을 쥐지 않는다. 붙들어 둔 덕에 이 사이가 비어도
         // 떨어지지 않는다는 위의 전제가 거기서 깨져, 도착 지점보다 한참 아래에서 일어나게 된다.
         _character.Movement.SetGravity(true);
 
