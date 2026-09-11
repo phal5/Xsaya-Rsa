@@ -25,14 +25,14 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _Chroma: 1.5
+    - _Chroma: 5
     - _EdgeSoftness: 0.3
-    - _HeadBias: 0.35
-    - _RevealFlip: 0
-    - _RevealSoftness: 0.08
+    - _HeadBias: 0
+    - _RevealFlip: 0.02
+    - _RevealSoftness: 0.001
     - _RevealTime: 0.4
     - _Shade: 0
-    - _Strength: 0.15
+    - _Strength: 1.611
     - _UseAge: 0
     m_Colors: []
   m_BuildTextureStacks: []
