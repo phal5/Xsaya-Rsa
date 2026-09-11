@@ -82,3 +82,6 @@ crashlytics-build.properties
 /[Aa]ssets/Fusako*
 /[Aa]ssets/Art/External*
 /[Aa]ssets/TripoModels*
+
+
+/[Dd]emoTimebomb/*
