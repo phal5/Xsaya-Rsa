@@ -207,9 +207,14 @@ public class SingularFlatMovement : MonoBehaviour, IMovement
 
         Vector3 direction = lookTarget.position - (_rigidbody.position + _rigidbody.transform.TransformDirection(localEyeOffset));
 
-        // 몸도 평면 밖을 보지 않는다. 이걸 빼면 루트 모션이 클립 변위를 잠긴 축으로
-        // 밀어내고, 그 몫이 솔버에서 버려져 걸음이 클립보다 느려진다.
-        direction = Flatten(direction);
+        // 루트 모션이 몸을 모는 동안에는 몸도 평면 밖을 보지 않는다. 이걸 빼면 루트 모션이 클립 변위를
+        // 잠긴 축으로 밀어내고, 그 몫이 솔버에서 버려져 걸음이 클립보다 느려진다.
+        //
+        // 그 밖에는 가두지 않는다. 가둘 이유가 루트 모션 하나뿐인데, 가두면 평면에 잠긴 개체의 방향이
+        // ±X 둘로 줄어 대상이 좌우를 넘나드는 순간 한 스텝에 반 바퀴를 돈다 — 머리 위에 떠 있는 공중 보스는
+        // 플레이어가 밑을 지날 때마다 그렇게 뒤집혔고, 바로 밑에서는 좌우로 떨었다. 평면 뒤에 떠 있는 몸이
+        // 대상을 똑바로 보면 깊이 성분이 늘 남아 카메라 쪽을 거쳐 이어서 돈다. 이동은 여전히 평면 안이다.
+        if (RootMotionDriven) direction = Flatten(direction);
 
         Vector3 flatDirection = CustomMath.CleanRemove(groundNormal, direction).normalized;
 
